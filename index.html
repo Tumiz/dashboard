@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold & Macro Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:#f0f2f5;color:#1a1a2e;min-height:100vh
+}
+.header{
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  color:#fff;padding:16px 16px;box-shadow:0 2px 8px rgba(0,0,0,.15)
+}
+.header h1{font-size:18px;font-weight:600}
+.header p{font-size:12px;color:#a8b2d1;margin-top:2px}
+.container{max-width:1200px;margin:0 auto;padding:12px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card .label{font-size:10px;color:#8b8fa3;margin-bottom:2px;text-transform:uppercase;letter-spacing:.3px}
+.card .value{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.card .change{font-size:11px;margin-top:2px}
+.card .change.up{color:#22c55e}
+.card .change.down{color:#ef4444}
+.card .sub{font-size:10px;color:#8b8fa3;margin-top:1px}
+.chart-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px}
+.chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
+.chart-wrapper{position:relative;height:200px}
+.stats-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.table-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+td{padding:6px 6px;border-bottom:1px solid #f3f4f6;white-space:nowrap}
+td.up{color:#22c55e}
+td.down{color:#ef4444}
+.loading{text-align:center;padding:60px 0;color:#6b7280;font-size:14px}
+.error{text-align:center;padding:60px 0;color:#ef4444;font-size:14px}
+@media(min-width:640px){
+  .header{padding:20px 24px}
+  .header h1{font-size:22px}
+  .header p{font-size:13px}
+  .container{padding:20px}
+  .stats{grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+  .stats-3{gap:12px;margin-bottom:20px}
+  .card{padding:16px}
+  .card .label{font-size:11px}
+  .card .value{font-size:22px}
+  .chart-card{padding:20px;margin-bottom:20px}
+  .chart-card h2{font-size:15px}
+  .chart-wrapper{height:320px}
+  .table-card{padding:20px}
+  .table-card h2{font-size:15px}
+  table{font-size:13px}
+  th,td{padding:8px 10px}
+}
+@media(max-width:400px){
+  .stats{grid-template-columns:1fr;gap:6px}
+  .stats-3{grid-template-columns:1fr;gap:6px}
+  .card{padding:10px}
+  .card .value{font-size:16px}
+  .chart-wrapper{height:180px}
+  .chart-card{padding:10px}
+  .table-card{padding:10px}
+  th,td{padding:4px 4px;font-size:11px}
+  th{font-size:9px}
+  .header h1{font-size:16px}
+  .header p{font-size:11px}
+  .container{padding:8px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Gold &middot; Macro Dashboard</h1>
+  <p>SGE Au99.99, USD Index, US CPI YoY &amp; Real 10Y Yield</p>
+</div>
+<div class="container" id="app"><div class="loading">Loading...</div></div>
+
+<script>
+function parseCSV(text){
+  const [header,...rows]=text.trim().split('\n').map(l=>l.split(','));
+  return rows.map(r=>Object.fromEntries(header.map((h,i)=>[h.trim(),r[i].trim()])));
+}
+
+function fmt(n){return '¥'+Number(n).toFixed(2)}
+function pct(n){return Number(n).toFixed(2)+'%'}
+function chg(a,b){let d=((a-b)/b*100);return {val:d,cls:d>=0?'up':'down',sign:d>=0?'+':''}}
+
+function render(gold, usd, cpi, real){
+  const glast=gold[gold.length-1], gprev=gold[gold.length-2];
+  const gc=chg(+glast.close,+gprev.close);
+  const gprices=gold.map(r=>+r.close);
+  const gmaxP=Math.max(...gprices),gminP=Math.min(...gprices);
+  const gmaxR=gold.find(r=>+r.close===gmaxP),gminR=gold.find(r=>+r.close===gminP);
+  const gavg=gprices.reduce((s,p)=>s+p,0)/gprices.length;
+  const gyc=chg(+glast.close,+gold[0].close);
+
+  const ulast=usd[usd.length-1], uprev=usd[usd.length-2];
+  const uc=chg(+ulast.close,+uprev.close);
+  const uprices=usd.map(r=>+r.close);
+  const umaxP=Math.max(...uprices),uminP=Math.min(...uprices);
+  const umaxR=usd.find(r=>+r.close===umaxP),uminR=usd.find(r=>+r.close===uminP);
+  const uyc=chg(+ulast.close,+usd[0].close);
+
+  const clast=cpi[cpi.length-1], cprev=cpi[cpi.length-2];
+  const cc=chg(+clast.cpi_yoy_pct,+cprev.cpi_yoy_pct);
+
+  const rlast=real[real.length-1], rprev=real[real.length-2];
+  const rc=chg(+rlast.real_yield_pct,+rprev.real_yield_pct);
+
+  const labels=gold.map(r=>r.month);
+  const usdByMonth={}; usd.forEach(r=>usdByMonth[r.month]=r);
+  const cpiByMonth={}; cpi.forEach(r=>cpiByMonth[r.date.substring(0,7)]=r);
+  const realByMonth={}; real.forEach(r=>realByMonth[r.month]=r);
+
+  const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
+  const cpiOnLabels=labels.map(m=>cpiByMonth[m]?+cpiByMonth[m].cpi_yoy_pct:null);
+  const realOnLabels=labels.map(m=>realByMonth[m]?+realByMonth[m].real_yield_pct:null);
+
+  document.getElementById('app').innerHTML=`
+    <div class="stats">
+      <div class="card">
+        <div class="label">Gold Latest</div>
+        <div class="value">${fmt(glast.close)}</div>
+        <div class="change ${gc.cls}">${gc.sign}${gc.val.toFixed(2)}% MoM</div>
+        <div class="sub">${glast.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">Gold YTD</div>
+        <div class="value">${gyc.sign}${gyc.val.toFixed(2)}%</div>
+        <div class="sub">${gold[0].month} &ndash; ${glast.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">USD Index</div>
+        <div class="value">${ulast.close}</div>
+        <div class="change ${uc.cls}">${uc.sign}${uc.val.toFixed(2)}% MoM</div>
+        <div class="sub">${ulast.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">US CPI YoY</div>
+        <div class="value">${pct(clast.cpi_yoy_pct)}</div>
+        <div class="change ${cc.cls}">${cc.sign}${cc.val.toFixed(2)}pp MoM</div>
+        <div class="sub">${clast.date.substring(0,7)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Real 10Y Yield</div>
+        <div class="value">${pct(rlast.real_yield_pct)}</div>
+        <div class="change ${rc.cls}">${rc.sign}${rc.val.toFixed(2)}pp MoM</div>
+        <div class="sub">${rlast.month}</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Gold, USD Index, CPI YoY &amp; Real 10Y Yield</h2>
+      <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
+    </div>
+
+    <div class="stats-3">
+      <div class="card">
+        <div class="label">Gold High</div>
+        <div class="value">${fmt(gmaxP)}</div>
+        <div class="sub">${gmaxR.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">Gold Low</div>
+        <div class="value">${fmt(gminP)}</div>
+        <div class="sub">${gminR.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">Gold Avg</div>
+        <div class="value">${fmt(gavg)}</div>
+        <div class="sub">Simple average</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h2>Monthly Details</h2>
+      <div class="wrap"><table>
+        <thead><tr>
+          <th>Month</th><th>Gold Close</th><th>Gold MoM</th><th>USD Index</th><th>USD MoM</th><th>CPI YoY%</th><th>Real 10Y%</th>
+        </tr></thead>
+        <tbody>${gold.map((r,i)=>{
+          const ch=i===0?null:chg(+r.close,+gold[i-1].close);
+          const u=usdByMonth[r.month];
+          const uch=u&&i>0?chg(+u.close,+(usdByMonth[gold[i-1].month]?.close??0)):null;
+          const c=cpiByMonth[r.month];
+          const rel=realByMonth[r.month];
+          return `<tr>
+            <td><strong>${r.month}</strong></td>
+            <td>${fmt(r.close)}</td>
+            <td class="${ch?ch.cls:''}">${ch?ch.sign+ch.val.toFixed(2)+'%':'-'}</td>
+            <td>${u?u.close:'-'}</td>
+            <td class="${uch?uch.cls:''}">${uch?uch.sign+uch.val.toFixed(2)+'%':'-'}</td>
+            <td>${c?pct(c.cpi_yoy_pct):'-'}</td>
+            <td>${rel?pct(rel.real_yield_pct):'-'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>
+  `;
+
+  new Chart(document.getElementById('priceChart'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Gold Close (¥/g)',
+        data:gprices,
+        borderColor:'#f59e0b',
+        backgroundColor:'rgba(245,158,11,0.1)',
+        fill:true,
+        tension:.3,
+        pointBackgroundColor:'#f59e0b',
+        pointBorderColor:'#fff',
+        pointBorderWidth:2,
+        pointRadius:2,
+        pointHoverRadius:6,
+        pointHitRadius:10,
+        yAxisID:'y'
+      },{
+        label:'USD Index',
+        data:usdOnLabels,
+        borderColor:'#0f3460',
+        backgroundColor:'rgba(15,52,96,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#0f3460',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:2,
+        pointHoverRadius:6,
+        pointHitRadius:10,
+        yAxisID:'y1'
+      },{
+        label:'US CPI YoY (%)',
+        data:cpiOnLabels,
+        borderColor:'#ef4444',
+        backgroundColor:'rgba(239,68,68,0.1)',
+        fill:false,
+        tension:.3,
+        borderDash:[5,3],
+        pointBackgroundColor:'#ef4444',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:2,
+        pointHoverRadius:6,
+        pointHitRadius:10,
+        yAxisID:'y2'
+      },{
+        label:'Real 10Y Yield (%)',
+        data:realOnLabels,
+        borderColor:'#22c55e',
+        backgroundColor:'rgba(34,197,94,0.1)',
+        fill:false,
+        tension:.3,
+        borderDash:[2,4],
+        pointBackgroundColor:'#22c55e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:2,
+        pointHoverRadius:6,
+        pointHitRadius:10,
+        yAxisID:'y2'
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{boxWidth:window.innerWidth<640?10:16,boxHeight:window.innerWidth<640?8:12,font:{size:window.innerWidth<640?9:12},padding:window.innerWidth<640?6:10}},
+        tooltip:{
+          callbacks:{
+            label:ctx=>{
+              let v=ctx.parsed.y;
+              if(ctx.dataset.yAxisID==='y') v='¥'+v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
+              else v=v.toFixed(2);
+              return ctx.dataset.label+': '+v;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{maxTicksLimit:window.innerWidth<480?8:20,maxRotation:0}},
+        y:{
+          position:'left',title:{display:true,text:'Gold (¥/g)'},
+          grid:{color:'rgba(0,0,0,0.06)'},
+          ticks:{callback:v=>'¥'+v}
+        },
+        y1:{
+          position:'right',title:{display:true,text:'USD Index'},
+          grid:{display:false}
+        },
+        y2:{
+          position:'right',title:{display:true,text:window.innerWidth<480?'CPI / Real Yld':'CPI & Real Yield (%)'},
+          grid:{display:false},
+          offset:true
+        }
+      }
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded',async ()=>{
+  try{
+    const [goldRes,usdRes,cpiRes,realRes]=await Promise.all([
+      fetch('sge_gold_monthly.csv'),
+      fetch('usd_index_monthly.csv'),
+      fetch('us_cpi_monthly.csv'),
+      fetch('us_real_yield_monthly.csv')
+    ]);
+    render(
+      parseCSV(await goldRes.text()),
+      parseCSV(await usdRes.text()),
+      parseCSV(await cpiRes.text()),
+      parseCSV(await realRes.text())
+    );
+  }catch(e){
+    document.getElementById('app').innerHTML='<div class="error">Failed to load data: '+e.message+'</div>';
+  }
+});
+</script>
+</body>
+</html>
