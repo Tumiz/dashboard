@@ -29,7 +29,6 @@ body{
 .chart-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px}
 .chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
 .chart-wrapper{position:relative;height:200px}
-.stats-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .table-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
 .wrap{overflow-x:auto}
@@ -45,8 +44,8 @@ td.down{color:#ef4444}
   .header h1{font-size:22px}
   .header p{font-size:13px}
   .container{padding:20px}
-  .stats{grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
-  .stats-3{gap:12px;margin-bottom:20px}
+  .stats{grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+
   .card{padding:16px}
   .card .label{font-size:11px}
   .card .value{font-size:22px}
@@ -60,7 +59,6 @@ td.down{color:#ef4444}
 }
 @media(max-width:400px){
   .stats{grid-template-columns:1fr;gap:6px}
-  .stats-3{grid-template-columns:1fr;gap:6px}
   .card{padding:10px}
   .card .value{font-size:16px}
   .chart-wrapper{height:180px}
@@ -77,7 +75,7 @@ td.down{color:#ef4444}
 <body>
 <div class="header">
   <h1>Gold &middot; Macro Dashboard</h1>
-  <p>SGE Au99.99, USD Index, US CPI YoY &amp; Real 10Y Yield</p>
+  <p>Gold, BTC, AUX/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</p>
 </div>
 <div class="container" id="app"><div class="loading">Loading...</div></div>
 
@@ -91,49 +89,68 @@ function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 function chg(a,b){let d=((a-b)/b*100);return {val:d,cls:d>=0?'up':'down',sign:d>=0?'+':''}}
 
-function render(gold, usd, cpi, real){
+function render(gold, usd, cpi, real, gpr, btc, aux, cb){
   const glast=gold[gold.length-1], gprev=gold[gold.length-2];
   const gc=chg(+glast.close,+gprev.close);
   const gprices=gold.map(r=>+r.close);
-  const gmaxP=Math.max(...gprices),gminP=Math.min(...gprices);
-  const gmaxR=gold.find(r=>+r.close===gmaxP),gminR=gold.find(r=>+r.close===gminP);
-  const gavg=gprices.reduce((s,p)=>s+p,0)/gprices.length;
   const gyc=chg(+glast.close,+gold[0].close);
 
   const ulast=usd[usd.length-1], uprev=usd[usd.length-2];
   const uc=chg(+ulast.close,+uprev.close);
-  const uprices=usd.map(r=>+r.close);
-  const umaxP=Math.max(...uprices),uminP=Math.min(...uprices);
-  const umaxR=usd.find(r=>+r.close===umaxP),uminR=usd.find(r=>+r.close===uminP);
-  const uyc=chg(+ulast.close,+usd[0].close);
-
   const clast=cpi[cpi.length-1], cprev=cpi[cpi.length-2];
   const cc=chg(+clast.cpi_yoy_pct,+cprev.cpi_yoy_pct);
 
   const rlast=real[real.length-1], rprev=real[real.length-2];
   const rc=chg(+rlast.real_yield_pct,+rprev.real_yield_pct);
 
+  const gprLast=gpr[gpr.length-1], gprPrev=gpr[gpr.length-2];
+  const gprc=chg(+gprLast.gpr,+gprPrev.gpr);
+
+  const btcLast=btc[btc.length-1], btcPrev=btc[btc.length-2];
+  const btcChg=chg(+btcLast.btc_usd,+btcPrev.btc_usd);
+
+  const auxLast=aux[aux.length-1], auxPrev=aux[aux.length-2];
+  const auxChg=chg(+auxLast.aux_usd,+auxPrev.aux_usd);
+
+  const cbLast=cb[cb.length-1], cbPrev=cb[cb.length-2];
+  const cbChg=chg(+cbLast.cb_demand,+cbPrev.cb_demand);
+
   const labels=gold.map(r=>r.month);
   const usdByMonth={}; usd.forEach(r=>usdByMonth[r.month]=r);
   const cpiByMonth={}; cpi.forEach(r=>cpiByMonth[r.date.substring(0,7)]=r);
   const realByMonth={}; real.forEach(r=>realByMonth[r.month]=r);
+  const gprByMonth={}; gpr.forEach(r=>gprByMonth[r.month]=r);
+  const btcByMonth={}; btc.forEach(r=>btcByMonth[r.month]=r);
+  const auxByMonth={}; aux.forEach(r=>auxByMonth[r.month]=r);
+  const cbByMonth={}; cb.forEach(r=>cbByMonth[r.month]=r);
 
   const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
   const cpiOnLabels=labels.map(m=>cpiByMonth[m]?+cpiByMonth[m].cpi_yoy_pct:null);
   const realOnLabels=labels.map(m=>realByMonth[m]?+realByMonth[m].real_yield_pct:null);
+  const gprOnLabels=labels.map(m=>gprByMonth[m]?+gprByMonth[m].gpr:null);
+  const btcOnLabels=labels.map(m=>btcByMonth[m]?+btcByMonth[m].btc_usd:null);
+  const auxOnLabels=labels.map(m=>auxByMonth[m]?+auxByMonth[m].aux_usd:null);
+  const cbOnLabels=labels.map(m=>cbByMonth[m]?+cbByMonth[m].cb_demand:null);
 
   document.getElementById('app').innerHTML=`
     <div class="stats">
       <div class="card">
-        <div class="label">Gold Latest</div>
+        <div class="label">Gold (¥/g)</div>
         <div class="value">${fmt(glast.close)}</div>
         <div class="change ${gc.cls}">${gc.sign}${gc.val.toFixed(2)}% MoM</div>
         <div class="sub">${glast.month}</div>
       </div>
       <div class="card">
-        <div class="label">Gold YTD</div>
-        <div class="value">${gyc.sign}${gyc.val.toFixed(2)}%</div>
-        <div class="sub">${gold[0].month} &ndash; ${glast.month}</div>
+        <div class="label">BTC/USD</div>
+        <div class="value">$${Number(btcLast.btc_usd).toLocaleString()}</div>
+        <div class="change ${btcChg.cls}">${btcChg.sign}${btcChg.val.toFixed(2)}% MoM</div>
+        <div class="sub">${btcLast.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">AUX/USD</div>
+        <div class="value">$${Number(auxLast.aux_usd).toFixed(2)}</div>
+        <div class="change ${auxChg.cls}">${auxChg.sign}${auxChg.val.toFixed(2)}% MoM</div>
+        <div class="sub">${auxLast.month}</div>
       </div>
       <div class="card">
         <div class="label">USD Index</div>
@@ -153,51 +170,49 @@ function render(gold, usd, cpi, real){
         <div class="change ${rc.cls}">${rc.sign}${rc.val.toFixed(2)}pp MoM</div>
         <div class="sub">${rlast.month}</div>
       </div>
+      <div class="card">
+        <div class="label">GPR</div>
+        <div class="value">${Number(gprLast.gpr).toFixed(1)}</div>
+        <div class="change ${gprc.cls}">${gprc.sign}${gprc.val.toFixed(1)}% MoM</div>
+        <div class="sub">${gprLast.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">CB Demand (tonnes)</div>
+        <div class="value">${Number(cbLast.cb_demand).toFixed(1)}</div>
+        <div class="change ${cbChg.cls}">${cbChg.sign}${cbChg.val.toFixed(1)}% QoQ</div>
+        <div class="sub">${cbLast.month}</div>
+      </div>
     </div>
 
     <div class="chart-card">
-      <h2>Gold, USD Index, CPI YoY &amp; Real 10Y Yield</h2>
+      <h2>Gold, BTC, AUX/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</h2>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
-    </div>
-
-    <div class="stats-3">
-      <div class="card">
-        <div class="label">Gold High</div>
-        <div class="value">${fmt(gmaxP)}</div>
-        <div class="sub">${gmaxR.month}</div>
-      </div>
-      <div class="card">
-        <div class="label">Gold Low</div>
-        <div class="value">${fmt(gminP)}</div>
-        <div class="sub">${gminR.month}</div>
-      </div>
-      <div class="card">
-        <div class="label">Gold Avg</div>
-        <div class="value">${fmt(gavg)}</div>
-        <div class="sub">Simple average</div>
-      </div>
     </div>
 
     <div class="table-card">
       <h2>Monthly Details</h2>
       <div class="wrap"><table>
         <thead><tr>
-          <th>Month</th><th>Gold Close</th><th>Gold MoM</th><th>USD Index</th><th>USD MoM</th><th>CPI YoY%</th><th>Real 10Y%</th>
+          <th>Month</th><th>Gold ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>USD Idx</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>CB Dem (t)</th>
         </tr></thead>
         <tbody>${gold.map((r,i)=>{
-          const ch=i===0?null:chg(+r.close,+gold[i-1].close);
+          const bt=btcByMonth[r.month];
+          const ax=auxByMonth[r.month];
           const u=usdByMonth[r.month];
-          const uch=u&&i>0?chg(+u.close,+(usdByMonth[gold[i-1].month]?.close??0)):null;
           const c=cpiByMonth[r.month];
           const rel=realByMonth[r.month];
+          const gp=gprByMonth[r.month];
+          const cb=cbByMonth[r.month];
           return `<tr>
             <td><strong>${r.month}</strong></td>
             <td>${fmt(r.close)}</td>
-            <td class="${ch?ch.cls:''}">${ch?ch.sign+ch.val.toFixed(2)+'%':'-'}</td>
+            <td>${bt?'$'+Number(bt.btc_usd).toLocaleString():'-'}</td>
+            <td>${ax?'$'+Number(ax.aux_usd).toFixed(2):'-'}</td>
             <td>${u?u.close:'-'}</td>
-            <td class="${uch?uch.cls:''}">${uch?uch.sign+uch.val.toFixed(2)+'%':'-'}</td>
             <td>${c?pct(c.cpi_yoy_pct):'-'}</td>
             <td>${rel?pct(rel.real_yield_pct):'-'}</td>
+            <td>${gp?Number(gp.gpr).toFixed(1):'-'}</td>
+            <td>${cb?Number(cb.cb_demand).toFixed(1):'-'}</td>
           </tr>`;
         }).join('')}</tbody>
       </table></div>
@@ -218,9 +233,9 @@ function render(gold, usd, cpi, real){
         pointBackgroundColor:'#f59e0b',
         pointBorderColor:'#fff',
         pointBorderWidth:2,
-        pointRadius:2,
-        pointHoverRadius:6,
-        pointHitRadius:10,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
         yAxisID:'y'
       },{
         label:'USD Index',
@@ -232,10 +247,24 @@ function render(gold, usd, cpi, real){
         pointBackgroundColor:'#0f3460',
         pointBorderColor:'#fff',
         pointBorderWidth:1.5,
-        pointRadius:2,
-        pointHoverRadius:6,
-        pointHitRadius:10,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
         yAxisID:'y1'
+      },{
+        label:'GPR',
+        data:gprOnLabels,
+        borderColor:'#a855f7',
+        backgroundColor:'rgba(168,85,247,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#a855f7',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y3'
       },{
         label:'US CPI YoY (%)',
         data:cpiOnLabels,
@@ -243,14 +272,41 @@ function render(gold, usd, cpi, real){
         backgroundColor:'rgba(239,68,68,0.1)',
         fill:false,
         tension:.3,
-        borderDash:[5,3],
         pointBackgroundColor:'#ef4444',
         pointBorderColor:'#fff',
         pointBorderWidth:1.5,
-        pointRadius:2,
-        pointHoverRadius:6,
-        pointHitRadius:10,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
         yAxisID:'y2'
+      },{
+        label:'BTC/USD',
+        data:btcOnLabels,
+        borderColor:'#f97316',
+        backgroundColor:'rgba(249,115,22,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#f97316',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y4'
+      },{
+        label:'AUX/USD',
+        data:auxOnLabels,
+        borderColor:'#06b6d4',
+        backgroundColor:'rgba(6,182,212,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#06b6d4',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
       },{
         label:'Real 10Y Yield (%)',
         data:realOnLabels,
@@ -258,16 +314,48 @@ function render(gold, usd, cpi, real){
         backgroundColor:'rgba(34,197,94,0.1)',
         fill:false,
         tension:.3,
-        borderDash:[2,4],
         pointBackgroundColor:'#22c55e',
         pointBorderColor:'#fff',
         pointBorderWidth:1.5,
-        pointRadius:2,
-        pointHoverRadius:6,
-        pointHitRadius:10,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
         yAxisID:'y2'
+      },{
+        label:'CB Demand (tonnes)',
+        data:cbOnLabels,
+        borderColor:'#ec4899',
+        backgroundColor:'rgba(236,72,153,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#ec4899',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y6'
       }]
     },
+    plugins:[{
+      id:'crosshair',
+      afterDraw(chart){
+        if(!chart._active.length) return;
+        const ctx=chart.ctx;
+        const x=chart._active[0].element.x;
+        const top=chart.chartArea.top;
+        const bot=chart.chartArea.bottom;
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([4,3]);
+        ctx.strokeStyle='rgba(0,0,0,0.25)';
+        ctx.lineWidth=1;
+        ctx.moveTo(x,top);
+        ctx.lineTo(x,bot);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }],
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
@@ -278,8 +366,9 @@ function render(gold, usd, cpi, real){
             label:ctx=>{
               let v=ctx.parsed.y;
               if(ctx.dataset.yAxisID==='y') v='¥'+v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y6') v=v.toFixed(1)+'t';
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
-              else v=v.toFixed(2);
+              else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
           }
@@ -300,6 +389,26 @@ function render(gold, usd, cpi, real){
           position:'right',title:{display:true,text:window.innerWidth<480?'CPI / Real Yld':'CPI & Real Yield (%)'},
           grid:{display:false},
           offset:true
+        },
+        y3:{
+          position:'right',title:{display:true,text:'GPR'},
+          grid:{display:false},
+          offset:true
+        },
+        y4:{
+          position:'right',title:{display:true,text:'BTC/USD'},
+          grid:{display:false},
+          offset:true
+        },
+        y5:{
+          position:'right',title:{display:true,text:'AUX/USD'},
+          grid:{display:false},
+          offset:true
+        },
+        y6:{
+          position:'right',title:{display:true,text:'CB Demand (t)'},
+          grid:{display:false},
+          offset:true
         }
       }
     }
@@ -308,17 +417,25 @@ function render(gold, usd, cpi, real){
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   try{
-    const [goldRes,usdRes,cpiRes,realRes]=await Promise.all([
+    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,cbRes]=await Promise.all([
       fetch('sge_gold_monthly.csv'),
       fetch('usd_index_monthly.csv'),
       fetch('us_cpi_monthly.csv'),
-      fetch('us_real_yield_monthly.csv')
+      fetch('us_real_yield_monthly.csv'),
+      fetch('gpr_monthly.csv'),
+      fetch('btc_monthly.csv'),
+      fetch('aux_monthly.csv'),
+      fetch('cb_demand_monthly.csv')
     ]);
     render(
       parseCSV(await goldRes.text()),
       parseCSV(await usdRes.text()),
       parseCSV(await cpiRes.text()),
-      parseCSV(await realRes.text())
+      parseCSV(await realRes.text()),
+      parseCSV(await gprRes.text()),
+      parseCSV(await btcRes.text()),
+      parseCSV(await auxRes.text()),
+      parseCSV(await cbRes.text())
     );
   }catch(e){
     document.getElementById('app').innerHTML='<div class="error">Failed to load data: '+e.message+'</div>';
