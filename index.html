@@ -132,6 +132,53 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
   const auxOnLabels=labels.map(m=>auxByMonth[m]?+auxByMonth[m].aux_usd:null);
   const cbOnLabels=labels.map(m=>cbByMonth[m]?+cbByMonth[m].cb_demand:null);
 
+  function r2(pairs){
+    const n=pairs.length;
+    if(n<4)return null;
+    let sx=0,sy=0,sxy=0,sx2=0,sy2=0;
+    for(const [x,y] of pairs){sx+=x;sy+=y;sxy+=x*y;sx2+=x*x;sy2+=y*y}
+    return (n*sxy-sx*sy)/Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy));
+  }
+
+  function rLabel(r){
+    const a=Math.abs(r);
+    return a>=0.7?'Strong':a>=0.4?'Moderate':a>=0.2?'Weak':'None';
+  }
+
+  const goldClose={}; gold.forEach(r=>goldClose[r.month]=+r.close);
+  const gvals=labels.map(m=>goldClose[m]);
+
+  function bestLagCorr(map,key){
+    const svals=labels.map(m=>{const o=map[m];return o?+o[key]:null});
+    let bestR=0,bestLag=0;
+    for(let lag=-12;lag<=12;lag++){
+      const pairs=[];
+      for(let i=0;i<labels.length;i++){
+        const j=i-lag;
+        if(j>=0&&j<labels.length&&gvals[i]!=null&&svals[j]!=null)
+          pairs.push([gvals[i],svals[j]]);
+      }
+      if(pairs.length>=4){
+        const r=r2(pairs);
+        if(r!==null&&Math.abs(r)>Math.abs(bestR)){bestR=r;bestLag=lag}
+      }
+    }
+    return {r:bestR,lag:bestLag};
+  }
+
+  const cors=[
+    ['USD Index',usdByMonth,'close'],
+    ['US CPI YoY',cpiByMonth,'cpi_yoy_pct'],
+    ['Real 10Y Yield',realByMonth,'real_yield_pct'],
+    ['GPR',gprByMonth,'gpr'],
+    ['BTC/USD',btcByMonth,'btc_usd'],
+    ['AUX/USD',auxByMonth,'aux_usd'],
+    ['CB Demand',cbByMonth,'cb_demand'],
+  ].map(([name,map,key])=>{
+    const {r,lag}=bestLagCorr(map,key);
+    return {name,r,lag};
+  }).sort((a,b)=>b.r-a.r);
+
   document.getElementById('app').innerHTML=`
     <div class="stats">
       <div class="card">
@@ -187,6 +234,19 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
     <div class="chart-card">
       <h2>Gold, BTC, AUX/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</h2>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
+    </div>
+
+    <div class="table-card" style="margin-top:8px">
+      <h2>Correlation with Gold (¥/g)</h2>
+      <div class="wrap"><table>
+        <thead><tr><th>Series</th><th>r (best lag)</th><th>Lag (mo)</th><th>Strength</th></tr></thead>
+        <tbody>${cors.map(c=>`<tr>
+          <td><strong>${c.name}</strong></td>
+          <td>${c.r.toFixed(4)}</td>
+          <td>${c.lag>0?'<span class="up">+'+c.lag+'</span>':c.lag<0?'<span class="down">'+c.lag+'</span>':'0'}</td>
+          <td>${rLabel(c.r)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
     </div>
 
     <div class="table-card">
@@ -354,6 +414,15 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
         ctx.lineTo(x,bot);
         ctx.stroke();
         ctx.restore();
+      }
+    },{
+      id:'axisToggler',
+      beforeUpdate(chart){
+        const axisDs=[[0,'y'],[1,'y1'],[2,'y3'],[4,'y4'],[5,'y5'],[7,'y6']];
+        for(const [idx,aid] of axisDs){
+          chart.options.scales[aid].display=!chart.getDatasetMeta(idx).hidden;
+        }
+        chart.options.scales['y2'].display=![3,6].every(i=>chart.getDatasetMeta(i).hidden);
       }
     }],
     options:{
