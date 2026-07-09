@@ -75,7 +75,7 @@ td.down{color:#ef4444}
 <body>
 <div class="header">
   <h1>Gold &middot; Macro Dashboard</h1>
-  <p>Gold, BTC, AUX/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</p>
+  <p>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</p>
 </div>
 <div class="container" id="app"><div class="loading">Loading...</div></div>
 
@@ -89,7 +89,7 @@ function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 function chg(a,b){let d=((a-b)/b*100);return {val:d,cls:d>=0?'up':'down',sign:d>=0?'+':''}}
 
-function render(gold, usd, cpi, real, gpr, btc, aux, cb){
+function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
   const glast=gold[gold.length-1], gprev=gold[gold.length-2];
   const gc=chg(+glast.close,+gprev.close);
   const gprices=gold.map(r=>+r.close);
@@ -112,6 +112,9 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
   const auxLast=aux[aux.length-1], auxPrev=aux[aux.length-2];
   const auxChg=chg(+auxLast.aux_usd,+auxPrev.aux_usd);
 
+  const xagLast=xag[xag.length-1], xagPrev=xag[xag.length-2];
+  const xagChg=chg(+xagLast.xag_usd,+xagPrev.xag_usd);
+
   const cbLast=cb[cb.length-1], cbPrev=cb[cb.length-2];
   const cbChg=chg(+cbLast.cb_demand,+cbPrev.cb_demand);
 
@@ -122,6 +125,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
   const gprByMonth={}; gpr.forEach(r=>gprByMonth[r.month]=r);
   const btcByMonth={}; btc.forEach(r=>btcByMonth[r.month]=r);
   const auxByMonth={}; aux.forEach(r=>auxByMonth[r.month]=r);
+  const xagByMonth={}; xag.forEach(r=>xagByMonth[r.month]=r);
   const cbByMonth={}; cb.forEach(r=>cbByMonth[r.month]=r);
 
   const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
@@ -130,6 +134,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
   const gprOnLabels=labels.map(m=>gprByMonth[m]?+gprByMonth[m].gpr:null);
   const btcOnLabels=labels.map(m=>btcByMonth[m]?+btcByMonth[m].btc_usd:null);
   const auxOnLabels=labels.map(m=>auxByMonth[m]?+auxByMonth[m].aux_usd:null);
+  const xagOnLabels=labels.map(m=>xagByMonth[m]?+xagByMonth[m].xag_usd:null);
   const cbOnLabels=labels.map(m=>cbByMonth[m]?+cbByMonth[m].cb_demand:null);
 
   function r2(pairs){
@@ -173,6 +178,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
     ['GPR',gprByMonth,'gpr'],
     ['BTC/USD',btcByMonth,'btc_usd'],
     ['AUX/USD',auxByMonth,'aux_usd'],
+    ['XAG/USD',xagByMonth,'xag_usd'],
     ['CB Demand',cbByMonth,'cb_demand'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
@@ -198,6 +204,12 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
         <div class="value">$${Number(auxLast.aux_usd).toFixed(2)}</div>
         <div class="change ${auxChg.cls}">${auxChg.sign}${auxChg.val.toFixed(2)}% MoM</div>
         <div class="sub">${auxLast.month}</div>
+      </div>
+      <div class="card">
+        <div class="label">XAG/USD</div>
+        <div class="value">$${Number(xagLast.xag_usd).toFixed(2)}</div>
+        <div class="change ${xagChg.cls}">${xagChg.sign}${xagChg.val.toFixed(2)}% MoM</div>
+        <div class="sub">${xagLast.month}</div>
       </div>
       <div class="card">
         <div class="label">USD Index</div>
@@ -232,7 +244,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
     </div>
 
     <div class="chart-card">
-      <h2>Gold, BTC, AUX/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</h2>
+      <h2>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</h2>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
     </div>
 
@@ -253,11 +265,12 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
       <h2>Monthly Details</h2>
       <div class="wrap"><table>
         <thead><tr>
-          <th>Month</th><th>Gold ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>USD Idx</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>CB Dem (t)</th>
+          <th>Month</th><th>Gold ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>XAG/USD</th><th>USD Idx</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>CB Dem (t)</th>
         </tr></thead>
         <tbody>${gold.map((r,i)=>{
           const bt=btcByMonth[r.month];
           const ax=auxByMonth[r.month];
+          const xg=xagByMonth[r.month];
           const u=usdByMonth[r.month];
           const c=cpiByMonth[r.month];
           const rel=realByMonth[r.month];
@@ -268,6 +281,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
             <td>${fmt(r.close)}</td>
             <td>${bt?'$'+Number(bt.btc_usd).toLocaleString():'-'}</td>
             <td>${ax?'$'+Number(ax.aux_usd).toFixed(2):'-'}</td>
+            <td>${xg?'$'+Number(xg.xag_usd).toFixed(2):'-'}</td>
             <td>${u?u.close:'-'}</td>
             <td>${c?pct(c.cpi_yoy_pct):'-'}</td>
             <td>${rel?pct(rel.real_yield_pct):'-'}</td>
@@ -368,6 +382,20 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
         pointHitRadius:0,
         yAxisID:'y5'
       },{
+        label:'XAG/USD',
+        data:xagOnLabels,
+        borderColor:'#94a3b8',
+        backgroundColor:'rgba(148,163,184,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#94a3b8',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y7'
+      },{
         label:'Real 10Y Yield (%)',
         data:realOnLabels,
         borderColor:'#22c55e',
@@ -418,11 +446,11 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
     },{
       id:'axisToggler',
       beforeUpdate(chart){
-        const axisDs=[[0,'y'],[1,'y1'],[2,'y3'],[4,'y4'],[5,'y5'],[7,'y6']];
+        const axisDs=[[0,'y'],[1,'y1'],[2,'y3'],[4,'y4'],[5,'y5'],[6,'y7'],[8,'y6']];
         for(const [idx,aid] of axisDs){
           chart.options.scales[aid].display=!chart.getDatasetMeta(idx).hidden;
         }
-        chart.options.scales['y2'].display=![3,6].every(i=>chart.getDatasetMeta(i).hidden);
+        chart.options.scales['y2'].display=![3,7].every(i=>chart.getDatasetMeta(i).hidden);
       }
     }],
     options:{
@@ -437,6 +465,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
               if(ctx.dataset.yAxisID==='y') v='¥'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y6') v=v.toFixed(1)+'t';
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
+              else if(ctx.dataset.yAxisID==='y7') v='$'+v.toFixed(2);
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -478,6 +507,11 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
           position:'right',title:{display:true,text:'CB Demand (t)'},
           grid:{display:false},
           offset:true
+        },
+        y7:{
+          position:'right',title:{display:true,text:'XAG/USD'},
+          grid:{display:false},
+          offset:true
         }
       }
     }
@@ -486,7 +520,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, cb){
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   try{
-    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,cbRes]=await Promise.all([
+    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes]=await Promise.all([
       fetch('sge_gold_monthly.csv'),
       fetch('usd_index_monthly.csv'),
       fetch('us_cpi_monthly.csv'),
@@ -494,6 +528,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       fetch('gpr_monthly.csv'),
       fetch('btc_monthly.csv'),
       fetch('aux_monthly.csv'),
+      fetch('xag_monthly.csv'),
       fetch('cb_demand_monthly.csv')
     ]);
     render(
@@ -504,6 +539,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       parseCSV(await gprRes.text()),
       parseCSV(await btcRes.text()),
       parseCSV(await auxRes.text()),
+      parseCSV(await xagRes.text()),
       parseCSV(await cbRes.text())
     );
   }catch(e){

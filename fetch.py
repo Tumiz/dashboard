@@ -105,6 +105,16 @@ def fetch_aux(output: str = "aux_monthly.csv"):
     print(f"Saved {len(df)} rows to {output}")
 
 
+def fetch_xag(output: str = "xag_monthly.csv"):
+    df = ak.futures_foreign_hist(symbol="XAG")
+    df = df[["date", "close"]].rename(columns={"close": "xag_usd"})
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df[["date", "month", "xag_usd"]].to_csv(output, index=False)
+    print(f"Saved {len(df)} rows to {output}")
+
+
 def fetch_cb_demand(output: str = "cb_demand_monthly.csv"):
     url = "https://fsapi.gold.org/api/v11/charts/supply-and-demand/42"
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}, timeout=30)
@@ -157,6 +167,7 @@ if __name__ == "__main__":
     parser.add_argument("--gpr", action="store_true", help="Fetch monthly Geopolitical Risk Index")
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
     parser.add_argument("--aux", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
+    parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
     args = parser.parse_args()
 
@@ -171,6 +182,9 @@ if __name__ == "__main__":
     elif args.aux:
         output = args.output or "aux_monthly.csv"
         fetch_aux(output)
+    elif args.xag:
+        output = args.output or "xag_monthly.csv"
+        fetch_xag(output)
     elif args.gpr:
         output = args.output or "gpr_monthly.csv"
         fetch_gpr(output)
