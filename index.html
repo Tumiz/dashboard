@@ -28,6 +28,14 @@ body{
 .card .sub{font-size:10px;color:#8b8fa3;margin-top:1px}
 .chart-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px}
 .chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
+.chart-controls{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.chart-controls label{font-size:11px;color:#6b7280;font-weight:500;white-space:nowrap}
+.dd-btn{font-size:12px;padding:4px 24px 4px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#1a1a2e;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.dd-menu{display:none;position:absolute;top:100%;left:0;min-width:220px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:20;padding:4px 0;margin-top:4px}
+.dd-menu.open{display:block}
+.dd-item{display:flex;align-items:center;gap:6px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.dd-item:hover{background:#f3f4f6}
+.dd-item input{margin:0;cursor:pointer;accent-color:#6366f1}
 .chart-wrapper{position:relative;height:200px}
 .table-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
@@ -75,7 +83,7 @@ td.down{color:#ef4444}
 <body>
 <div class="header">
   <h1>Gold &middot; Macro Dashboard</h1>
-  <p>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</p>
+  <p>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR, Fed Rate &amp; CB Demand</p>
 </div>
 <div class="container" id="app"><div class="loading">Loading...</div></div>
 
@@ -89,7 +97,7 @@ function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 function chg(a,b){let d=((a-b)/b*100);return {val:d,cls:d>=0?'up':'down',sign:d>=0?'+':''}}
 
-function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
+function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
   const glast=gold[gold.length-1], gprev=gold[gold.length-2];
   const gc=chg(+glast.close,+gprev.close);
   const gprices=gold.map(r=>+r.close);
@@ -118,6 +126,9 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
   const cbLast=cb[cb.length-1], cbPrev=cb[cb.length-2];
   const cbChg=chg(+cbLast.cb_demand,+cbPrev.cb_demand);
 
+  const fedLast=fed[fed.length-1], fedPrev=fed[fed.length-2];
+  const fedChg=chg(+fedLast.fed_rate_pct,+fedPrev.fed_rate_pct);
+
   const labels=gold.map(r=>r.month);
   const usdByMonth={}; usd.forEach(r=>usdByMonth[r.month]=r);
   const cpiByMonth={}; cpi.forEach(r=>cpiByMonth[r.date.substring(0,7)]=r);
@@ -127,6 +138,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
   const auxByMonth={}; aux.forEach(r=>auxByMonth[r.month]=r);
   const xagByMonth={}; xag.forEach(r=>xagByMonth[r.month]=r);
   const cbByMonth={}; cb.forEach(r=>cbByMonth[r.month]=r);
+  const fedByMonth={}; fed.forEach(r=>fedByMonth[r.month]=r);
 
   const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
   const cpiOnLabels=labels.map(m=>cpiByMonth[m]?+cpiByMonth[m].cpi_yoy_pct:null);
@@ -136,6 +148,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
   const auxOnLabels=labels.map(m=>auxByMonth[m]?+auxByMonth[m].aux_usd:null);
   const xagOnLabels=labels.map(m=>xagByMonth[m]?+xagByMonth[m].xag_usd:null);
   const cbOnLabels=labels.map(m=>cbByMonth[m]?+cbByMonth[m].cb_demand:null);
+  const fedOnLabels=labels.map(m=>fedByMonth[m]?+fedByMonth[m].fed_rate_pct:null);
 
   function r2(pairs){
     const n=pairs.length;
@@ -180,6 +193,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
     ['AUX/USD',auxByMonth,'aux_usd'],
     ['XAG/USD',xagByMonth,'xag_usd'],
     ['CB Demand',cbByMonth,'cb_demand'],
+    ['Fed Rate',fedByMonth,'fed_rate_pct'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
     return {name,r,lag};
@@ -241,10 +255,21 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
         <div class="change ${cbChg.cls}">${cbChg.sign}${cbChg.val.toFixed(1)}% QoQ</div>
         <div class="sub">${cbLast.month}</div>
       </div>
+      <div class="card">
+        <div class="label">Fed Funds Rate</div>
+        <div class="value">${pct(fedLast.fed_rate_pct)}</div>
+        <div class="change ${fedChg.cls}">${fedChg.sign}${fedChg.val.toFixed(2)}pp MoM</div>
+        <div class="sub">${fedLast.month}</div>
+      </div>
     </div>
 
     <div class="chart-card">
-      <h2>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR &amp; CB Demand</h2>
+      <h2>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR, Fed Rate &amp; CB Demand</h2>
+      <div class="chart-controls">
+        <label>Lines:</label>
+        <button class="dd-btn" id="ddBtn">Select lines...</button>
+        <div class="dd-menu" id="ddMenu"></div>
+      </div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
     </div>
 
@@ -265,7 +290,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       <h2>Monthly Details</h2>
       <div class="wrap"><table>
         <thead><tr>
-          <th>Month</th><th>Gold ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>XAG/USD</th><th>USD Idx</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>CB Dem (t)</th>
+          <th>Month</th><th>Gold ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>XAG/USD</th><th>USD Idx</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>Fed%</th><th>CB Dem (t)</th>
         </tr></thead>
         <tbody>${gold.map((r,i)=>{
           const bt=btcByMonth[r.month];
@@ -275,6 +300,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
           const c=cpiByMonth[r.month];
           const rel=realByMonth[r.month];
           const gp=gprByMonth[r.month];
+          const fd=fedByMonth[r.month];
           const cb=cbByMonth[r.month];
           return `<tr>
             <td><strong>${r.month}</strong></td>
@@ -286,6 +312,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
             <td>${c?pct(c.cpi_yoy_pct):'-'}</td>
             <td>${rel?pct(rel.real_yield_pct):'-'}</td>
             <td>${gp?Number(gp.gpr).toFixed(1):'-'}</td>
+            <td>${fd?pct(fd.fed_rate_pct):'-'}</td>
             <td>${cb?Number(cb.cb_demand).toFixed(1):'-'}</td>
           </tr>`;
         }).join('')}</tbody>
@@ -293,7 +320,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
     </div>
   `;
 
-  new Chart(document.getElementById('priceChart'),{
+  const chart=new Chart(document.getElementById('priceChart'),{
     type:'line',
     data:{
       labels,
@@ -314,6 +341,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       },{
         label:'USD Index',
         data:usdOnLabels,
+        hidden:true,
         borderColor:'#0f3460',
         backgroundColor:'rgba(15,52,96,0.1)',
         fill:false,
@@ -328,6 +356,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       },{
         label:'GPR',
         data:gprOnLabels,
+        hidden:true,
         borderColor:'#a855f7',
         backgroundColor:'rgba(168,85,247,0.1)',
         fill:false,
@@ -342,6 +371,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       },{
         label:'US CPI YoY (%)',
         data:cpiOnLabels,
+        hidden:true,
         borderColor:'#ef4444',
         backgroundColor:'rgba(239,68,68,0.1)',
         fill:false,
@@ -370,6 +400,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       },{
         label:'AUX/USD',
         data:auxOnLabels,
+        hidden:true,
         borderColor:'#06b6d4',
         backgroundColor:'rgba(6,182,212,0.1)',
         fill:false,
@@ -384,6 +415,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       },{
         label:'XAG/USD',
         data:xagOnLabels,
+        hidden:true,
         borderColor:'#94a3b8',
         backgroundColor:'rgba(148,163,184,0.1)',
         fill:false,
@@ -398,6 +430,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       },{
         label:'Real 10Y Yield (%)',
         data:realOnLabels,
+        hidden:true,
         borderColor:'#22c55e',
         backgroundColor:'rgba(34,197,94,0.1)',
         fill:false,
@@ -412,6 +445,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
       },{
         label:'CB Demand (tonnes)',
         data:cbOnLabels,
+        hidden:true,
         borderColor:'#ec4899',
         backgroundColor:'rgba(236,72,153,0.1)',
         fill:false,
@@ -423,6 +457,21 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y6'
+      },{
+        label:'Fed Funds Rate (%)',
+        data:fedOnLabels,
+        hidden:true,
+        borderColor:'#6366f1',
+        backgroundColor:'rgba(99,102,241,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#6366f1',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y8'
       }]
     },
     plugins:[{
@@ -443,21 +492,12 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
         ctx.stroke();
         ctx.restore();
       }
-    },{
-      id:'axisToggler',
-      beforeUpdate(chart){
-        const axisDs=[[0,'y'],[1,'y1'],[2,'y3'],[4,'y4'],[5,'y5'],[6,'y7'],[8,'y6']];
-        for(const [idx,aid] of axisDs){
-          chart.options.scales[aid].display=!chart.getDatasetMeta(idx).hidden;
-        }
-        chart.options.scales['y2'].display=![3,7].every(i=>chart.getDatasetMeta(i).hidden);
-      }
     }],
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{position:'top',labels:{boxWidth:window.innerWidth<640?10:16,boxHeight:window.innerWidth<640?8:12,font:{size:window.innerWidth<640?9:12},padding:window.innerWidth<640?6:10}},
+        legend:{display:false},
         tooltip:{
           callbacks:{
             label:ctx=>{
@@ -465,6 +505,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
               if(ctx.dataset.yAxisID==='y') v='¥'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y6') v=v.toFixed(1)+'t';
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
+              else if(ctx.dataset.yAxisID==='y8') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y7') v='$'+v.toFixed(2);
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
@@ -481,17 +522,15 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
         },
         y1:{
           position:'right',title:{display:true,text:'USD Index'},
-          grid:{display:false}
+          grid:{display:false},display:false
         },
         y2:{
           position:'right',title:{display:true,text:window.innerWidth<480?'CPI / Real Yld':'CPI & Real Yield (%)'},
-          grid:{display:false},
-          offset:true
+          grid:{display:false},display:false,offset:true
         },
         y3:{
           position:'right',title:{display:true,text:'GPR'},
-          grid:{display:false},
-          offset:true
+          grid:{display:false},display:false,offset:true
         },
         y4:{
           position:'right',title:{display:true,text:'BTC/USD'},
@@ -500,27 +539,62 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb){
         },
         y5:{
           position:'right',title:{display:true,text:'AUX/USD'},
-          grid:{display:false},
-          offset:true
+          grid:{display:false},display:false,offset:true
         },
         y6:{
           position:'right',title:{display:true,text:'CB Demand (t)'},
-          grid:{display:false},
-          offset:true
+          grid:{display:false},display:false,offset:true
         },
         y7:{
           position:'right',title:{display:true,text:'XAG/USD'},
-          grid:{display:false},
-          offset:true
+          grid:{display:false},display:false,offset:true
+        },
+        y8:{
+          position:'right',title:{display:true,text:'Fed Rate (%)'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
   });
+
+  chart.update();
+
+  const btn=document.getElementById('ddBtn');
+  const menu=document.getElementById('ddMenu');
+  chart.data.datasets.forEach((ds,i)=>{
+    const item=document.createElement('label');
+    item.className='dd-item';
+    const cb=document.createElement('input');
+    cb.type='checkbox';
+    cb.checked=!ds.hidden;
+    cb.addEventListener('change',()=>{
+      chart.setDatasetVisibility(i,cb.checked);
+      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8'};
+      if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
+      if(i===3||i===7){
+        chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
+      }
+      chart.update();
+      updateBtnText();
+    });
+    const span=document.createElement('span');
+    span.textContent=ds.label;
+    item.appendChild(cb);
+    item.appendChild(span);
+    menu.appendChild(item);
+  });
+  function updateBtnText(){
+    const checked=[...menu.querySelectorAll('input:checked')];
+    btn.textContent=checked.length===chart.data.datasets.length?'All lines':checked.length===0?'No lines':checked.length===1?checked[0].nextSibling.textContent:checked.length+' lines';
+  }
+  updateBtnText();
+  btn.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open')});
+  document.addEventListener('click',e=>{if(!menu.contains(e.target)&&e.target!==btn)menu.classList.remove('open')});
 }
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   try{
-    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes]=await Promise.all([
+    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes]=await Promise.all([
       fetch('sge_gold_monthly.csv'),
       fetch('usd_index_monthly.csv'),
       fetch('us_cpi_monthly.csv'),
@@ -529,7 +603,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       fetch('btc_monthly.csv'),
       fetch('aux_monthly.csv'),
       fetch('xag_monthly.csv'),
-      fetch('cb_demand_monthly.csv')
+      fetch('cb_demand_monthly.csv'),
+      fetch('fed_rates_monthly.csv')
     ]);
     render(
       parseCSV(await goldRes.text()),
@@ -540,7 +615,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       parseCSV(await btcRes.text()),
       parseCSV(await auxRes.text()),
       parseCSV(await xagRes.text()),
-      parseCSV(await cbRes.text())
+      parseCSV(await cbRes.text()),
+      parseCSV(await fedRes.text())
     );
   }catch(e){
     document.getElementById('app').innerHTML='<div class="error">Failed to load data: '+e.message+'</div>';

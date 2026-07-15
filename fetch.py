@@ -115,6 +115,20 @@ def fetch_xag(output: str = "xag_monthly.csv"):
     print(f"Saved {len(df)} rows to {output}")
 
 
+def fetch_fed_rates(output: str = "fed_rates_monthly.csv"):
+    url = (
+        "https://fred.stlouisfed.org/graph/fredgraph.csv"
+        "?id=FEDFUNDS&cosd=1954-07-01&coed=9999-12-31"
+    )
+    df = pd.read_csv(url)
+    df.columns = ["date", "fed_rate_pct"]
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df[["date", "month", "fed_rate_pct"]].to_csv(output, index=False)
+    print(f"Saved {len(df)} rows to {output}")
+
+
 def fetch_cb_demand(output: str = "cb_demand_monthly.csv"):
     url = "https://fsapi.gold.org/api/v11/charts/supply-and-demand/42"
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}, timeout=30)
@@ -169,10 +183,14 @@ if __name__ == "__main__":
     parser.add_argument("--aux", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
     parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
+    parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
     args = parser.parse_args()
 
     if args.symbols:
         list_gold_symbols()
+    elif args.fed_rates:
+        output = args.output or "fed_rates_monthly.csv"
+        fetch_fed_rates(output)
     elif args.cb_demand:
         output = args.output or "cb_demand_monthly.csv"
         fetch_cb_demand(output)
