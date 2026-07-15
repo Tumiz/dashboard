@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gold & Macro Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="rolling_corr.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -165,6 +166,8 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
 
   const goldClose={}; gold.forEach(r=>goldClose[r.month]=+r.close);
   const gvals=labels.map(m=>goldClose[m]);
+
+  const btcRollingCorr=rollingFixedLagCorr(gvals,btcOnLabels,6,12);
 
   function bestLagCorr(map,key){
     const svals=labels.map(m=>{const o=map[m];return o?+o[key]:null});
@@ -472,6 +475,22 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y8'
+      },{
+        label:'Gold-BTC Corr (12m)',
+        data:btcRollingCorr,
+        hidden:true,
+        borderColor:'#eab308',
+        backgroundColor:'rgba(234,179,8,0.15)',
+        fill:false,
+        tension:.3,
+        borderDash:[6,3],
+        pointBackgroundColor:'#eab308',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y9'
       }]
     },
     plugins:[{
@@ -507,6 +526,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y8') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y7') v='$'+v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y9') v=v===null?'N/A':v.toFixed(3);
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -552,6 +572,11 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
         y8:{
           position:'right',title:{display:true,text:'Fed Rate (%)'},
           grid:{display:false},display:false,offset:true
+        },
+        y9:{
+          position:'right',title:{display:true,text:'Corr (r)'},
+          grid:{display:false},display:false,offset:true,
+          min:-1,max:1
         }
       }
     }
@@ -569,7 +594,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
     cb.checked=!ds.hidden;
     cb.addEventListener('change',()=>{
       chart.setDatasetVisibility(i,cb.checked);
-      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8'};
+      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9'};
       if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
       if(i===3||i===7){
         chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
