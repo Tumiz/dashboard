@@ -68,7 +68,7 @@ td.down{color:#ef4444}
 <body>
 <div class="header">
   <h1>Gold &middot; Macro Dashboard</h1>
-  <p>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR, Fed Rate &amp; CB Demand</p>
+  <p>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR, Fed Rate, CB Demand, AUX/XAG &amp; BTC/XAU</p>
 </div>
 <div class="container" id="app"><div class="loading">Loading...</div></div>
 
@@ -105,6 +105,8 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
   const xagOnLabels=labels.map(m=>xagByMonth[m]?+xagByMonth[m].xag_usd:null);
   const cbOnLabels=labels.map(m=>cbByMonth[m]?+cbByMonth[m].cb_demand:null);
   const fedOnLabels=labels.map(m=>fedByMonth[m]?+fedByMonth[m].fed_rate_pct:null);
+  const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
+  const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
   function r2(pairs){
     const n=pairs.length;
@@ -142,6 +144,9 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
     return {r:bestR,lag:bestLag};
   }
 
+  const auxXagByMonth={}; labels.forEach((m,i)=>{if(auxXagOnLabels[i]!=null)auxXagByMonth[m]={v:auxXagOnLabels[i]}});
+  const btcXauByMonth={}; labels.forEach((m,i)=>{if(btcXauOnLabels[i]!=null)btcXauByMonth[m]={v:btcXauOnLabels[i]}});
+
   const cors=[
     ['USD Index',usdByMonth,'close'],
     ['US CPI YoY',cpiByMonth,'cpi_yoy_pct'],
@@ -150,6 +155,8 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
     ['BTC/USD',btcByMonth,'btc_usd'],
     ['AUX/USD',auxByMonth,'aux_usd'],
     ['XAG/USD',xagByMonth,'xag_usd'],
+    ['AUX/XAG',auxXagByMonth,'v'],
+    ['BTC/XAU',btcXauByMonth,'v'],
     ['CB Demand',cbByMonth,'cb_demand'],
     ['Fed Rate',fedByMonth,'fed_rate_pct'],
   ].map(([name,map,key])=>{
@@ -159,7 +166,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
 
   document.getElementById('app').innerHTML=`
     <div class="chart-card">
-      <h2>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, CPI, Real Yield, GPR, Fed Rate &amp; CB Demand</h2>
+      <h2>Gold &amp; Macro Index</h2>
       <div class="chart-controls">
         <label>Lines:</label>
         <button class="dd-btn" id="ddBtn">Select lines...</button>
@@ -187,7 +194,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
         <thead><tr>
           <th>Month</th><th>Gold ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>XAG/USD</th><th>USD Idx</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>Fed%</th><th>CB Dem (t)</th>
         </tr></thead>
-        <tbody>${gold.map((r,i)=>{
+        <tbody>${[...gold].reverse().map((r,i)=>{
           const bt=btcByMonth[r.month];
           const ax=auxByMonth[r.month];
           const xg=xagByMonth[r.month];
@@ -383,6 +390,36 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y9'
+      },{
+        label:'AUX/XAG (Gold/Silver)',
+        data:auxXagOnLabels,
+        hidden:true,
+        borderColor:'#14b8a6',
+        backgroundColor:'rgba(20,184,166,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#14b8a6',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y10'
+      },{
+        label:'BTC/XAU (BTC/Gold)',
+        data:btcXauOnLabels,
+        hidden:true,
+        borderColor:'#f43f5e',
+        backgroundColor:'rgba(244,63,94,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#f43f5e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y11'
       }]
     },
     plugins:[{
@@ -419,6 +456,8 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
               else if(ctx.dataset.yAxisID==='y8') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y7') v='$'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y9') v=v===null?'N/A':v.toFixed(3);
+              else if(ctx.dataset.yAxisID==='y10') v=v===null?'N/A':v.toFixed(1);
+              else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -469,6 +508,14 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
           position:'right',title:{display:true,text:'Corr (r)'},
           grid:{display:false},display:false,offset:true,
           min:-1,max:1
+        },
+        y10:{
+          position:'right',title:{display:true,text:'AUX/XAG'},
+          grid:{display:false},display:false,offset:true
+        },
+        y11:{
+          position:'right',title:{display:true,text:'BTC/XAU'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
@@ -486,7 +533,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed){
     cb.checked=!ds.hidden;
     cb.addEventListener('change',()=>{
       chart.setDatasetVisibility(i,cb.checked);
-      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9'};
+      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11'};
       if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
       if(i===3||i===7){
         chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
