@@ -13,13 +13,11 @@ def fetch_gold(symbol: str = "Au99.99", months: bool = False, output: str = "sge
     df["date"] = pd.to_datetime(df["date"])
 
     if months:
-        df = df.set_index("date").resample("ME").agg({
-            "open": "first",
-            "high": "max",
-            "low": "min",
-            "close": "last",
-        }).dropna().reset_index()
+        df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
         df["month"] = df["date"].dt.strftime("%Y-%m")
+        df = df.drop(columns=["date"]).round(1)
+    else:
+        df = df.drop(columns=["date"]).round(1)
 
     df.to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
@@ -38,13 +36,11 @@ def fetch_usd_index(months: bool = False, output: str = "usd_index.csv"):
     df = df[["date", "open", "high", "low", "close"]]
 
     if months:
-        df = df.set_index("date").resample("ME").agg({
-            "open": "first",
-            "high": "max",
-            "low": "min",
-            "close": "last",
-        }).dropna().reset_index()
+        df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
         df["month"] = df["date"].dt.strftime("%Y-%m")
+        df = df.drop(columns=["date"]).round(1)
+    else:
+        df = df.drop(columns=["date"]).round(1)
 
     df.to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
@@ -54,7 +50,8 @@ def fetch_us_cpi(output: str = "us_cpi_monthly.csv"):
     df = ak.macro_usa_cpi_yoy()
     df = df.rename(columns={"时间": "date", "现值": "cpi_yoy_pct"})
     df["date"] = pd.to_datetime(df["date"])
-    df[["date", "cpi_yoy_pct"]].to_csv(output, index=False)
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df[["month", "cpi_yoy_pct"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -66,9 +63,9 @@ def fetch_us_real_yield(output: str = "us_real_yield_monthly.csv"):
     df = pd.read_csv(url)
     df.columns = ["date", "real_yield_pct"]
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "real_yield_pct"]].to_csv(output, index=False)
+    df[["month", "real_yield_pct"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -80,7 +77,7 @@ def fetch_gpr(output: str = "gpr_monthly.csv"):
     df["date"] = pd.to_datetime(df["date"])
     df = df.dropna(subset=["gpr"]).reset_index(drop=True)
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "gpr"]].to_csv(output, index=False)
+    df[["month", "gpr"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -89,9 +86,9 @@ def fetch_btc(output: str = "btc_monthly.csv"):
     df = pd.read_csv(url)
     df.columns = ["date", "btc_usd"]
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "btc_usd"]].to_csv(output, index=False)
+    df[["month", "btc_usd"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -99,9 +96,9 @@ def fetch_aux(output: str = "aux_monthly.csv"):
     df = ak.futures_foreign_hist(symbol="XAU")
     df = df[["date", "close"]].rename(columns={"close": "aux_usd"})
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "aux_usd"]].to_csv(output, index=False)
+    df[["month", "aux_usd"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -109,23 +106,18 @@ def fetch_xag(output: str = "xag_monthly.csv"):
     df = ak.futures_foreign_hist(symbol="XAG")
     df = df[["date", "close"]].rename(columns={"close": "xag_usd"})
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "xag_usd"]].to_csv(output, index=False)
+    df[["month", "xag_usd"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
 def fetch_au9999(output: str = "au9999_monthly.csv"):
     df = ak.spot_hist_sge("Au99.99")
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").agg({
-        "open": "first",
-        "high": "max",
-        "low": "min",
-        "close": "last",
-    }).dropna().reset_index()
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "open", "high", "low", "close"]].to_csv(output, index=False)
+    df[["month", "open", "high", "low", "close"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -137,9 +129,9 @@ def fetch_fed_rates(output: str = "fed_rates_monthly.csv"):
     df = pd.read_csv(url)
     df.columns = ["date", "fed_rate_pct"]
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "fed_rate_pct"]].to_csv(output, index=False)
+    df[["month", "fed_rate_pct"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -151,9 +143,9 @@ def fetch_nasdaq(output: str = "nasdaq_monthly.csv"):
     df = pd.read_csv(url)
     df.columns = ["date", "nasdaq_close"]
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").last().dropna().reset_index()
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    df[["date", "month", "nasdaq_close"]].to_csv(output, index=False)
+    df[["month", "nasdaq_close"]].round(1).to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
@@ -181,12 +173,10 @@ def fetch_cb_demand(output: str = "cb_demand_monthly.csv"):
         end_month = q * 3
         start_month = end_month - 2
         for m in range(start_month, end_month + 1):
-            date_str = f"{year}-{m:02d}-01"
             month_str = f"{year}-{m:02d}"
-            rows.append({"date": date_str, "month": month_str, "cb_demand": val})
+            rows.append({"month": month_str, "cb_demand": round(val, 1)})
     df = pd.DataFrame(rows)
-    df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
-    df[["date", "month", "cb_demand"]].to_csv(output, index=False)
+    df[["month", "cb_demand"]].to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
 
