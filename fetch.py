@@ -115,6 +115,20 @@ def fetch_xag(output: str = "xag_monthly.csv"):
     print(f"Saved {len(df)} rows to {output}")
 
 
+def fetch_au9999(output: str = "au9999_monthly.csv"):
+    df = ak.spot_hist_sge("Au99.99")
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").agg({
+        "open": "first",
+        "high": "max",
+        "low": "min",
+        "close": "last",
+    }).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df[["date", "month", "open", "high", "low", "close"]].to_csv(output, index=False)
+    print(f"Saved {len(df)} rows to {output}")
+
+
 def fetch_fed_rates(output: str = "fed_rates_monthly.csv"):
     url = (
         "https://fred.stlouisfed.org/graph/fredgraph.csv"
@@ -196,6 +210,7 @@ if __name__ == "__main__":
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
     parser.add_argument("--aux", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
     parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
+    parser.add_argument("--au9999", action="store_true", help="Fetch monthly SGE Au99.99 gold price (CNY/g)")
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
@@ -221,6 +236,9 @@ if __name__ == "__main__":
     elif args.xag:
         output = args.output or "xag_monthly.csv"
         fetch_xag(output)
+    elif args.au9999:
+        output = args.output or "au9999_monthly.csv"
+        fetch_au9999(output)
     elif args.gpr:
         output = args.output or "gpr_monthly.csv"
         fetch_gpr(output)

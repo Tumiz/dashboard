@@ -68,7 +68,7 @@ td.down{color:#ef4444}
 <body>
 <div class="header">
   <h1>Gold &middot; Macro Dashboard</h1>
-  <p>Gold, Silver, BTC, AUX/USD, XAG/USD, USD Index, NASDAQ, CPI, Real Yield, GPR, Fed Rate, CB Demand, AUX/XAG &amp; BTC/XAU</p>
+  <p>Gold, Au99.99, Silver, BTC, AUX/USD, XAG/USD, USD Index, NASDAQ, CPI, Real Yield, GPR, Fed Rate, CB Demand, AUX/XAG &amp; BTC/XAU</p>
 </div>
 <div class="container" id="app"><div class="loading">Loading...</div></div>
 
@@ -81,7 +81,7 @@ function parseCSV(text){
 function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 
-function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
+function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au9999){
   const glast=gold[gold.length-1];
   const gprices=gold.map(r=>+r.close);
 
@@ -96,6 +96,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
   const cbByMonth={}; cb.forEach(r=>cbByMonth[r.month]=r);
   const fedByMonth={}; fed.forEach(r=>fedByMonth[r.month]=r);
   const nasdaqByMonth={}; nasdaq.forEach(r=>nasdaqByMonth[r.month]=r);
+  const au9999ByMonth={}; au9999.forEach(r=>au9999ByMonth[r.month]=r);
 
   const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
   const cpiOnLabels=labels.map(m=>cpiByMonth[m]?+cpiByMonth[m].cpi_yoy_pct:null);
@@ -107,6 +108,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
   const cbOnLabels=labels.map(m=>cbByMonth[m]?+cbByMonth[m].cb_demand:null);
   const fedOnLabels=labels.map(m=>fedByMonth[m]?+fedByMonth[m].fed_rate_pct:null);
   const nasdaqOnLabels=labels.map(m=>nasdaqByMonth[m]?+nasdaqByMonth[m].nasdaq_close:null);
+  const au9999OnLabels=labels.map(m=>au9999ByMonth[m]?+au9999ByMonth[m].close:null);
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -162,6 +164,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
     ['CB Demand',cbByMonth,'cb_demand'],
     ['Fed Rate',fedByMonth,'fed_rate_pct'],
     ['NASDAQ',nasdaqByMonth,'nasdaq_close'],
+    ['Au99.99',au9999ByMonth,'close'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
     return {name,r,lag};
@@ -195,9 +198,10 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
       <h2>Monthly Details</h2>
       <div class="wrap"><table>
         <thead><tr>
-          <th>Month</th><th>Gold ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>XAG/USD</th><th>USD Idx</th><th>NASDAQ</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>Fed%</th><th>CB Dem (t)</th>
+          <th>Month</th><th>Gold ¥/g</th><th>Au99.99 ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>XAG/USD</th><th>USD Idx</th><th>NASDAQ</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>Fed%</th><th>CB Dem (t)</th>
         </tr></thead>
         <tbody>${[...gold].reverse().map((r,i)=>{
+          const au=au9999ByMonth[r.month];
           const bt=btcByMonth[r.month];
           const ax=auxByMonth[r.month];
           const xg=xagByMonth[r.month];
@@ -211,6 +215,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
           return `<tr>
             <td><strong>${r.month}</strong></td>
             <td>${fmt(r.close)}</td>
+            <td>${au?fmt(au.close):'-'}</td>
             <td>${bt?'$'+Number(bt.btc_usd).toLocaleString():'-'}</td>
             <td>${ax?'$'+Number(ax.aux_usd).toFixed(2):'-'}</td>
             <td>${xg?'$'+Number(xg.xag_usd).toFixed(2):'-'}</td>
@@ -440,6 +445,21 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y12'
+      },{
+        label:'Au99.99 (¥/g)',
+        data:au9999OnLabels,
+        hidden:true,
+        borderColor:'#d97706',
+        backgroundColor:'rgba(217,119,6,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#d97706',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y'
       }]
     },
     plugins:[{
@@ -582,7 +602,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq){
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   try{
-    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes,nasdaqRes]=await Promise.all([
+    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes,nasdaqRes,au9999Res]=await Promise.all([
       fetch('sge_gold_monthly.csv'),
       fetch('usd_index_monthly.csv'),
       fetch('us_cpi_monthly.csv'),
@@ -593,7 +613,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       fetch('xag_monthly.csv'),
       fetch('cb_demand_monthly.csv'),
       fetch('fed_rates_monthly.csv'),
-      fetch('nasdaq_monthly.csv')
+      fetch('nasdaq_monthly.csv'),
+      fetch('au9999_monthly.csv')
     ]);
     render(
       parseCSV(await goldRes.text()),
@@ -606,7 +627,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       parseCSV(await xagRes.text()),
       parseCSV(await cbRes.text()),
       parseCSV(await fedRes.text()),
-      parseCSV(await nasdaqRes.text())
+      parseCSV(await nasdaqRes.text()),
+      parseCSV(await au9999Res.text())
     );
   }catch(e){
     document.getElementById('app').innerHTML='<div class="error">Failed to load data: '+e.message+'</div>';
