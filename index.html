@@ -68,7 +68,6 @@ td.down{color:#ef4444}
 <body>
 <div class="header">
   <h1>Gold &middot; Macro Dashboard</h1>
-  <p>Gold, Au99.99, Silver, BTC, AUX/USD, XAG/USD, USD Index, NASDAQ, CPI, Real Yield, GPR, Fed Rate, CB Demand, AUX/XAG &amp; BTC/XAU</p>
 </div>
 <div class="container" id="app"><div class="loading">Loading...</div></div>
 
@@ -81,13 +80,13 @@ function parseCSV(text){
 function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 
-function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au9999){
+function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au9999, usdCny){
   const glast=gold[gold.length-1];
   const gprices=gold.map(r=>+r.close);
 
   const labels=gold.map(r=>r.month);
   const usdByMonth={}; usd.forEach(r=>usdByMonth[r.month]=r);
-  const cpiByMonth={}; cpi.forEach(r=>cpiByMonth[r.date.substring(0,7)]=r);
+  const cpiByMonth={}; cpi.forEach(r=>cpiByMonth[r.month]=r);
   const realByMonth={}; real.forEach(r=>realByMonth[r.month]=r);
   const gprByMonth={}; gpr.forEach(r=>gprByMonth[r.month]=r);
   const btcByMonth={}; btc.forEach(r=>btcByMonth[r.month]=r);
@@ -97,6 +96,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
   const fedByMonth={}; fed.forEach(r=>fedByMonth[r.month]=r);
   const nasdaqByMonth={}; nasdaq.forEach(r=>nasdaqByMonth[r.month]=r);
   const au9999ByMonth={}; au9999.forEach(r=>au9999ByMonth[r.month]=r);
+  const usdCnyByMonth={}; usdCny.forEach(r=>usdCnyByMonth[r.month]=r);
 
   const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
   const cpiOnLabels=labels.map(m=>cpiByMonth[m]?+cpiByMonth[m].cpi_yoy_pct:null);
@@ -109,6 +109,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
   const fedOnLabels=labels.map(m=>fedByMonth[m]?+fedByMonth[m].fed_rate_pct:null);
   const nasdaqOnLabels=labels.map(m=>nasdaqByMonth[m]?+nasdaqByMonth[m].nasdaq_close:null);
   const au9999OnLabels=labels.map(m=>au9999ByMonth[m]?+au9999ByMonth[m].close:null);
+  const usdCnyOnLabels=labels.map(m=>usdCnyByMonth[m]?+usdCnyByMonth[m].usd_cny:null);
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -164,6 +165,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     ['CB Demand',cbByMonth,'cb_demand'],
     ['Fed Rate',fedByMonth,'fed_rate_pct'],
     ['NASDAQ',nasdaqByMonth,'nasdaq_close'],
+    ['USD/CNY',usdCnyByMonth,'usd_cny'],
     ['Au99.99',au9999ByMonth,'close'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
@@ -191,43 +193,6 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
           <td>${c.lag>0?'<span class="up">+'+c.lag+'</span>':c.lag<0?'<span class="down">'+c.lag+'</span>':'0'}</td>
           <td>${rLabel(c.r)}</td>
         </tr>`).join('')}</tbody>
-      </table></div>
-    </div>
-
-    <div class="table-card">
-      <h2>Monthly Details</h2>
-      <div class="wrap"><table>
-        <thead><tr>
-          <th>Month</th><th>Gold ¥/g</th><th>Au99.99 ¥/g</th><th>BTC/USD</th><th>AUX/USD</th><th>XAG/USD</th><th>USD Idx</th><th>NASDAQ</th><th>CPI YoY%</th><th>Real 10Y%</th><th>GPR</th><th>Fed%</th><th>CB Dem (t)</th>
-        </tr></thead>
-        <tbody>${[...gold].reverse().map((r,i)=>{
-          const au=au9999ByMonth[r.month];
-          const bt=btcByMonth[r.month];
-          const ax=auxByMonth[r.month];
-          const xg=xagByMonth[r.month];
-          const u=usdByMonth[r.month];
-          const nq=nasdaqByMonth[r.month];
-          const c=cpiByMonth[r.month];
-          const rel=realByMonth[r.month];
-          const gp=gprByMonth[r.month];
-          const fd=fedByMonth[r.month];
-          const cb=cbByMonth[r.month];
-          return `<tr>
-            <td><strong>${r.month}</strong></td>
-            <td>${fmt(r.close)}</td>
-            <td>${au?fmt(au.close):'-'}</td>
-            <td>${bt?'$'+Number(bt.btc_usd).toLocaleString():'-'}</td>
-            <td>${ax?'$'+Number(ax.aux_usd).toFixed(2):'-'}</td>
-            <td>${xg?'$'+Number(xg.xag_usd).toFixed(2):'-'}</td>
-            <td>${u?u.close:'-'}</td>
-            <td>${nq?Number(nq.nasdaq_close).toLocaleString():'-'}</td>
-            <td>${c?pct(c.cpi_yoy_pct):'-'}</td>
-            <td>${rel?pct(rel.real_yield_pct):'-'}</td>
-            <td>${gp?Number(gp.gpr).toFixed(1):'-'}</td>
-            <td>${fd?pct(fd.fed_rate_pct):'-'}</td>
-            <td>${cb?Number(cb.cb_demand).toFixed(1):'-'}</td>
-          </tr>`;
-        }).join('')}</tbody>
       </table></div>
     </div>
   `;
@@ -460,6 +425,21 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y'
+      },{
+        label:'USD/CNY',
+        data:usdCnyOnLabels,
+        hidden:true,
+        borderColor:'#0ea5e9',
+        backgroundColor:'rgba(14,165,233,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#0ea5e9',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y13'
       }]
     },
     plugins:[{
@@ -498,6 +478,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
               else if(ctx.dataset.yAxisID==='y9') v=v===null?'N/A':v.toFixed(3);
               else if(ctx.dataset.yAxisID==='y10') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
+              else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -560,6 +541,10 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         y12:{
           position:'right',title:{display:true,text:'NASDAQ'},
           grid:{display:false},display:false,offset:true
+        },
+        y13:{
+          position:'right',title:{display:true,text:'USD/CNY'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
@@ -577,7 +562,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     cb.checked=!ds.hidden;
     cb.addEventListener('change',()=>{
       chart.setDatasetVisibility(i,cb.checked);
-      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11',13:'y12'};
+      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11',13:'y12',14:'y',15:'y13'};
       if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
       if(i===3||i===7){
         chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
@@ -602,7 +587,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   try{
-    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes,nasdaqRes,au9999Res]=await Promise.all([
+    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes,nasdaqRes,au9999Res,usdCnyRes]=await Promise.all([
       fetch('sge_gold_monthly.csv'),
       fetch('usd_index_monthly.csv'),
       fetch('us_cpi_monthly.csv'),
@@ -614,7 +599,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       fetch('cb_demand_monthly.csv'),
       fetch('fed_rates_monthly.csv'),
       fetch('nasdaq_monthly.csv'),
-      fetch('au9999_monthly.csv')
+      fetch('au9999_monthly.csv'),
+      fetch('usd_cny_monthly.csv')
     ]);
     render(
       parseCSV(await goldRes.text()),
@@ -628,7 +614,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       parseCSV(await cbRes.text()),
       parseCSV(await fedRes.text()),
       parseCSV(await nasdaqRes.text()),
-      parseCSV(await au9999Res.text())
+      parseCSV(await au9999Res.text()),
+      parseCSV(await usdCnyRes.text())
     );
   }catch(e){
     document.getElementById('app').innerHTML='<div class="error">Failed to load data: '+e.message+'</div>';

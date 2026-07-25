@@ -149,6 +149,20 @@ def fetch_nasdaq(output: str = "nasdaq_monthly.csv"):
     print(f"Saved {len(df)} rows to {output}")
 
 
+def fetch_usd_cny(output: str = "usd_cny_monthly.csv"):
+    url = (
+        "https://fred.stlouisfed.org/graph/fredgraph.csv"
+        "?id=DEXCHUS&cosd=1981-01-02&coed=9999-12-31"
+    )
+    df = pd.read_csv(url)
+    df.columns = ["date", "usd_cny"]
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df[["month", "usd_cny"]].round(2).to_csv(output, index=False)
+    print(f"Saved {len(df)} rows to {output}")
+
+
 def fetch_cb_demand(output: str = "cb_demand_monthly.csv"):
     url = "https://fsapi.gold.org/api/v11/charts/supply-and-demand/42"
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}, timeout=30)
@@ -204,6 +218,7 @@ if __name__ == "__main__":
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
+    parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
     args = parser.parse_args()
 
     if args.symbols:
@@ -241,6 +256,9 @@ if __name__ == "__main__":
     elif args.usd_index:
         output = args.output or "usd_index.csv"
         fetch_usd_index(args.monthly, output)
+    elif args.usd_cny:
+        output = args.output or "usd_cny_monthly.csv"
+        fetch_usd_cny(output)
     else:
         output = args.output or "sge_gold.csv"
         fetch_gold(args.symbol, args.monthly, output)
