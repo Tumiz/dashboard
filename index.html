@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gold & Macro Dashboard</title>
+<title>Gold & Macro & Stock Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="rolling_corr.js"></script>
 <style>
@@ -30,6 +30,15 @@ body{
 .dd-item:hover{background:#f3f4f6}
 .dd-item input{margin:0;cursor:pointer;accent-color:#6366f1}
 .chart-wrapper{position:relative;height:200px}
+.range-group{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:nowrap}
+.range-group label{font-size:10px;color:#6b7280;white-space:nowrap}
+.range-group .range-label{font-size:10px;color:#374151;min-width:48px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dual-range{position:relative;width:80px;height:18px;flex-shrink:0}
+.dual-range .dr-track{position:absolute;top:50%;left:0;right:0;height:4px;background:#e5e7eb;border-radius:2px;transform:translateY(-50%)}
+.dual-range .dr-fill{position:absolute;top:50%;height:4px;background:#6366f1;border-radius:2px;transform:translateY(-50%)}
+.dual-range input[type=range]{position:absolute;top:0;left:0;width:100%;height:100%;-webkit-appearance:none;appearance:none;background:transparent;pointer-events:none;margin:0;padding:0}
+.dual-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
+.dual-range input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
 .table-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
 .wrap{overflow-x:auto}
@@ -48,10 +57,18 @@ td.down{color:#ef4444}
   .chart-card{padding:20px;margin-bottom:20px}
   .chart-card h2{font-size:15px}
   .chart-wrapper{height:320px}
+  .dual-range{width:140px}
   .table-card{padding:20px}
   .table-card h2{font-size:15px}
   table{font-size:13px}
   th,td{padding:8px 10px}
+}
+@media(max-width:480px){
+  .range-group label{display:none}
+  .range-group .range-label{font-size:9px;min-width:30px}
+  .dual-range{width:auto;flex:1;height:28px}
+  .dual-range input[type=range]::-webkit-slider-thumb{width:20px;height:20px}
+  .dual-range input[type=range]::-moz-range-thumb{width:20px;height:20px}
 }
 @media(max-width:400px){
   .chart-wrapper{height:180px}
@@ -67,7 +84,7 @@ td.down{color:#ef4444}
 </head>
 <body>
 <div class="header">
-  <h1>Gold &middot; Macro Dashboard</h1>
+  <h1>Gold &middot; Macro &middot; Stock Dashboard</h1>
 </div>
 <div class="container" id="app"><div class="loading">Loading...</div></div>
 
@@ -80,7 +97,7 @@ function parseCSV(text){
 function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 
-function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au9999, usdCny){
+function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au9999, usdCny, tencent){
   const glast=gold[gold.length-1];
   const gprices=gold.map(r=>+r.close);
 
@@ -97,6 +114,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
   const nasdaqByMonth={}; nasdaq.forEach(r=>nasdaqByMonth[r.month]=r);
   const au9999ByMonth={}; au9999.forEach(r=>au9999ByMonth[r.month]=r);
   const usdCnyByMonth={}; usdCny.forEach(r=>usdCnyByMonth[r.month]=r);
+  const tencentByMonth={}; tencent.forEach(r=>tencentByMonth[r.month]=r);
 
   const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
   const cpiOnLabels=labels.map(m=>cpiByMonth[m]?+cpiByMonth[m].cpi_yoy_pct:null);
@@ -110,6 +128,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
   const nasdaqOnLabels=labels.map(m=>nasdaqByMonth[m]?+nasdaqByMonth[m].nasdaq_close:null);
   const au9999OnLabels=labels.map(m=>au9999ByMonth[m]?+au9999ByMonth[m].close:null);
   const usdCnyOnLabels=labels.map(m=>usdCnyByMonth[m]?+usdCnyByMonth[m].usd_cny:null);
+  const tencentOnLabels=labels.map(m=>tencentByMonth[m]?+tencentByMonth[m].close:null);
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -167,6 +186,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     ['NASDAQ',nasdaqByMonth,'nasdaq_close'],
     ['USD/CNY',usdCnyByMonth,'usd_cny'],
     ['Au99.99',au9999ByMonth,'close'],
+    ['Tencent (0700.HK)',tencentByMonth,'close'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
     return {name,r,lag};
@@ -179,6 +199,17 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         <label>Lines:</label>
         <button class="dd-btn" id="ddBtn">Select lines...</button>
         <div class="dd-menu" id="ddMenu"></div>
+        <div class="range-group">
+          <label>Range:</label>
+          <span class="range-label" id="rangeStartLabel"></span>
+          <div class="dual-range" id="dualRange">
+            <div class="dr-track"></div>
+            <div class="dr-fill" id="rangeFill"></div>
+            <input type="range" id="rangeStart" min="0" max="1" value="0" step="1">
+            <input type="range" id="rangeEnd" min="0" max="1" value="1" step="1">
+          </div>
+          <span class="range-label" id="rangeEndLabel"></span>
+        </div>
       </div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
     </div>
@@ -426,6 +457,21 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         pointHitRadius:0,
         yAxisID:'y'
       },{
+        label:'Tencent (0700.HK)',
+        data:tencentOnLabels,
+        hidden:true,
+        borderColor:'#06d6a0',
+        backgroundColor:'rgba(6,214,160,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#06d6a0',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y14'
+      },{
         label:'USD/CNY',
         data:usdCnyOnLabels,
         hidden:true,
@@ -479,6 +525,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
               else if(ctx.dataset.yAxisID==='y10') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y14') v='HK$'+v.toFixed(2);
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -545,12 +592,43 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         y13:{
           position:'right',title:{display:true,text:'USD/CNY'},
           grid:{display:false},display:false,offset:true
+        },
+        y14:{
+          position:'right',title:{display:true,text:'Tencent (HKD)'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
   });
 
   chart.update();
+
+  const rangeStart=document.getElementById('rangeStart');
+  const rangeEnd=document.getElementById('rangeEnd');
+  const rangeFill=document.getElementById('rangeFill');
+  const rangeStartLabel=document.getElementById('rangeStartLabel');
+  const rangeEndLabel=document.getElementById('rangeEndLabel');
+  const lastIdx=labels.length-1;
+  rangeStart.max=lastIdx;rangeStart.value=0;
+  rangeEnd.max=lastIdx;rangeEnd.value=lastIdx;
+  rangeStartLabel.textContent=labels[0];
+  rangeEndLabel.textContent=labels[lastIdx];
+  function updateRange(active){
+    const s=parseInt(rangeStart.value),e=parseInt(rangeEnd.value);
+    const lo=Math.min(s,e),hi=Math.max(s,e);
+    const pct=v=>v/lastIdx*100;
+    rangeFill.style.left=pct(lo)+'%';
+    rangeFill.style.width=(pct(hi)-pct(lo))+'%';
+    chart.options.scales.x.min=lo;
+    chart.options.scales.x.max=hi;
+    chart.update('none');
+    rangeStartLabel.textContent=labels[s];
+    rangeEndLabel.textContent=labels[e];
+    if(active==='start') rangeStart.style.zIndex=2;
+    else rangeStart.style.zIndex='';
+  }
+  rangeStart.addEventListener('input',()=>updateRange('start'));
+  rangeEnd.addEventListener('input',()=>updateRange('end'));
 
   const btn=document.getElementById('ddBtn');
   const menu=document.getElementById('ddMenu');
@@ -562,7 +640,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     cb.checked=!ds.hidden;
     cb.addEventListener('change',()=>{
       chart.setDatasetVisibility(i,cb.checked);
-      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11',13:'y12',14:'y',15:'y13'};
+      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11',13:'y12',14:'y',15:'y14',16:'y13'};
       if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
       if(i===3||i===7){
         chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
@@ -587,7 +665,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   try{
-    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes,nasdaqRes,au9999Res,usdCnyRes]=await Promise.all([
+    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes,nasdaqRes,au9999Res,usdCnyRes,tencentRes]=await Promise.all([
       fetch('sge_gold_monthly.csv'),
       fetch('usd_index_monthly.csv'),
       fetch('us_cpi_monthly.csv'),
@@ -600,7 +678,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       fetch('fed_rates_monthly.csv'),
       fetch('nasdaq_monthly.csv'),
       fetch('au9999_monthly.csv'),
-      fetch('usd_cny_monthly.csv')
+      fetch('usd_cny_monthly.csv'),
+      fetch('tencent_hk_monthly.csv')
     ]);
     render(
       parseCSV(await goldRes.text()),
@@ -615,7 +694,8 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       parseCSV(await fedRes.text()),
       parseCSV(await nasdaqRes.text()),
       parseCSV(await au9999Res.text()),
-      parseCSV(await usdCnyRes.text())
+      parseCSV(await usdCnyRes.text()),
+      parseCSV(await tencentRes.text())
     );
   }catch(e){
     document.getElementById('app').innerHTML='<div class="error">Failed to load data: '+e.message+'</div>';

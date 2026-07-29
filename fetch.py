@@ -163,6 +163,15 @@ def fetch_usd_cny(output: str = "usd_cny_monthly.csv"):
     print(f"Saved {len(df)} rows to {output}")
 
 
+def fetch_tencent(output: str = "tencent_hk_monthly.csv"):
+    df = ak.stock_hk_daily(symbol="00700")
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df[["month", "close"]].round(2).to_csv(output, index=False)
+    print(f"Saved {len(df)} rows to {output}")
+
+
 def fetch_cb_demand(output: str = "cb_demand_monthly.csv"):
     url = "https://fsapi.gold.org/api/v11/charts/supply-and-demand/42"
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}, timeout=30)
@@ -219,6 +228,7 @@ if __name__ == "__main__":
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
     parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
+    parser.add_argument("--tencent", action="store_true", help="Fetch monthly Tencent HK (0700.HK) stock price")
     args = parser.parse_args()
 
     if args.symbols:
@@ -256,6 +266,9 @@ if __name__ == "__main__":
     elif args.usd_index:
         output = args.output or "usd_index.csv"
         fetch_usd_index(args.monthly, output)
+    elif args.tencent:
+        output = args.output or "tencent_hk_monthly.csv"
+        fetch_tencent(output)
     elif args.usd_cny:
         output = args.output or "usd_cny_monthly.csv"
         fetch_usd_cny(output)

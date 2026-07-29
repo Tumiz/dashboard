@@ -18,7 +18,6 @@ df = df.merge(aux, on="month", how="left").merge(xag, on="month", how="left")
 df["xau_xag"] = df["aux_usd"] / df["xag_usd"]
 df = df.reset_index(drop=True)
 
-# %%
 WINDOW = 12
 OX, Oy = [], []
 for i in range(WINDOW, len(df) - 1):
@@ -30,7 +29,6 @@ for i in range(WINDOW, len(df) - 1):
 
 OX, Oy = np.array(OX, dtype=np.float32), np.array(Oy, dtype=np.float32)
 
-# %%
 X_df = pd.DataFrame(OX)
 
 mu_X = X_df.mean()
@@ -43,8 +41,8 @@ y = Oy.astype(np.float32)
 mu_X, sig_X = mu_X.values, sig_X.values
 
 np.random.seed(42)
-shuffle_idx = np.random.permutation(len(X))
-RX, Ry = X[shuffle_idx], y[shuffle_idx]
+shuffle_idx = np.random.permutation(len(X)-1)
+RX, Ry = X[:-1][shuffle_idx], y[:-1][shuffle_idx]
 
 print("\nCorrelation between inputs and output (gold):")
 feature_names = []
@@ -53,39 +51,39 @@ for t in range(WINDOW):
 correlations = np.corrcoef(X, y, rowvar=False)[-1, :-1]
 for name, corr in zip(feature_names, correlations):
     print(f"  {name}: {corr:+.4f}")
-
+# %%
 w = WINDOW * 3 + 1
 model = keras.Sequential([
     Input(shape=(w,)),
-    Dense(w, activation="relu", kernel_initializer="he_normal"),
-    Dense(w, activation="relu", kernel_initializer="he_normal"),
+    Dense(16, activation="relu", kernel_initializer="he_normal"),
     Dense(1),
 ])
 model.compile(optimizer="adam", loss="mse", metrics=["mae"])
 model.summary()
-
 early_stop = EarlyStopping(monitor="val_mae", patience=20, restore_best_weights=True)
-model.fit(RX, Ry, epochs=500, batch_size=16, validation_split=0.1, callbacks=[early_stop], verbose=1)
+model.fit(RX, Ry, epochs=2000, batch_size=16, validation_split=0.2, callbacks=[early_stop], verbose=1)
 model.save("gold_model.keras")
-np.savez("gold_norm.npz", mu_X=mu_X, sig_X=sig_X)
 
 # %%
-model = keras.models.load_model("gold_model.keras")
-norm = np.load("gold_norm.npz")
-mu_X, sig_X = norm["mu_X"], norm["sig_X"]
-
 X_last24 = X[-24:]
 y_last24_actual = y[-24:]
 y_last24_pred = model.predict(X_last24).ravel()
+diff_last24 = y_last24_pred - y_last24_actual
 next_months = np.append(df["month"].iloc[-23:].values, ["2026-07"])
 
-print("\nLast 24 months prediction (next month):")
-print(f"{'Month':<10} {'Actual':>10} {'Predicted':>10} {'Diff':>10}")
-print("-" * 42)
-for month, actual, pred in zip(next_months, y_last24_actual, y_last24_pred):
-    print(f"{month:<10} {actual:>10.2f} {pred:>10.2f} {pred - actual:>10.2f}")
-print(f"\nMAE: {np.mean(np.abs(y_last24_pred - y_last24_actual)):.2f}")
+def last24_summary(months, actual, predicted, diff):
+    last24 = pd.DataFrame({
+        "Month": months,
+        "Actual": np.round(actual, 2),
+        "Predicted": np.round(predicted, 2),
+        "Difference": np.round(diff, 2),
+    })
+    print("\nLast 24 months prediction (next month):")
+    print(last24.to_string(index=False))
+    print(f"\nMAE: {np.mean(np.abs(diff)):.2f}  Max Diff: {np.max(np.abs(diff)):.2f}")
+    return last24
 
+last24 = last24_summary(next_months, y_last24_actual, y_last24_pred, diff_last24)
 btc_vals = df["btc_usd"]
 fed_vals = df["fed_rate_pct"]
 xau_xag_vals = df["xau_xag"]
@@ -106,5 +104,5 @@ y_future_pred = model.predict(X_future).ravel()
 print("\nFuture ` month prediction:")
 print(f"{'Month':<10} {'Predicted':>10}")
 print("-" * 21)
-print(f"{'2026-08':<10} {y_future_pred:>10.2f}")
+print(f"{'2026-08':<10} {y_future_pred.item():>10.2f}")
 # %%
