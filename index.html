@@ -63,12 +63,21 @@ td.down{color:#ef4444}
   table{font-size:13px}
   th,td{padding:8px 10px}
 }
+@media(max-width:480px) and (orientation:portrait){
+  html,body{overflow:hidden;height:100%;width:100%;margin:0;padding:0}
+  body{position:fixed;top:0;left:100vw;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+}
 @media(max-width:480px){
+  .chart-controls{flex-wrap:wrap;gap:4px}
+  .chart-controls>label{display:none}
+  .dd-btn{flex:1 1 100%}
+  .range-group{width:100%;margin-left:0}
   .range-group label{display:none}
   .range-group .range-label{font-size:9px;min-width:30px}
-  .dual-range{width:auto;flex:1;height:28px}
+  .dual-range{flex:1;height:28px}
   .dual-range input[type=range]::-webkit-slider-thumb{width:20px;height:20px}
   .dual-range input[type=range]::-moz-range-thumb{width:20px;height:20px}
+  #corrS1,#corrS2{max-width:none;flex:1;min-width:0}
 }
 @media(max-width:400px){
   .chart-wrapper{height:180px}
@@ -99,9 +108,12 @@ function pct(n){return Number(n).toFixed(2)+'%'}
 
 function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au9999, usdCny, tencent){
   const glast=gold[gold.length-1];
-  const gprices=gold.map(r=>+r.close);
-
-  const labels=gold.map(r=>r.month);
+  const goldMonths=gold.map(r=>r.month);
+  const [fy,fm]=goldMonths[0].split('-').map(Number);
+  const preLabels=[];
+  for(let y=2000;y<=fy;y++){const endM=y===fy?fm-1:12;for(let m=1;m<=endM;m++)preLabels.push(y+'-'+String(m).padStart(2,'0'))}
+  const labels=[...preLabels,...goldMonths];
+  const gprices=[...new Array(preLabels.length).fill(null),...gold.map(r=>+r.close)];
   const usdByMonth={}; usd.forEach(r=>usdByMonth[r.month]=r);
   const cpiByMonth={}; cpi.forEach(r=>cpiByMonth[r.month]=r);
   const realByMonth={}; real.forEach(r=>realByMonth[r.month]=r);
@@ -148,8 +160,6 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
   const goldClose={}; gold.forEach(r=>goldClose[r.month]=+r.close);
   const gvals=labels.map(m=>goldClose[m]);
 
-  const btcRollingCorr=rollingFixedLagCorr(gvals,btcOnLabels,6,12);
-
   function bestLagCorr(map,key){
     const svals=labels.map(m=>{const o=map[m];return o?+o[key]:null});
     let bestR=0,bestLag=0;
@@ -170,6 +180,24 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
 
   const auxXagByMonth={}; labels.forEach((m,i)=>{if(auxXagOnLabels[i]!=null)auxXagByMonth[m]={v:auxXagOnLabels[i]}});
   const btcXauByMonth={}; labels.forEach((m,i)=>{if(btcXauOnLabels[i]!=null)btcXauByMonth[m]={v:btcXauOnLabels[i]}});
+  const signalMap={
+    'SGE Gold (¥/g)':gprices,
+    'USD Index':usdOnLabels,
+    'US CPI YoY (%)':cpiOnLabels,
+    'Real 10Y Yield (%)':realOnLabels,
+    'GPR':gprOnLabels,
+    'BTC/USD':btcOnLabels,
+    'AUX/USD':auxOnLabels,
+    'XAG/USD':xagOnLabels,
+    'CB Demand (tonnes)':cbOnLabels,
+    'Fed Funds Rate (%)':fedOnLabels,
+    'NASDAQ':nasdaqOnLabels,
+    'Au99.99 (¥/g)':au9999OnLabels,
+    'Tencent (0700.HK)':tencentOnLabels,
+    'USD/CNY':usdCnyOnLabels,
+    'AUX/XAG':auxXagOnLabels,
+    'BTC/XAU':btcXauOnLabels,
+  };
 
   const cors=[
     ['USD Index',usdByMonth,'close'],
@@ -210,6 +238,10 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
           </div>
           <span class="range-label" id="rangeEndLabel"></span>
         </div>
+        <select id="corrS1" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px">${Object.keys(signalMap).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+        <select id="corrS2" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px">${Object.keys(signalMap).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+        <input type="checkbox" id="corrToggle" checked style="margin:0;accent-color:#eab308">
+        <span style="font-size:10px;color:#6b7280;white-space:nowrap">Corr(12m)</span>
       </div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
     </div>
@@ -233,7 +265,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     data:{
       labels,
       datasets:[{
-        label:'Gold Close (¥/g)',
+        label:'SGE Gold (¥/g)',
         data:gprices,
         borderColor:'#f59e0b',
         backgroundColor:'rgba(245,158,11,0.1)',
@@ -381,8 +413,8 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         pointHitRadius:0,
         yAxisID:'y8'
       },{
-        label:'Gold-BTC Corr (12m)',
-        data:btcRollingCorr,
+        label:'Rolling Corr (12m)',
+        data:[],
         hidden:true,
         borderColor:'#eab308',
         backgroundColor:'rgba(234,179,8,0.15)',
@@ -533,7 +565,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         }
       },
       scales:{
-        x:{grid:{display:false},ticks:{maxTicksLimit:window.innerWidth<480?8:20,maxRotation:0}},
+        x:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{maxTicksLimit:window.innerWidth<480?6:10,maxRotation:window.innerWidth<480?45:0}},
         y:{
           position:'left',title:{display:true,text:'Gold (¥/g)'},
           grid:{color:'rgba(0,0,0,0.06)'},
@@ -640,7 +672,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     cb.checked=!ds.hidden;
     cb.addEventListener('change',()=>{
       chart.setDatasetVisibility(i,cb.checked);
-      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11',13:'y12',14:'y',15:'y14',16:'y13'};
+      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y9'};
       if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
       if(i===3||i===7){
         chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
@@ -661,6 +693,23 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
   updateBtnText();
   btn.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open')});
   document.addEventListener('click',e=>{if(!menu.contains(e.target)&&e.target!==btn)menu.classList.remove('open')});
+
+  const corrS1=document.getElementById('corrS1');
+  const corrS2=document.getElementById('corrS2');
+  const corrToggle=document.getElementById('corrToggle');
+  function updateCorr(){
+    const ds=chart.data.datasets.find(d=>d.yAxisID==='y9');
+    if(!ds)return;
+    const d1=signalMap[corrS1.value],d2=signalMap[corrS2.value];
+    ds.data=rollingFixedLagCorr(d1,d2,0,12);
+    ds.label=corrS1.value.replace(/\(.*?\)/g,'').trim()+' vs '+corrS2.value.replace(/\(.*?\)/g,'').trim()+' (12m)';
+    ds.hidden=!corrToggle.checked;
+    chart.update();
+  }
+  corrToggle.addEventListener('change',updateCorr);
+  corrS1.addEventListener('change',updateCorr);
+  corrS2.addEventListener('change',updateCorr);
+  updateCorr();
 }
 
 document.addEventListener('DOMContentLoaded',async ()=>{
