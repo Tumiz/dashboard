@@ -7,16 +7,9 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import Input, Dense
 
-gold = pd.read_csv("sge_gold_monthly.csv")[["month", "close"]].rename(columns={"close": "gold"})
-btc = pd.read_csv("btc_monthly.csv")[["month", "btc_usd"]]
-fed = pd.read_csv("fed_rates_monthly.csv")[["month", "fed_rate_pct"]]
-aux = pd.read_csv("aux_monthly.csv")[["month", "aux_usd"]]
-xag = pd.read_csv("xag_monthly.csv")[["month", "xag_usd"]]
-
-df = gold.merge(btc, on="month", how="left").merge(fed, on="month", how="left")
-df = df.merge(aux, on="month", how="left").merge(xag, on="month", how="left")
+df = pd.read_csv("dashboard_monthly.csv")[["month", "gold_close", "btc_usd", "fed_rate_pct", "aux_usd", "xag_usd"]]
+df = df.rename(columns={"gold_close": "gold"}).dropna(subset=["gold"]).reset_index(drop=True)
 df["xau_xag"] = df["aux_usd"] / df["xag_usd"]
-df = df.reset_index(drop=True)
 
 WINDOW = 12
 OX, Oy = [], []

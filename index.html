@@ -106,41 +106,36 @@ function parseCSV(text){
 function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 
-function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au9999, usdCny, tencent){
-  const glast=gold[gold.length-1];
-  const goldMonths=gold.map(r=>r.month);
+function render(rows){
+  const num=v=>v===''||v==null?null:+v;
+  const M={}; rows.forEach(r=>M[r.month]=r);
+  const months=rows.map(r=>r.month);
+  const goldMonths=months.filter(m=>M[m].gold_close!=='');
   const [fy,fm]=goldMonths[0].split('-').map(Number);
   const preLabels=[];
   for(let y=2000;y<=fy;y++){const endM=y===fy?fm-1:12;for(let m=1;m<=endM;m++)preLabels.push(y+'-'+String(m).padStart(2,'0'))}
   const labels=[...preLabels,...goldMonths];
-  const gprices=[...new Array(preLabels.length).fill(null),...gold.map(r=>+r.close)];
-  const usdByMonth={}; usd.forEach(r=>usdByMonth[r.month]=r);
-  const cpiByMonth={}; cpi.forEach(r=>cpiByMonth[r.month]=r);
-  const realByMonth={}; real.forEach(r=>realByMonth[r.month]=r);
-  const gprByMonth={}; gpr.forEach(r=>gprByMonth[r.month]=r);
-  const btcByMonth={}; btc.forEach(r=>btcByMonth[r.month]=r);
-  const auxByMonth={}; aux.forEach(r=>auxByMonth[r.month]=r);
-  const xagByMonth={}; xag.forEach(r=>xagByMonth[r.month]=r);
-  const cbByMonth={}; cb.forEach(r=>cbByMonth[r.month]=r);
-  const fedByMonth={}; fed.forEach(r=>fedByMonth[r.month]=r);
-  const nasdaqByMonth={}; nasdaq.forEach(r=>nasdaqByMonth[r.month]=r);
-  const au9999ByMonth={}; au9999.forEach(r=>au9999ByMonth[r.month]=r);
-  const usdCnyByMonth={}; usdCny.forEach(r=>usdCnyByMonth[r.month]=r);
-  const tencentByMonth={}; tencent.forEach(r=>tencentByMonth[r.month]=r);
-
-  const usdOnLabels=labels.map(m=>usdByMonth[m]?+usdByMonth[m].close:null);
-  const cpiOnLabels=labels.map(m=>cpiByMonth[m]?+cpiByMonth[m].cpi_yoy_pct:null);
-  const realOnLabels=labels.map(m=>realByMonth[m]?+realByMonth[m].real_yield_pct:null);
-  const gprOnLabels=labels.map(m=>gprByMonth[m]?+gprByMonth[m].gpr:null);
-  const btcOnLabels=labels.map(m=>btcByMonth[m]?+btcByMonth[m].btc_usd:null);
-  const auxOnLabels=labels.map(m=>auxByMonth[m]?+auxByMonth[m].aux_usd:null);
-  const xagOnLabels=labels.map(m=>xagByMonth[m]?+xagByMonth[m].xag_usd:null);
-  const cbOnLabels=labels.map(m=>cbByMonth[m]?+cbByMonth[m].cb_demand:null);
-  const fedOnLabels=labels.map(m=>fedByMonth[m]?+fedByMonth[m].fed_rate_pct:null);
-  const nasdaqOnLabels=labels.map(m=>nasdaqByMonth[m]?+nasdaqByMonth[m].nasdaq_close:null);
-  const au9999OnLabels=labels.map(m=>au9999ByMonth[m]?+au9999ByMonth[m].close:null);
-  const usdCnyOnLabels=labels.map(m=>usdCnyByMonth[m]?+usdCnyByMonth[m].usd_cny:null);
-  const tencentOnLabels=labels.map(m=>tencentByMonth[m]?+tencentByMonth[m].close:null);
+  const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].gold_close))];
+  const col=key=>labels.map(m=>{const r=M[m];return r&&r[key]!==''?num(r[key]):null});
+  const usdOnLabels=col('usd_close');
+  const cpiOnLabels=col('cpi_yoy_pct');
+  const realOnLabels=col('real_yield_pct');
+  const gprOnLabels=col('gpr');
+  const btcOnLabels=col('btc_usd');
+  const auxOnLabels=col('aux_usd');
+  const xagOnLabels=col('xag_usd');
+  const cbOnLabels=col('cb_demand');
+  const fedOnLabels=col('fed_rate_pct');
+  const nasdaqOnLabels=col('nasdaq_close');
+  const au9999OnLabels=col('au9999_close');
+  const usdCnyOnLabels=col('usd_cny');
+  const tencentOnLabels=col('tencent_close');
+  const cac40OnLabels=col('cac40_close');
+  const daxOnLabels=col('dax_close');
+  const sp500OnLabels=col('sp500_close');
+  const nikkeiOnLabels=col('nikkei_close');
+  const shanghaiOnLabels=col('shanghai_close');
+  const kospiOnLabels=col('kospi_close');
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -157,18 +152,15 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     return a>=0.7?'Strong':a>=0.4?'Moderate':a>=0.2?'Weak':'None';
   }
 
-  const goldClose={}; gold.forEach(r=>goldClose[r.month]=+r.close);
-  const gvals=labels.map(m=>goldClose[m]);
-
   function bestLagCorr(map,key){
-    const svals=labels.map(m=>{const o=map[m];return o?+o[key]:null});
+    const svals=labels.map(m=>{const o=map[m];return o&&o[key]!==''?+o[key]:null});
     let bestR=0,bestLag=0;
     for(let lag=-12;lag<=12;lag++){
       const pairs=[];
       for(let i=0;i<labels.length;i++){
         const j=i-lag;
-        if(j>=0&&j<labels.length&&gvals[i]!=null&&svals[j]!=null)
-          pairs.push([gvals[i],svals[j]]);
+        if(j>=0&&j<labels.length&&gprices[i]!=null&&svals[j]!=null)
+          pairs.push([gprices[i],svals[j]]);
       }
       if(pairs.length>=4){
         const r=r2(pairs);
@@ -195,26 +187,38 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     'Au99.99 (¥/g)':au9999OnLabels,
     'Tencent (0700.HK)':tencentOnLabels,
     'USD/CNY':usdCnyOnLabels,
+    'CAC 40':cac40OnLabels,
+    'DAX':daxOnLabels,
+    'S&P 500':sp500OnLabels,
+    'Nikkei 225':nikkeiOnLabels,
+    'Shanghai':shanghaiOnLabels,
+    'KOSPI':kospiOnLabels,
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
   };
 
   const cors=[
-    ['USD Index',usdByMonth,'close'],
-    ['US CPI YoY',cpiByMonth,'cpi_yoy_pct'],
-    ['Real 10Y Yield',realByMonth,'real_yield_pct'],
-    ['GPR',gprByMonth,'gpr'],
-    ['BTC/USD',btcByMonth,'btc_usd'],
-    ['AUX/USD',auxByMonth,'aux_usd'],
-    ['XAG/USD',xagByMonth,'xag_usd'],
+    ['USD Index',M,'usd_close'],
+    ['US CPI YoY',M,'cpi_yoy_pct'],
+    ['Real 10Y Yield',M,'real_yield_pct'],
+    ['GPR',M,'gpr'],
+    ['BTC/USD',M,'btc_usd'],
+    ['AUX/USD',M,'aux_usd'],
+    ['XAG/USD',M,'xag_usd'],
     ['AUX/XAG',auxXagByMonth,'v'],
     ['BTC/XAU',btcXauByMonth,'v'],
-    ['CB Demand',cbByMonth,'cb_demand'],
-    ['Fed Rate',fedByMonth,'fed_rate_pct'],
-    ['NASDAQ',nasdaqByMonth,'nasdaq_close'],
-    ['USD/CNY',usdCnyByMonth,'usd_cny'],
-    ['Au99.99',au9999ByMonth,'close'],
-    ['Tencent (0700.HK)',tencentByMonth,'close'],
+    ['CB Demand',M,'cb_demand'],
+    ['Fed Rate',M,'fed_rate_pct'],
+    ['NASDAQ',M,'nasdaq_close'],
+    ['USD/CNY',M,'usd_cny'],
+    ['Au99.99',M,'au9999_close'],
+    ['Tencent (0700.HK)',M,'tencent_close'],
+    ['CAC 40',M,'cac40_close'],
+    ['DAX',M,'dax_close'],
+    ['S&P 500',M,'sp500_close'],
+    ['Nikkei 225',M,'nikkei_close'],
+    ['Shanghai',M,'shanghai_close'],
+    ['KOSPI',M,'kospi_close'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
     return {name,r,lag};
@@ -518,6 +522,96 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y13'
+      },{
+        label:'CAC 40',
+        data:cac40OnLabels,
+        hidden:true,
+        borderColor:'#2563eb',
+        backgroundColor:'rgba(37,99,235,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#2563eb',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y15'
+      },{
+        label:'DAX',
+        data:daxOnLabels,
+        hidden:true,
+        borderColor:'#dc2626',
+        backgroundColor:'rgba(220,38,38,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#dc2626',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y16'
+      },{
+        label:'S&P 500',
+        data:sp500OnLabels,
+        hidden:true,
+        borderColor:'#16a34a',
+        backgroundColor:'rgba(22,163,74,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#16a34a',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y17'
+      },{
+        label:'Nikkei 225',
+        data:nikkeiOnLabels,
+        hidden:true,
+        borderColor:'#e11d48',
+        backgroundColor:'rgba(225,29,72,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#e11d48',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y18'
+      },{
+        label:'Shanghai',
+        data:shanghaiOnLabels,
+        hidden:true,
+        borderColor:'#ca8a04',
+        backgroundColor:'rgba(202,138,4,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#ca8a04',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y19'
+      },{
+        label:'KOSPI',
+        data:kospiOnLabels,
+        hidden:true,
+        borderColor:'#0f766e',
+        backgroundColor:'rgba(15,118,110,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#0f766e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y20'
       }]
     },
     plugins:[{
@@ -628,6 +722,30 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
         y14:{
           position:'right',title:{display:true,text:'Tencent (HKD)'},
           grid:{display:false},display:false,offset:true
+        },
+        y15:{
+          position:'right',title:{display:true,text:'CAC 40'},
+          grid:{display:false},display:false,offset:true
+        },
+        y16:{
+          position:'right',title:{display:true,text:'DAX'},
+          grid:{display:false},display:false,offset:true
+        },
+        y17:{
+          position:'right',title:{display:true,text:'S&P 500'},
+          grid:{display:false},display:false,offset:true
+        },
+        y18:{
+          position:'right',title:{display:true,text:'Nikkei 225'},
+          grid:{display:false},display:false,offset:true
+        },
+        y19:{
+          position:'right',title:{display:true,text:'Shanghai'},
+          grid:{display:false},display:false,offset:true
+        },
+        y20:{
+          position:'right',title:{display:true,text:'KOSPI'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
@@ -672,7 +790,7 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
     cb.checked=!ds.hidden;
     cb.addEventListener('change',()=>{
       chart.setDatasetVisibility(i,cb.checked);
-      const axisMap={0:'y',1:'y1',2:'y3',4:'y4',5:'y5',6:'y7',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y9'};
+      const axisMap={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11',13:'y12',14:'y',15:'y14',16:'y13',17:'y15',18:'y16',19:'y17',20:'y18',21:'y19',22:'y20'};
       if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
       if(i===3||i===7){
         chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
@@ -714,38 +832,8 @@ function render(gold, usd, cpi, real, gpr, btc, aux, xag, cb, fed, nasdaq, au999
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   try{
-    const [goldRes,usdRes,cpiRes,realRes,gprRes,btcRes,auxRes,xagRes,cbRes,fedRes,nasdaqRes,au9999Res,usdCnyRes,tencentRes]=await Promise.all([
-      fetch('sge_gold_monthly.csv'),
-      fetch('usd_index_monthly.csv'),
-      fetch('us_cpi_monthly.csv'),
-      fetch('us_real_yield_monthly.csv'),
-      fetch('gpr_monthly.csv'),
-      fetch('btc_monthly.csv'),
-      fetch('aux_monthly.csv'),
-      fetch('xag_monthly.csv'),
-      fetch('cb_demand_monthly.csv'),
-      fetch('fed_rates_monthly.csv'),
-      fetch('nasdaq_monthly.csv'),
-      fetch('au9999_monthly.csv'),
-      fetch('usd_cny_monthly.csv'),
-      fetch('tencent_hk_monthly.csv')
-    ]);
-    render(
-      parseCSV(await goldRes.text()),
-      parseCSV(await usdRes.text()),
-      parseCSV(await cpiRes.text()),
-      parseCSV(await realRes.text()),
-      parseCSV(await gprRes.text()),
-      parseCSV(await btcRes.text()),
-      parseCSV(await auxRes.text()),
-      parseCSV(await xagRes.text()),
-      parseCSV(await cbRes.text()),
-      parseCSV(await fedRes.text()),
-      parseCSV(await nasdaqRes.text()),
-      parseCSV(await au9999Res.text()),
-      parseCSV(await usdCnyRes.text()),
-      parseCSV(await tencentRes.text())
-    );
+    const res=await fetch('dashboard_monthly.csv');
+    render(parseCSV(await res.text()));
   }catch(e){
     document.getElementById('app').innerHTML='<div class="error">Failed to load data: '+e.message+'</div>';
   }
