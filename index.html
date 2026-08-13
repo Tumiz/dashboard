@@ -41,6 +41,11 @@ body{
 .dual-range input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
 .table-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
+.flow-legend{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:8px;font-size:11px;color:#6b7280}
+.flow-legend .lg{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.flow-legend .lg-line{width:22px;height:3px;border-radius:2px}
+.flow-legend .lg-node{width:12px;height:12px;border-radius:3px}
+.flow-cap{font-size:11px;color:#9ca3af;margin-top:4px}
 .wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:6px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
@@ -62,10 +67,6 @@ td.down{color:#ef4444}
   .table-card h2{font-size:15px}
   table{font-size:13px}
   th,td{padding:8px 10px}
-}
-@media(max-width:480px) and (orientation:portrait){
-  html,body{overflow:hidden;height:100%;width:100%;margin:0;padding:0}
-  body{position:fixed;top:0;left:100vw;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
 }
 @media(max-width:480px){
   .chart-controls{flex-wrap:wrap;gap:4px}
@@ -224,6 +225,52 @@ function render(rows){
     return {name,r,lag};
   }).sort((a,b)=>b.r-a.r);
 
+  function flowSvg(cors){
+    const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const W=980,H=840,CX=490,CY=445;
+    const R_IN=250,R_OUT=335,N=cors.length;
+    const boxW=118,boxH=44;
+    const gW=150,gH=58,hw=gW/2,hh=gH/2;
+    const shortName={'Tencent (0700.HK)':'Tencent'};
+    const col=r=>Math.abs(r)<0.2?'#9ca3af':r>0?'#22c55e':'#ef4444';
+    function rectEdge(x,y){
+      const dx=CX-x,dy=CY-y;
+      const L=Math.hypot(dx,dy)||1;
+      const ux=dx/L,uy=dy/L;
+      let t=Infinity;
+      if(ux!==0){const tx=(x>=CX?x-(CX+hw):x-(CX-hw))/(-ux);if(tx>=0)t=Math.min(t,tx)}
+      if(uy!==0){const ty=(y>=CY?y-(CY+hh):y-(CY-hh))/(-uy);if(ty>=0)t=Math.min(t,ty)}
+      return [x+ux*t,y+uy*t];
+    }
+    const edges=[],nodes=[];
+    cors.forEach((c,i)=>{
+      const a=-Math.PI/2+(i*2*Math.PI)/N;
+      const R=i%2===0?R_IN:R_OUT;
+      const x=CX+Math.cos(a)*R,y=CY+Math.sin(a)*R;
+      const [ex,ey]=rectEdge(x,y);
+      const ccol=col(c.r);
+      const lw=(1+Math.abs(c.r)*3.2).toFixed(1);
+      const dash=Math.abs(c.r)<0.2?'4 3':'';
+      edges.push(`<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${ccol}" stroke-width="${lw}"${dash?` stroke-dasharray="${dash}"`:''} marker-end="url(#flowArrow)"><title>${esc(c.name)} vs gold: r=${c.r>=0?'+':''}${c.r.toFixed(3)} (best lag ${c.lag} mo), ${rLabel(c.r)} correlation</title></line>`);
+      const nm=shortName[c.name]||c.name;
+      const label=nm.length>18?nm.slice(0,17)+'…':nm;
+      const vcol=c.r>=0.2?'#16a34a':c.r<=-0.2?'#dc2626':'#6b7280';
+      nodes.push(`<g><title>${esc(c.name)}: r=${c.r>=0?'+':''}${c.r.toFixed(3)}, best lag ${c.lag} mo, ${rLabel(c.r)} correlation with gold</title>
+        <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-boxH/2).toFixed(1)}" width="${boxW}" height="${boxH}" rx="8" fill="#fff" stroke="${ccol}" stroke-width="1.5"/>
+        <text x="${x.toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="10.5" fill="#1a1a2e">${esc(label)}</text>
+        <text x="${x.toFixed(1)}" y="${(y+10).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${vcol}">${c.r>=0?'+':''}${c.r.toFixed(2)}</text></g>`);
+    });
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Gold relations flowchart">
+      <defs><marker id="flowArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+      ${edges.join('')}
+      <g><title>SGE Gold (¥/g) — reference series</title>
+        <rect x="${CX-hw}" y="${CY-hh}" width="${gW}" height="${gH}" rx="10" fill="#f59e0b"/>
+        <text x="${CX}" y="${CY-1}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">SGE Gold (¥/g)</text>
+        <text x="${CX}" y="${CY+13}" text-anchor="middle" font-size="9.5" fill="#fff" opacity=".9">reference series</text></g>
+      ${nodes.join('')}
+    </svg>`;
+  }
+
   document.getElementById('app').innerHTML=`
     <div class="chart-card">
       <h2>Gold &amp; Macro Index</h2>
@@ -248,6 +295,19 @@ function render(rows){
         <span style="font-size:10px;color:#6b7280;white-space:nowrap">Corr(12m)</span>
       </div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
+    </div>
+
+    <div class="chart-card" style="margin-top:8px">
+      <h2>Gold Relations Flowchart</h2>
+      <div style="overflow-x:auto">${flowSvg(cors)}</div>
+      <div class="flow-legend">
+        <span class="lg"><span class="lg-line" style="background:#22c55e"></span>Positive</span>
+        <span class="lg"><span class="lg-line" style="background:#ef4444"></span>Negative</span>
+        <span class="lg"><span class="lg-line" style="background:#9ca3af"></span>Weak / none</span>
+        <span class="lg">Thickness = strength |r|</span>
+        <span class="lg">Arrow = direction toward gold</span>
+      </div>
+      <div class="flow-cap">Best-lag Pearson correlation with SGE Gold (¥/g) over its full history. Hover a node for r, lag and strength.</div>
     </div>
 
     <div class="table-card" style="margin-top:8px">
