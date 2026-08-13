@@ -23,12 +23,6 @@ body{
 .chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
 .chart-controls{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .chart-controls label{font-size:11px;color:#6b7280;font-weight:500;white-space:nowrap}
-.dd-btn{font-size:12px;padding:4px 24px 4px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#1a1a2e;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
-.dd-menu{display:none;position:absolute;top:100%;left:0;min-width:220px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:20;padding:4px 0;margin-top:4px}
-.dd-menu.open{display:block}
-.dd-item{display:flex;align-items:center;gap:6px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
-.dd-item:hover{background:#f3f4f6}
-.dd-item input{margin:0;cursor:pointer;accent-color:#6366f1}
 .chart-wrapper{position:relative;height:200px}
 .range-group{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:nowrap}
 .range-group label{font-size:10px;color:#6b7280;white-space:nowrap}
@@ -46,6 +40,14 @@ body{
 .flow-legend .lg-line{width:22px;height:3px;border-radius:2px}
 .flow-legend .lg-node{width:12px;height:12px;border-radius:3px}
 .flow-cap{font-size:11px;color:#9ca3af;margin-top:4px}
+.flow-rationale{margin-top:10px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa}
+.flow-rationale summary{cursor:pointer;font-size:12px;font-weight:600;color:#1a1a2e;padding:8px 12px;list-style:none}
+.flow-rationale summary::-webkit-details-marker{display:none}
+.flow-rationale summary::before{content:'▸ ';color:#6366f1;font-size:10px}
+.flow-rationale[open] summary::before{content:'▾ '}
+.flow-rationale .wrap{padding:0 12px 10px}
+.flow-rationale td{white-space:normal;line-height:1.45;vertical-align:top}
+.flow-rationale td.dir{white-space:nowrap;font-weight:600}
 .wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:6px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
@@ -68,10 +70,13 @@ td.down{color:#ef4444}
   table{font-size:13px}
   th,td{padding:8px 10px}
 }
+@media(hover:none) and (pointer:coarse){
+  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  input,select{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+}
 @media(max-width:480px){
   .chart-controls{flex-wrap:wrap;gap:4px}
   .chart-controls>label{display:none}
-  .dd-btn{flex:1 1 100%}
   .range-group{width:100%;margin-left:0}
   .range-group label{display:none}
   .range-group .range-label{font-size:9px;min-width:30px}
@@ -222,45 +227,88 @@ function render(rows){
     ['KOSPI',M,'kospi_close'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
-    return {name,r,lag};
-  }).sort((a,b)=>b.r-a.r);
+    const dir=lag>0?'leads':lag<0?'lags':'sync';
+    return {name,r,lag,dir};
+  }).sort((a,b)=>Math.abs(b.r)-Math.abs(a.r));
+
+  const explain={
+    'USD Index':'Gold is USD-priced — a stronger dollar makes it costlier abroad, damping demand (inverse channel).',
+    'US CPI YoY':'Gold is the classic inflation hedge; rising CPI erodes real returns and lifts gold demand.',
+    'Real 10Y Yield':'Gold pays no yield — higher real yields raise its opportunity cost (inverse).',
+    'GPR':'Geopolitical risk spikes trigger safe-haven gold buying.',
+    'BTC/USD':'Crypto trades as risk-on "digital gold"; capital often shifts between BTC and gold, so they co-move.',
+    'AUX/USD':'Shanghai-exchange gold — the same asset priced in CNY/USD; tracks gold near 1:1.',
+    'XAG/USD':'Silver (industrial + precious) usually turns before gold; the pair co-moves, silver often leads.',
+    'AUX/XAG':'Gold/silver ratio — high when gold outperforms silver in risk-off episodes; mean-reverting, rises with gold.',
+    'BTC/XAU':'Crypto risk appetite relative to gold — falls when safe-haven demand lifts gold above BTC.',
+    'CB Demand':'Central-bank purchases are a structural demand driver that supports gold prices.',
+    'Fed Rate':'Higher policy rates raise gold\u2019s opportunity cost and strengthen the dollar (inverse).',
+    'NASDAQ':'Equities vs gold flip between risk-on (both up) and risk-off (gold up, stocks down) regimes — net link weak.',
+    'USD/CNY':'A weaker CNY lifts local-currency gold demand on the Shanghai exchange.',
+    'Au99.99':'Shanghai spot gold — same asset as AUX; tracks near 1:1.',
+    'Tencent (0700.HK)':'China tech bellwether — signals China liquidity and risk appetite that also flow into gold demand.',
+    'CAC 40':'European equities transmit EUR/USD swings (which move the dollar index) and risk sentiment to gold.',
+    'DAX':'Same EUR/USD and risk channels as CAC; German yield sensitivity mirrors gold\u2019s real-rate driver.',
+    'S&P 500':'Global risk appetite and the real-rate regime — negative when Fed tightening lifts real yields, positive in easing.',
+    'Nikkei 225':'Japan\u2019s ultra-low rates and yen carry make gold vs Nikkei a risk-on/off switch.',
+    'Shanghai':'China A-shares: PBOC easing lifts both domestic equities and gold demand via the liquidity channel.',
+    'KOSPI':'Korea equities transmit USD/KRW moves and global risk-on/off; diverges from gold in risk-off episodes.',
+  };
+
+  const dirTxt=d=>d==='leads'?'leads gold':d==='lags'?'gold leads':'synchronous';
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
   function flowSvg(cors){
-    const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const W=980,H=840,CX=490,CY=445;
     const R_IN=250,R_OUT=335,N=cors.length;
     const boxW=118,boxH=44;
     const gW=150,gH=58,hw=gW/2,hh=gH/2;
     const shortName={'Tencent (0700.HK)':'Tencent'};
     const col=r=>Math.abs(r)<0.2?'#9ca3af':r>0?'#22c55e':'#ef4444';
-    function rectEdge(x,y){
-      const dx=CX-x,dy=CY-y;
-      const L=Math.hypot(dx,dy)||1;
-      const ux=dx/L,uy=dy/L;
-      let t=Infinity;
-      if(ux!==0){const tx=(x>=CX?x-(CX+hw):x-(CX-hw))/(-ux);if(tx>=0)t=Math.min(t,tx)}
-      if(uy!==0){const ty=(y>=CY?y-(CY+hh):y-(CY-hh))/(-uy);if(ty>=0)t=Math.min(t,ty)}
-      return [x+ux*t,y+uy*t];
+    function rayBox(fx,fy,ux,uy,cx,cy,w,h){
+      const t1=(cx-w/2-fx)/ux,t2=(cx+w/2-fx)/ux;
+      const t3=(cy-h/2-fy)/uy,t4=(cy+h/2-fy)/uy;
+      const tmin=Math.max(Math.min(t1,t2),Math.min(t3,t4));
+      const tmax=Math.min(Math.max(t1,t2),Math.max(t3,t4));
+      const t=(tmin>0?tmin:tmax)||0;
+      return [fx+ux*t,fy+uy*t];
     }
     const edges=[],nodes=[];
     cors.forEach((c,i)=>{
       const a=-Math.PI/2+(i*2*Math.PI)/N;
       const R=i%2===0?R_IN:R_OUT;
       const x=CX+Math.cos(a)*R,y=CY+Math.sin(a)*R;
-      const [ex,ey]=rectEdge(x,y);
+      const dx=CX-x,dy=CY-y;
+      const L=Math.hypot(dx,dy)||1;
+      const ux=dx/L,uy=dy/L;
       const ccol=col(c.r);
       const lw=(1+Math.abs(c.r)*3.2).toFixed(1);
       const dash=Math.abs(c.r)<0.2?'4 3':'';
-      edges.push(`<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${ccol}" stroke-width="${lw}"${dash?` stroke-dasharray="${dash}"`:''} marker-end="url(#flowArrow)"><title>${esc(c.name)} vs gold: r=${c.r>=0?'+':''}${c.r.toFixed(3)} (best lag ${c.lag} mo), ${rLabel(c.r)} correlation</title></line>`);
+      const rel=(c.r>=0?'+':'')+c.r.toFixed(3);
+      const lead=Math.abs(c.lag);
+      const stats=c.dir==='sync'?'synchronous with gold':`${dirTxt(c.dir)} (${lead} mo)`;
+      const leadTxt=c.dir==='leads'?`${c.name} leads gold (${lead} mo)`:c.dir==='lags'?`gold leads ${c.name} (${lead} mo)`:`${c.name} is synchronous with gold`;
+      const reason=explain[c.name]?' — '+explain[c.name]:'';
+      if(c.dir==='lags'){
+        const [ex,ey]=rayBox(CX,CY,-ux,-uy,x,y,boxW,boxH);
+        edges.push(`<line x1="${CX.toFixed(1)}" y1="${CY.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${ccol}" stroke-width="${lw}"${dash?` stroke-dasharray="${dash}"`:''} marker-end="url(#flowArrow)"><title>${esc(leadTxt)}: r=${rel}, ${rLabel(c.r)} correlation${reason}</title></line>`);
+      }else if(c.dir==='sync'){
+        const [nx,ny]=rayBox(x,y,ux,uy,x,y,boxW,boxH);
+        const [gx,gy]=rayBox(x,y,ux,uy,CX,CY,gW,gH);
+        edges.push(`<line x1="${nx.toFixed(1)}" y1="${ny.toFixed(1)}" x2="${gx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${ccol}" stroke-width="${lw}"${dash?` stroke-dasharray="${dash}"`:''} marker-start="url(#flowArrow)" marker-end="url(#flowArrow)"><title>${esc(leadTxt)}: r=${rel}, ${rLabel(c.r)} correlation${reason}</title></line>`);
+      }else{
+        const [ex,ey]=rayBox(x,y,ux,uy,CX,CY,gW,gH);
+        edges.push(`<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${ccol}" stroke-width="${lw}"${dash?` stroke-dasharray="${dash}"`:''} marker-end="url(#flowArrow)"><title>${esc(leadTxt)}: r=${rel}, ${rLabel(c.r)} correlation${reason}</title></line>`);
+      }
       const nm=shortName[c.name]||c.name;
       const label=nm.length>18?nm.slice(0,17)+'…':nm;
       const vcol=c.r>=0.2?'#16a34a':c.r<=-0.2?'#dc2626':'#6b7280';
-      nodes.push(`<g><title>${esc(c.name)}: r=${c.r>=0?'+':''}${c.r.toFixed(3)}, best lag ${c.lag} mo, ${rLabel(c.r)} correlation with gold</title>
+      nodes.push(`<g><title>${esc(c.name)}: r=${rel}, ${stats}, ${rLabel(c.r)} correlation with gold${reason}</title>
         <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-boxH/2).toFixed(1)}" width="${boxW}" height="${boxH}" rx="8" fill="#fff" stroke="${ccol}" stroke-width="1.5"/>
         <text x="${x.toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="10.5" fill="#1a1a2e">${esc(label)}</text>
         <text x="${x.toFixed(1)}" y="${(y+10).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${vcol}">${c.r>=0?'+':''}${c.r.toFixed(2)}</text></g>`);
     });
-    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Gold relations flowchart">
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Gold lead-lag causality flowchart">
       <defs><marker id="flowArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
       ${edges.join('')}
       <g><title>SGE Gold (¥/g) — reference series</title>
@@ -275,9 +323,6 @@ function render(rows){
     <div class="chart-card">
       <h2>Gold &amp; Macro Index</h2>
       <div class="chart-controls">
-        <label>Lines:</label>
-        <button class="dd-btn" id="ddBtn">Select lines...</button>
-        <div class="dd-menu" id="ddMenu"></div>
         <div class="range-group">
           <label>Range:</label>
           <span class="range-label" id="rangeStartLabel"></span>
@@ -289,25 +334,35 @@ function render(rows){
           </div>
           <span class="range-label" id="rangeEndLabel"></span>
         </div>
-        <select id="corrS1" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px">${Object.keys(signalMap).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
-        <select id="corrS2" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px">${Object.keys(signalMap).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
-        <input type="checkbox" id="corrToggle" checked style="margin:0;accent-color:#eab308">
-        <span style="font-size:10px;color:#6b7280;white-space:nowrap">Corr(12m)</span>
+        <select id="corrS1" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px"><option value="">— line —</option>${Object.keys(signalMap).map((s,i)=>`<option value="${s}"${i===0?' selected':''}>${s}</option>`).join('')}</select>
+        <select id="corrS2" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px"><option value="">— line —</option>${Object.keys(signalMap).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
       </div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
     </div>
 
     <div class="chart-card" style="margin-top:8px">
-      <h2>Gold Relations Flowchart</h2>
+      <h2>Gold Lead-Lag Causality Flowchart</h2>
       <div style="overflow-x:auto">${flowSvg(cors)}</div>
       <div class="flow-legend">
         <span class="lg"><span class="lg-line" style="background:#22c55e"></span>Positive</span>
         <span class="lg"><span class="lg-line" style="background:#ef4444"></span>Negative</span>
         <span class="lg"><span class="lg-line" style="background:#9ca3af"></span>Weak / none</span>
         <span class="lg">Thickness = strength |r|</span>
-        <span class="lg">Arrow = direction toward gold</span>
+        <span class="lg">Arrow = leading series (leader &rarr; laggard)</span>
       </div>
-      <div class="flow-cap">Best-lag Pearson correlation with SGE Gold (¥/g) over its full history. Hover a node for r, lag and strength.</div>
+      <div class="flow-cap">Best-lag lead-lag causality with SGE Gold (¥/g) over its full history: the arrow points from the leading series toward the lagging one (double-headed = synchronous). Thickness = |r|, color = sign of correlation. Hover a node or edge for r, lead and economic rationale.</div>
+      <details class="flow-rationale">
+        <summary>Economic Rationale (${cors.length})</summary>
+        <div class="wrap"><table>
+          <thead><tr><th>Series</th><th>Direction</th><th>r (lead)</th><th>Rationale</th></tr></thead>
+          <tbody>${cors.map(c=>`<tr>
+            <td><strong>${c.name}</strong></td>
+            <td class="dir">${c.dir==='leads'?'<span class="up">leads gold</span>':c.dir==='lags'?'<span class="down">gold leads</span>':'<span>synchronous</span>'}</td>
+            <td>${c.r.toFixed(3)} (${c.lag>0?'+':''}${c.lag} mo)</td>
+            <td>${esc(explain[c.name]||'')}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </details>
     </div>
 
     <div class="table-card" style="margin-top:8px">
@@ -390,6 +445,7 @@ function render(rows){
       },{
         label:'BTC/USD',
         data:btcOnLabels,
+        hidden:true,
         borderColor:'#f97316',
         backgroundColor:'rgba(249,115,22,0.1)',
         fill:false,
@@ -840,54 +896,37 @@ function render(rows){
   rangeStart.addEventListener('input',()=>updateRange('start'));
   rangeEnd.addEventListener('input',()=>updateRange('end'));
 
-  const btn=document.getElementById('ddBtn');
-  const menu=document.getElementById('ddMenu');
-  chart.data.datasets.forEach((ds,i)=>{
-    const item=document.createElement('label');
-    item.className='dd-item';
-    const cb=document.createElement('input');
-    cb.type='checkbox';
-    cb.checked=!ds.hidden;
-    cb.addEventListener('change',()=>{
-      chart.setDatasetVisibility(i,cb.checked);
-      const axisMap={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y9',11:'y10',12:'y11',13:'y12',14:'y',15:'y14',16:'y13',17:'y15',18:'y16',19:'y17',20:'y18',21:'y19',22:'y20'};
-      if(axisMap[i]!==undefined) chart.options.scales[axisMap[i]].display=cb.checked;
-      if(i===3||i===7){
-        chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
-      }
-      chart.update();
-      updateBtnText();
-    });
-    const span=document.createElement('span');
-    span.textContent=ds.label;
-    item.appendChild(cb);
-    item.appendChild(span);
-    menu.appendChild(item);
-  });
-  function updateBtnText(){
-    const checked=[...menu.querySelectorAll('input:checked')];
-    btn.textContent=checked.length===chart.data.datasets.length?'All lines':checked.length===0?'No lines':checked.length===1?checked[0].nextSibling.textContent:checked.length+' lines';
-  }
-  updateBtnText();
-  btn.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open')});
-  document.addEventListener('click',e=>{if(!menu.contains(e.target)&&e.target!==btn)menu.classList.remove('open')});
-
   const corrS1=document.getElementById('corrS1');
   const corrS2=document.getElementById('corrS2');
-  const corrToggle=document.getElementById('corrToggle');
-  function updateCorr(){
-    const ds=chart.data.datasets.find(d=>d.yAxisID==='y9');
-    if(!ds)return;
-    const d1=signalMap[corrS1.value],d2=signalMap[corrS2.value];
-    ds.data=rollingFixedLagCorr(d1,d2,0,12);
-    ds.label=corrS1.value.replace(/\(.*?\)/g,'').trim()+' vs '+corrS2.value.replace(/\(.*?\)/g,'').trim()+' (12m)';
-    ds.hidden=!corrToggle.checked;
+  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':11,'BTC/XAU':12,'NASDAQ':13,'Au99.99 (¥/g)':14,'Tencent (0700.HK)':15,'USD/CNY':16,'CAC 40':17,'DAX':18,'S&P 500':19,'Nikkei 225':20,'Shanghai':21,'KOSPI':22};
+  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',11:'y10',12:'y11',13:'y12',14:'y',15:'y14',16:'y13',17:'y15',18:'y16',19:'y17',20:'y18',21:'y19',22:'y20',10:'y9'};
+  function updateSelection(){
+    const v1=corrS1.value,v2=corrS2.value;
+    const want=new Set([0]);
+    if(v1) want.add(lineIdx[v1]);
+    if(v2) want.add(lineIdx[v2]);
+    Object.values(lineIdx).forEach(idx=>{
+      const show=want.has(idx);
+      chart.setDatasetVisibility(idx,show);
+      const ax=axisOf[idx];
+      if(ax) chart.options.scales[ax].display=show;
+    });
+    chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
+    const corrDs=chart.data.datasets.find(d=>d.yAxisID==='y9');
+    if(corrDs){
+      const show=!!v1&&!!v2&&v1!==v2;
+      if(show){
+        corrDs.data=rollingFixedLagCorr(signalMap[v1],signalMap[v2],0,12);
+        corrDs.label=v1.replace(/\(.*?\)/g,'').trim()+' vs '+v2.replace(/\(.*?\)/g,'').trim()+' (12m)';
+      }
+      corrDs.hidden=!show;
+      chart.options.scales.y9.display=show;
+    }
     chart.update();
   }
-  corrToggle.addEventListener('change',updateCorr);
-  corrS1.addEventListener('change',updateCorr);
-  corrS2.addEventListener('change',updateCorr);
-  updateCorr();
+  corrS1.addEventListener('change',updateSelection);
+  corrS2.addEventListener('change',updateSelection);
+  updateSelection();
 }
 
 document.addEventListener('DOMContentLoaded',async ()=>{
