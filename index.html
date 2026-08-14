@@ -48,6 +48,21 @@ body{
 .flow-rationale .wrap{padding:0 12px 10px}
 .flow-rationale td{white-space:normal;line-height:1.45;vertical-align:top}
 .flow-rationale td.dir{white-space:nowrap;font-weight:600}
+.flow-card{position:relative}
+.flow-node{cursor:pointer}
+.flow-node rect{transition:stroke-width .15s,filter .15s}
+.flow-node:hover rect,.flow-node:focus-visible rect{stroke-width:2.5px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))}
+.flow-tip{
+  position:absolute;z-index:30;display:none;max-width:min(320px,90vw);
+  background:#1f2937;color:#f9fafb;border-radius:8px;padding:10px 12px;
+  font-size:12px;line-height:1.5;box-shadow:0 6px 18px rgba(0,0,0,.25);
+  pointer-events:none;white-space:normal
+}
+.flow-tip .t-title{font-weight:700;font-size:13px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.flow-tip .t-title .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.flow-tip .t-row{display:flex;gap:8px;margin-top:2px}
+.flow-tip .t-row .k{color:#9ca3af;min-width:78px;flex-shrink:0}
+.flow-tip .t-hint{font-size:10.5px;color:#9ca3af;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.12)}
 .wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:6px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
@@ -303,7 +318,7 @@ function render(rows){
       const nm=shortName[c.name]||c.name;
       const label=nm.length>18?nm.slice(0,17)+'…':nm;
       const vcol=c.r>=0.2?'#16a34a':c.r<=-0.2?'#dc2626':'#6b7280';
-      nodes.push(`<g><title>${esc(c.name)}: r=${rel}, ${stats}, ${rLabel(c.r)} correlation with gold${reason}</title>
+      nodes.push(`<g class="flow-node" data-name="${esc(c.name)}" tabindex="0"><title>${esc(c.name)}: r=${rel}, ${stats}, ${rLabel(c.r)} correlation with gold${reason}</title>
         <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-boxH/2).toFixed(1)}" width="${boxW}" height="${boxH}" rx="8" fill="#fff" stroke="${ccol}" stroke-width="1.5"/>
         <text x="${x.toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="10.5" fill="#1a1a2e">${esc(label)}</text>
         <text x="${x.toFixed(1)}" y="${(y+10).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${vcol}">${c.r>=0?'+':''}${c.r.toFixed(2)}</text></g>`);
@@ -311,7 +326,7 @@ function render(rows){
     return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Gold lead-lag causality flowchart">
       <defs><marker id="flowArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
       ${edges.join('')}
-      <g><title>SGE Gold (¥/g) — reference series</title>
+      <g class="flow-node" data-name="SGE Gold (¥/g)" tabindex="0"><title>SGE Gold (¥/g) — reference series</title>
         <rect x="${CX-hw}" y="${CY-hh}" width="${gW}" height="${gH}" rx="10" fill="#f59e0b"/>
         <text x="${CX}" y="${CY-1}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">SGE Gold (¥/g)</text>
         <text x="${CX}" y="${CY+13}" text-anchor="middle" font-size="9.5" fill="#fff" opacity=".9">reference series</text></g>
@@ -340,9 +355,10 @@ function render(rows){
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
     </div>
 
-    <div class="chart-card" style="margin-top:8px">
+    <div class="chart-card flow-card" id="flowCard" style="margin-top:8px">
       <h2>Gold Lead-Lag Causality Flowchart</h2>
       <div style="overflow-x:auto">${flowSvg(cors)}</div>
+      <div class="flow-tip" id="flowTip" role="tooltip"></div>
       <div class="flow-legend">
         <span class="lg"><span class="lg-line" style="background:#22c55e"></span>Positive</span>
         <span class="lg"><span class="lg-line" style="background:#ef4444"></span>Negative</span>
@@ -363,19 +379,6 @@ function render(rows){
           </tr>`).join('')}</tbody>
         </table></div>
       </details>
-    </div>
-
-    <div class="table-card" style="margin-top:8px">
-      <h2>Correlation with Gold (¥/g)</h2>
-      <div class="wrap"><table>
-        <thead><tr><th>Series</th><th>r (best lag)</th><th>Lag (mo)</th><th>Strength</th></tr></thead>
-        <tbody>${cors.map(c=>`<tr>
-          <td><strong>${c.name}</strong></td>
-          <td>${c.r.toFixed(4)}</td>
-          <td>${c.lag>0?'<span class="up">+'+c.lag+'</span>':c.lag<0?'<span class="down">'+c.lag+'</span>':'0'}</td>
-          <td>${rLabel(c.r)}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
     </div>
   `;
 
@@ -927,6 +930,42 @@ function render(rows){
   corrS1.addEventListener('change',updateSelection);
   corrS2.addEventListener('change',updateSelection);
   updateSelection();
+
+  const flowCard=document.getElementById('flowCard');
+  const flowTip=document.getElementById('flowTip');
+  const flowCol=r=>Math.abs(r)<0.2?'#9ca3af':r>0?'#22c55e':'#ef4444';
+  function showFlowTip(name,ev){
+    const isGold=name==='SGE Gold (¥/g)';
+    const c=isGold?null:cors.find(x=>x.name===name);
+    const rows=isGold
+      ? [['Role','Reference series — every correlation and lead-lag here is measured against gold.']]
+      : [
+          ['Direction',c.dir==='sync'?'synchronous with gold':(c.dir==='leads'?`${c.name} leads gold (${Math.abs(c.lag)} mo)`:`gold leads ${c.name} (${Math.abs(c.lag)} mo)`)],
+          ['Correlation',`r = ${(c.r>=0?'+':'')+c.r.toFixed(3)} · ${rLabel(c.r)}`],
+          ['Rationale',explain[c.name]||'No rationale available.']
+        ];
+    const dotColor=isGold?'#f59e0b':flowCol(c.r);
+    flowTip.innerHTML=`<div class="t-title"><span class="dot" style="background:${dotColor}"></span>${esc(name)}</div>`+
+      rows.map(([k,v])=>`<div class="t-row"><span class="k">${k}</span><span>${esc(v)}</span></div>`).join('')+
+      `<div class="t-hint">Click any box to show its tip · click elsewhere to dismiss</div>`;
+    const r=flowCard.getBoundingClientRect();
+    const tx=ev.clientX-r.left+16,ty=ev.clientY-r.top+14;
+    flowTip.style.left=Math.min(tx,Math.max(0,r.width-330))+'px';
+    flowTip.style.top=Math.min(ty,Math.max(0,r.height-160))+'px';
+    flowTip.style.display='block';
+  }
+  function hideFlowTip(){flowTip.style.display='none'}
+  flowCard.addEventListener('click',e=>{
+    const node=e.target.closest('.flow-node');
+    if(node) showFlowTip(node.dataset.name,e);
+    else hideFlowTip();
+  });
+  flowCard.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('flow-node')){
+      e.preventDefault();
+      showFlowTip(e.target.dataset.name,e);
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded',async ()=>{
