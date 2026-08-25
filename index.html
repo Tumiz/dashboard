@@ -150,6 +150,7 @@ function render(rows){
   const nasdaqOnLabels=col('nasdaq_close');
   const au9999OnLabels=col('au9999_close');
   const usdCnyOnLabels=col('usd_cny');
+  const twexbOnLabels=col('twexb');
   const tencentOnLabels=col('tencent_close');
   const cac40OnLabels=col('cac40_close');
   const daxOnLabels=col('dax_close');
@@ -208,6 +209,7 @@ function render(rows){
     'Au99.99 (¥/g)':au9999OnLabels,
     'Tencent (0700.HK)':tencentOnLabels,
     'USD/CNY':usdCnyOnLabels,
+    'Trade-Wtd USD (TWEXB)':twexbOnLabels,
     'CAC 40':cac40OnLabels,
     'DAX':daxOnLabels,
     'S&P 500':sp500OnLabels,
@@ -232,6 +234,7 @@ function render(rows){
     ['Fed Rate',M,'fed_rate_pct'],
     ['NASDAQ',M,'nasdaq_close'],
     ['USD/CNY',M,'usd_cny'],
+    ['TWEXB',M,'twexb'],
     ['Au99.99',M,'au9999_close'],
     ['Tencent (0700.HK)',M,'tencent_close'],
     ['CAC 40',M,'cac40_close'],
@@ -260,6 +263,7 @@ function render(rows){
     'Fed Rate':'Higher policy rates raise gold\u2019s opportunity cost and strengthen the dollar (inverse).',
     'NASDAQ':'Equities vs gold flip between risk-on (both up) and risk-off (gold up, stocks down) regimes — net link weak.',
     'USD/CNY':'A weaker CNY lifts local-currency gold demand on the Shanghai exchange.',
+    'TWEXB':'The broad trade-weighted dollar measures USD strength against all major trading partners — a stronger dollar mechanically depresses USD-priced gold (inverse channel).',
     'Au99.99':'Shanghai spot gold — same asset as AUX; tracks near 1:1.',
     'Tencent (0700.HK)':'China tech bellwether — signals China liquidity and risk appetite that also flow into gold demand.',
     'CAC 40':'European equities transmit EUR/USD swings (which move the dollar index) and risk sentiment to gold.',
@@ -731,6 +735,21 @@ function render(rows){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y20'
+      },{
+        label:'Trade-Wtd USD (TWEXB)',
+        data:twexbOnLabels,
+        hidden:true,
+        borderColor:'#c026d3',
+        backgroundColor:'rgba(192,38,211,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#c026d3',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y21'
       }]
     },
     plugins:[{
@@ -865,6 +884,10 @@ function render(rows){
         y20:{
           position:'right',title:{display:true,text:'KOSPI'},
           grid:{display:false},display:false,offset:true
+        },
+        y21:{
+          position:'right',title:{display:true,text:'TWEXB'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
@@ -901,8 +924,8 @@ function render(rows){
 
   const corrS1=document.getElementById('corrS1');
   const corrS2=document.getElementById('corrS2');
-  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':11,'BTC/XAU':12,'NASDAQ':13,'Au99.99 (¥/g)':14,'Tencent (0700.HK)':15,'USD/CNY':16,'CAC 40':17,'DAX':18,'S&P 500':19,'Nikkei 225':20,'Shanghai':21,'KOSPI':22};
-  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',11:'y10',12:'y11',13:'y12',14:'y',15:'y14',16:'y13',17:'y15',18:'y16',19:'y17',20:'y18',21:'y19',22:'y20',10:'y9'};
+  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':11,'BTC/XAU':12,'NASDAQ':13,'Au99.99 (¥/g)':14,'Tencent (0700.HK)':15,'USD/CNY':16,'CAC 40':17,'DAX':18,'S&P 500':19,'Nikkei 225':20,'Shanghai':21,'KOSPI':22,'Trade-Wtd USD (TWEXB)':23};
+  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',11:'y10',12:'y11',13:'y12',14:'y',15:'y14',16:'y13',17:'y15',18:'y16',19:'y17',20:'y18',21:'y19',22:'y20',23:'y21',10:'y9'};
   function updateSelection(){
     const v1=corrS1.value,v2=corrS2.value;
     const want=new Set([0]);

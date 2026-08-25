@@ -2,11 +2,29 @@
 """Fetch economic/financial series and update the dashboard_monthly.csv dashboard data."""
 
 import argparse
+import io
+import json
+import multiprocessing
 import os
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import TimeoutError as TaskTimeoutError
 
 import akshare as ak
 import pandas as pd
 import requests
+
+TASK_TIMEOUT = 180
+
+
+def http_get(url: str, timeout: int = 30) -> bytes:
+    """Download a URL with an explicit timeout so a stalled endpoint cannot hang forever."""
+    resp = requests.get(
+        url,
+        headers={"User-Agent": "Mozilla/5.0", "Accept": "*/*"},
+        timeout=timeout,
+    )
+    resp.raise_for_status()
+    return resp.content
 
 
 def update_dashboard(month_df: pd.DataFrame, output: str = "dashboard_monthly.csv"):
@@ -79,7 +97,7 @@ def fetch_us_real_yield():
         "https://fred.stlouisfed.org/graph/fredgraph.csv"
         "?id=DFII10&cosd=2003-01-02&coed=9999-12-31"
     )
-    df = pd.read_csv(url)
+    df = pd.read_csv(io.BytesIO(http_get(url)))
     df.columns = ["date", "real_yield_pct"]
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
@@ -89,7 +107,7 @@ def fetch_us_real_yield():
 
 def fetch_gpr():
     url = "https://www.matteoiacoviello.com/gpr_files/data_gpr_export.xls"
-    df = pd.read_excel(url)
+    df = pd.read_excel(io.BytesIO(http_get(url, timeout=120)))
     df = df[["month", "GPR"]].copy()
     df = df.rename(columns={"month": "date", "GPR": "gpr"})
     df["date"] = pd.to_datetime(df["date"])
@@ -100,7 +118,7 @@ def fetch_gpr():
 
 def fetch_btc():
     url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CBBTCUSD"
-    df = pd.read_csv(url)
+    df = pd.read_csv(io.BytesIO(http_get(url)))
     df.columns = ["date", "btc_usd"]
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
@@ -139,7 +157,7 @@ def fetch_fed_rates():
         "https://fred.stlouisfed.org/graph/fredgraph.csv"
         "?id=FEDFUNDS&cosd=1954-07-01&coed=9999-12-31"
     )
-    df = pd.read_csv(url)
+    df = pd.read_csv(io.BytesIO(http_get(url)))
     df.columns = ["date", "fed_rate_pct"]
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
@@ -152,7 +170,7 @@ def fetch_nasdaq():
         "https://fred.stlouisfed.org/graph/fredgraph.csv"
         "?id=NASDAQCOM&cosd=1971-02-05&coed=9999-12-31"
     )
-    df = pd.read_csv(url)
+    df = pd.read_csv(io.BytesIO(http_get(url)))
     df.columns = ["date", "nasdaq_close"]
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
@@ -160,12 +178,25 @@ def fetch_nasdaq():
     update_dashboard(df[["month", "nasdaq_close"]].round(1))
 
 
+def fetch_twexb():
+    url = (
+        "https://fred.stlouisfed.org/graph/fredgraph.csv"
+        "?id=DTWEXBGS&cosd=2006-01-02&coed=9999-12-31"
+    )
+    df = pd.read_csv(io.BytesIO(http_get(url)))
+    df.columns = ["date", "twexb"]
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    update_dashboard(df[["month", "twexb"]].round(2))
+
+
 def fetch_usd_cny():
     url = (
         "https://fred.stlouisfed.org/graph/fredgraph.csv"
         "?id=DEXCHUS&cosd=1981-01-02&coed=9999-12-31"
     )
-    df = pd.read_csv(url)
+    df = pd.read_csv(io.BytesIO(http_get(url)))
     df.columns = ["date", "usd_cny"]
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
@@ -220,9 +251,7 @@ def fetch_tencent():
 
 def fetch_cb_demand():
     url = "https://fsapi.gold.org/api/v11/charts/supply-and-demand/42"
-    resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+    data = json.loads(http_get(url, timeout=60))
     qdata = None
     qcats = None
     for chart_type, chart_data in data["chartData"].items():
@@ -247,6 +276,56 @@ def fetch_cb_demand():
     update_dashboard(pd.DataFrame(rows))
 
 
+def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
+    """Run every fetcher to refresh all series in dashboard_monthly.csv."""
+    tasks = [
+        ("gold", fetch_gold, (symbol,), {"months": True}),
+        ("usd_index", fetch_usd_index, (), {"months": True}),
+        ("us_cpi", fetch_us_cpi, (), {}),
+        ("real_yield", fetch_us_real_yield, (), {}),
+        ("gpr", fetch_gpr, (), {}),
+        ("btc", fetch_btc, (), {}),
+        ("aux", fetch_aux, (), {}),
+        ("xag", fetch_xag, (), {}),
+        ("au9999", fetch_au9999, (), {}),
+        ("fed_rates", fetch_fed_rates, (), {}),
+        ("nasdaq", fetch_nasdaq, (), {}),
+        ("usd_cny", fetch_usd_cny, (), {}),
+        ("twexb", fetch_twexb, (), {}),
+        ("tencent", fetch_tencent, (), {}),
+        ("sp500", fetch_sp500, (), {}),
+        ("nikkei", fetch_nikkei, (), {}),
+        ("dax", fetch_dax, (), {}),
+        ("cac40", fetch_cac40, (), {}),
+        ("kospi", fetch_kospi, (), {}),
+        ("shanghai", fetch_shanghai, (), {}),
+        ("cb_demand", fetch_cb_demand, (), {}),
+    ]
+    failures = []
+    ctx = multiprocessing.get_context("fork")
+    for name, func, args, kwargs in tasks:
+        print(f"[{name}] fetching ...", flush=True)
+        executor = ProcessPoolExecutor(max_workers=1, mp_context=ctx)
+        try:
+            executor.submit(func, *args, **kwargs).result(timeout=timeout)
+            print(f"[{name}] done", flush=True)
+        except TaskTimeoutError:
+            failures.append(name)
+            print(f"[{name}] timed out after {timeout}s", flush=True)
+        except Exception as exc:
+            failures.append(name)
+            print(f"[{name}] failed: {exc}", flush=True)
+        finally:
+            for proc in list(getattr(executor, "_processes", {}).values()):
+                if proc.is_alive():
+                    proc.terminate()
+            executor.shutdown(wait=False)
+    if failures:
+        print(f"Finished with failures: {', '.join(failures)}")
+    else:
+        print("All series updated successfully")
+
+
 def list_gold_symbols():
     syms = ak.spot_symbol_table_sge()
     print(syms.to_string(index=False))
@@ -256,6 +335,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Fetch series and update dashboard_monthly.csv (or write daily files for gold/USD index)"
     )
+    parser.add_argument("--all", action="store_true", help="Update all series in dashboard_monthly.csv")
     parser.add_argument("--symbol", default="Au99.99", help="Gold contract symbol (default: Au99.99)")
     parser.add_argument("--symbols", action="store_true", help="List all available gold symbols")
     parser.add_argument("--monthly", action="store_true", help="Resample gold/USD index to monthly and update dashboard")
@@ -272,6 +352,7 @@ if __name__ == "__main__":
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
     parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
+    parser.add_argument("--twexb", action="store_true", help="Fetch monthly Broad Trade-Weighted USD Index (FRED DTWEXBGS)")
     parser.add_argument("--tencent", action="store_true", help="Fetch monthly Tencent HK (0700.HK) stock price")
     parser.add_argument("--cac40", action="store_true", help="Fetch monthly CAC 40 index")
     parser.add_argument("--dax", action="store_true", help="Fetch monthly DAX index")
@@ -283,6 +364,8 @@ if __name__ == "__main__":
 
     if args.symbols:
         list_gold_symbols()
+    elif args.all:
+        update_all(args.symbol)
     elif args.cac40:
         fetch_cac40()
     elif args.dax:
@@ -321,5 +404,7 @@ if __name__ == "__main__":
         fetch_tencent()
     elif args.usd_cny:
         fetch_usd_cny()
+    elif args.twexb:
+        fetch_twexb()
     else:
         fetch_gold(args.symbol, args.monthly, args.output or "sge_gold.csv")
