@@ -7,52 +7,51 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import Input, Dense, Dropout
 
-keras.utils.set_random_seed(42)
-
-df = pd.read_csv("dashboard_monthly.csv")[["month", "aux_usd", "btc_usd", "fed_rate_pct", "xag_usd"]]
+df = pd.read_csv("dashboard_monthly.csv")[["month", "aux_usd", "btc_usd", "fed_rate_pct", "real_yield_pct"]]
 df = df.rename(columns={"aux_usd": "xau"}).dropna(subset=["xau"]).reset_index(drop=True)
-df["xau_xag"] = df["xau"] / df["xag_usd"]
+
+def prepare_dataset(df, window=12, val=6):
+    btc_chg = df["btc_usd"].pct_change()
+    fed_delta = df["fed_rate_pct"].diff()
+    ry_delta = df["real_yield_pct"].diff()
+
+    y = df["xau"].pct_change().shift(-1)
+
+    frames = []
+    feature_names = []
+    for lag in range(1, window + 1):
+        for name, series in [("btc_chg", btc_chg), ("fed_delta", fed_delta), ("ry_delta", ry_delta)]:
+            fname = f"{name}_lag{lag}"
+            frames.append(series.shift(lag).rename(fname))
+            feature_names.append(fname)
+    X = pd.concat(frames, axis=1)
+
+    combined = pd.concat([X, y.rename("target"), df["month"], df["xau"]], axis=1)
+    combined = combined.dropna().reset_index(drop=True)
+
+    X_all = combined[feature_names].values.astype(np.float32)
+    y_all = combined["target"].values.astype(np.float32)
+    months_all = combined["month"].values
+    curr_all = combined["xau"].values.astype(np.float32)
+
+    X_tr, y_tr = X_all[:-val], y_all[:-val]
+    X_va, y_va = X_all[-val:], y_all[-val:]
+
+    mu_X = X_tr.mean(axis=0)
+    sig_X = X_tr.std(axis=0)
+    sig_X[sig_X == 0] = 1
+
+    X_tr = ((X_tr - mu_X) / sig_X).astype(np.float32)
+    X_va = ((X_va - mu_X) / sig_X).astype(np.float32)
+
+    return X_tr, y_tr, X_va, y_va, mu_X, sig_X, feature_names, months_all, curr_all
+
 
 WINDOW = 12
 VAL = 6
-OX, Oy, O_months, O_curr = [], [], [], []
-for i in range(WINDOW + 1, len(df) - 1):
-    feat = []
-    for t in range(i - WINDOW, i):
-        feat.extend([
-            df.loc[t, "btc_usd"] / df.loc[t - 1, "btc_usd"] - 1,
-            df.loc[t, "fed_rate_pct"] - df.loc[t - 1, "fed_rate_pct"],
-            df.loc[t, "xau_xag"] / df.loc[t - 1, "xau_xag"] - 1,
-        ])
-    OX.append(feat)
-    Oy.append(df.loc[i + 1, "xau"] / df.loc[i, "xau"] - 1)
-    O_months.append(df.loc[i + 1, "month"])
-    O_curr.append(df.loc[i, "xau"])
-
-OX, Oy = np.array(OX, dtype=np.float32), np.array(Oy, dtype=np.float32)
-O_months = np.array(O_months)
-O_curr = np.array(O_curr, dtype=np.float32)
-keep = ~np.isnan(OX).any(axis=1)
-OX, Oy, O_months, O_curr = OX[keep], Oy[keep], O_months[keep], O_curr[keep]
-
-X_tr, y_tr = OX[:-VAL], Oy[:-VAL]
-X_va, y_va = OX[-VAL:], Oy[-VAL:]
-
-tr_df = pd.DataFrame(X_tr)
-mu_X = tr_df.mean()
-sig_X = tr_df.std().replace(0, 1)
-
-X_tr = ((tr_df - mu_X) / sig_X).values.astype(np.float32)
-X_va = ((pd.DataFrame(X_va) - mu_X) / sig_X).values.astype(np.float32)
-y_tr = y_tr.astype(np.float32)
-y_va = y_va.astype(np.float32)
-
-mu_X, sig_X = mu_X.values, sig_X.values
+X_tr, y_tr, X_va, y_va, mu_X, sig_X, feature_names, months_all, curr_all = prepare_dataset(df, WINDOW, VAL)
 
 print("\nCorrelation between inputs and output (XAU next-month return, training set):")
-feature_names = []
-for t in range(WINDOW):
-    feature_names.extend([f"btc_chg_t-{WINDOW - t}", f"fed_delta_t-{WINDOW - t}", f"xau_xag_chg_t-{WINDOW - t}"])
 correlations = np.corrcoef(X_tr, y_tr, rowvar=False)[-1, :-1]
 for name, corr in zip(feature_names, correlations):
     print(f"  {name}: {corr:+.4f}")
@@ -78,11 +77,11 @@ for seed in range(N_SEEDS):
 # %%
 y_va_actual = y_va
 y_va_pred = np.mean([m.predict(X_va, verbose=0).ravel() for m in models], axis=0)
-curr_va = O_curr[-VAL:]
+curr_va = curr_all[-VAL:]
 actual_price = curr_va * (1 + y_va_actual)
 pred_price = curr_va * (1 + y_va_pred)
 diff_price = pred_price - actual_price
-va_months = O_months[-VAL:]
+va_months = months_all[-VAL:]
 
 def last_summary(months, actual, predicted, diff):
     last = pd.DataFrame({
@@ -100,21 +99,20 @@ def last_summary(months, actual, predicted, diff):
 last = last_summary(va_months, actual_price, pred_price, diff_price)
 btc_vals = df["btc_usd"]
 fed_vals = df["fed_rate_pct"]
-xau_xag_vals = df["xau_xag"]
+ry_vals = df["real_yield_pct"]
 
-X_future = []
-end = len(df)
-start = end - WINDOW
+btc_chg = btc_vals.pct_change()
+fed_delta = fed_vals.diff()
+ry_delta = ry_vals.diff()
+
 feat = []
-for t in range(start, end):
+for lag in range(1, WINDOW + 1):
     feat.extend([
-        btc_vals[t] / btc_vals[t - 1] - 1,
-        fed_vals[t] - fed_vals[t - 1],
-        xau_xag_vals[t] / xau_xag_vals[t - 1] - 1,
+        btc_chg.iloc[-lag],
+        fed_delta.iloc[-lag],
+        ry_delta.iloc[-lag],
     ])
-X_future.append(feat)
-
-X_future = np.array(X_future, dtype=np.float32)
+X_future = np.array([feat], dtype=np.float32)
 X_future = ((X_future - mu_X) / sig_X).astype(np.float32)
 y_future_pred = np.mean([m.predict(X_future, verbose=0).ravel() for m in models], axis=0)
 future_price = df["xau"].iloc[-1] * (1 + y_future_pred)
