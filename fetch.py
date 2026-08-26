@@ -135,6 +135,15 @@ def fetch_aux():
     update_dashboard(df[["month", "aux_usd"]].round(1))
 
 
+def fetch_copper():
+    df = ak.futures_foreign_hist(symbol="HG")
+    df = df[["date", "close"]].rename(columns={"close": "copper_close"})
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    update_dashboard(df[["month", "copper_close"]].round(1))
+
+
 def fetch_xag():
     df = ak.futures_foreign_hist(symbol="XAG")
     df = df[["date", "close"]].rename(columns={"close": "xag_usd"})
@@ -287,11 +296,13 @@ def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
         ("btc", fetch_btc, (), {}),
         ("aux", fetch_aux, (), {}),
         ("xag", fetch_xag, (), {}),
+        ("copper", fetch_copper, (), {}),
         ("au9999", fetch_au9999, (), {}),
         ("fed_rates", fetch_fed_rates, (), {}),
         ("nasdaq", fetch_nasdaq, (), {}),
         ("usd_cny", fetch_usd_cny, (), {}),
         ("twexb", fetch_twexb, (), {}),
+        ("zijin", fetch_zijin, (), {}),
         ("tencent", fetch_tencent, (), {}),
         ("sp500", fetch_sp500, (), {}),
         ("nikkei", fetch_nikkei, (), {}),
@@ -326,6 +337,14 @@ def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
         print("All series updated successfully")
 
 
+def fetch_zijin():
+    df = ak.stock_zh_a_daily(symbol="sh601899")
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    update_dashboard(df[["month", "close"]].rename(columns={"close": "zijin_close"}).round(2))
+
+
 def list_gold_symbols():
     syms = ak.spot_symbol_table_sge()
     print(syms.to_string(index=False))
@@ -347,12 +366,14 @@ if __name__ == "__main__":
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
     parser.add_argument("--aux", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
     parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
+    parser.add_argument("--copper", action="store_true", help="Fetch monthly COMEX copper (HG) price")
     parser.add_argument("--au9999", action="store_true", help="Fetch monthly SGE Au99.99 gold price (CNY/g)")
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
     parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
     parser.add_argument("--twexb", action="store_true", help="Fetch monthly Broad Trade-Weighted USD Index (FRED DTWEXBGS)")
+    parser.add_argument("--zijin", action="store_true", help="Fetch monthly Zijin Mining (601899.SH) stock price")
     parser.add_argument("--tencent", action="store_true", help="Fetch monthly Tencent HK (0700.HK) stock price")
     parser.add_argument("--cac40", action="store_true", help="Fetch monthly CAC 40 index")
     parser.add_argument("--dax", action="store_true", help="Fetch monthly DAX index")
@@ -390,6 +411,8 @@ if __name__ == "__main__":
         fetch_aux()
     elif args.xag:
         fetch_xag()
+    elif args.copper:
+        fetch_copper()
     elif args.au9999:
         fetch_au9999()
     elif args.gpr:
@@ -406,5 +429,7 @@ if __name__ == "__main__":
         fetch_usd_cny()
     elif args.twexb:
         fetch_twexb()
+    elif args.zijin:
+        fetch_zijin()
     else:
         fetch_gold(args.symbol, args.monthly, args.output or "sge_gold.csv")
