@@ -140,7 +140,7 @@ function render(rows){
   const labels=[...preLabels,...goldMonths];
   const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].gold_close))];
   const col=key=>labels.map(m=>{const r=M[m];return r&&r[key]!==''?num(r[key]):null});
-  const usdOnLabels=col('usd_close');
+  const usdOnLabels=col('usd_index');
   const cpiOnLabels=col('cpi_yoy_pct');
   const realOnLabels=col('real_yield_pct');
   const gprOnLabels=col('gpr');
@@ -227,7 +227,7 @@ function render(rows){
   };
 
   const cors=[
-    ['USD Index',M,'usd_close'],
+    ['USD Index',M,'usd_index'],
     ['US CPI YoY',M,'cpi_yoy_pct'],
     ['Real 10Y Yield',M,'real_yield_pct'],
     ['GPR',M,'gpr'],

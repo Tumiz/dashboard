@@ -76,7 +76,7 @@ def fetch_usd_index(months: bool = False, output: str = "usd_index.csv"):
     if months:
         df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
         df["month"] = df["date"].dt.strftime("%Y-%m")
-        update_dashboard(df[["month", "close"]].rename(columns={"close": "usd_close"}).round(1))
+        update_dashboard(df[["month", "close"]].rename(columns={"close": "usd_index"}).round(1))
         return
 
     df = df.drop(columns=["date"]).round(1)
