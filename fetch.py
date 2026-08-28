@@ -258,6 +258,26 @@ def fetch_tencent():
     update_dashboard(df[["month", "close"]].rename(columns={"close": "tencent_close"}).round(2))
 
 
+def fetch_gold_mine_production():
+    url = "https://fsapi.gold.org/api/v11/charts/supply-and-demand/42"
+    data = json.loads(http_get(url, timeout=60))
+    supply = data["chartData"]["Supply_Annually"]
+    pdata = None
+    pcats = None
+    for series in supply["series"]:
+        if series["name"] == "Mine production":
+            pdata = series["data"]
+            pcats = supply["categories"]
+            break
+    if pdata is None:
+        raise ValueError("Mine production data not found in API response")
+    rows = []
+    for year, val in zip(pcats, pdata):
+        for m in range(1, 13):
+            rows.append({"month": f"{int(year)}-{m:02d}", "gold_mine_production_t": round(val, 1)})
+    update_dashboard(pd.DataFrame(rows))
+
+
 def fetch_cb_demand():
     url = "https://fsapi.gold.org/api/v11/charts/supply-and-demand/42"
     data = json.loads(http_get(url, timeout=60))
@@ -311,6 +331,7 @@ def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
         ("kospi", fetch_kospi, (), {}),
         ("shanghai", fetch_shanghai, (), {}),
         ("cb_demand", fetch_cb_demand, (), {}),
+        ("gold_production", fetch_gold_mine_production, (), {}),
     ]
     failures = []
     ctx = multiprocessing.get_context("fork")
@@ -369,6 +390,7 @@ if __name__ == "__main__":
     parser.add_argument("--copper", action="store_true", help="Fetch monthly COMEX copper (HG) price")
     parser.add_argument("--au9999", action="store_true", help="Fetch monthly SGE Au99.99 gold price (CNY/g)")
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
+    parser.add_argument("--gold-production", action="store_true", help="Fetch annual global mine gold production (tonnes), spread monthly")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
     parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
@@ -405,6 +427,8 @@ if __name__ == "__main__":
         fetch_fed_rates()
     elif args.cb_demand:
         fetch_cb_demand()
+    elif args.gold_production:
+        fetch_gold_mine_production()
     elif args.btc:
         fetch_btc()
     elif args.aux:
