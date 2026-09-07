@@ -23,6 +23,20 @@ body{
 .chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
 .chart-controls{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .chart-controls label{font-size:11px;color:#6b7280;font-weight:500;white-space:nowrap}
+.corr-dd{position:relative;flex-shrink:0}
+.corr-dd-btn{font-size:10px;padding:2px 8px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#374151;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.corr-dd-btn .caret{font-size:8px;color:#6b7280}
+.corr-dd-panel{position:absolute;top:calc(100% + 2px);left:0;z-index:40;display:none;min-width:220px;max-width:320px;background:#fff;border:1px solid #d1d5db;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.15);padding:4px}
+.corr-dd-panel.open{display:block}
+.corr-dd-panel .corr-checks{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:1px}
+.corr-dd-panel::-webkit-scrollbar{width:3px}
+.corr-dd-panel::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:2px}
+.corr-dd-panel label{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#374151;cursor:pointer;white-space:nowrap;padding:2px 4px;border-radius:4px}
+.corr-dd-panel label:hover{background:#f3f4f6}
+.corr-dd-panel input[type=checkbox]{accent-color:#6366f1;width:12px;height:12px;flex-shrink:0}
+.corr-dd-actions{display:flex;gap:6px;padding:4px 4px 2px;border-top:1px solid #f3f4f6;margin-top:2px}
+.corr-dd-actions button{font-size:10px;padding:1px 6px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#374151;cursor:pointer}
+.corr-dd-actions button:hover{background:#f0f2f5}
 
 .chart-wrapper{position:relative;height:200px}
 .range-group{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:nowrap}
@@ -99,7 +113,9 @@ td.down{color:#ef4444}
   .dual-range{flex:1;height:28px}
   .dual-range input[type=range]::-webkit-slider-thumb{width:20px;height:20px}
   .dual-range input[type=range]::-moz-range-thumb{width:20px;height:20px}
-  #corrS1,#corrS2{max-width:none;flex:1;min-width:0}
+  #corrS2{max-width:none;flex:1;min-width:0}
+  .corr-dd{flex:1;min-width:0}
+  .corr-dd-btn{max-width:none;width:100%}
 }
 @media(max-width:400px){
   .chart-wrapper{height:180px}
@@ -366,8 +382,14 @@ function render(rows){
           </div>
           <span class="range-label" id="rangeEndLabel"></span>
         </div>
-        <select id="corrS1" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px"><option value="">— line —</option>${Object.keys(signalMap).map((s,i)=>`<option value="${s}"${s==='AUX/USD'?' selected':''}>${s}</option>`).join('')}</select>
-        <select id="corrS2" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px"><option value="">— line —</option>${Object.keys(signalMap).map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+        <div class="corr-dd" id="corrDD">
+          <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
+          <div class="corr-dd-panel" id="corrDDPanel">
+            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).map(s=>`<label><input type="checkbox" value="${s}"${s==='AUX/USD'?' checked':''}>${s}</label>`).join('')}</div>
+            <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
+          </div>
+        </div>
+        <select id="corrS2" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px"><option value="">— pan —</option></select>
         <label class="shift-group" style="display:flex;align-items:center;gap:4px;font-size:10px;color:#374151;white-space:nowrap">
           Shift: <input type="range" id="shiftSlider" min="-24" max="24" value="0" step="1" style="width:120px;accent-color:#6366f1">
           <span id="shiftLabel" style="min-width:30px;text-align:center;font-variant-numeric:tabular-nums">0</span>
@@ -976,7 +998,10 @@ function render(rows){
   rangeStart.addEventListener('input',()=>updateRange('start'));
   rangeEnd.addEventListener('input',()=>updateRange('end'));
 
-  const corrS1=document.getElementById('corrS1');
+  const corrDD=document.getElementById('corrDD');
+  const corrDDToggle=document.getElementById('corrDDToggle');
+  const corrDDPanel=document.getElementById('corrDDPanel');
+  const corrChecks=document.getElementById('corrChecks');
   const corrS2=document.getElementById('corrS2');
   const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':10,'BTC/XAU':11,'NASDAQ':12,'Au99.99 (¥/g)':13,'Tencent (0700.HK)':14,'USD/CNY':15,'CAC 40':16,'DAX':17,'S&P 500':18,'Nikkei 225':19,'Shanghai':20,'KOSPI':21,'Trade-Wtd USD (TWEXB)':22,'Zijin Mining (601899)':23,'Copper (COMEX)':24,'Gold Mine Production (t)':25};
   const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y15',17:'y16',18:'y17',19:'y18',20:'y19',21:'y20',22:'y21',23:'y22',24:'y23',25:'y24'};
@@ -990,18 +1015,30 @@ function render(rows){
     }
     return out;
   }
+  function getChecked(){
+    return[...corrChecks.querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.value);
+  }
+  function updatePanDropdown(checked){
+    const prev=corrS2.value;
+    corrS2.innerHTML='<option value="">— pan —</option>'+checked.map(s=>`<option value="${s}"${s===prev?' selected':''}>${s}</option>`).join('');
+  }
+  function updateDDLabel(checked){
+    if(checked.length) corrDDToggle.textContent='Curves ('+checked.length+') ▾';
+    else corrDDToggle.textContent='Select curves ▾';
+  }
   function updateSelection(){
-    const v1=corrS1.value,v2=corrS2.value;
-    const want=new Set();
-    if(v1) want.add(lineIdx[v1]);
-    if(v2) want.add(lineIdx[v2]);
-    Object.values(lineIdx).forEach(idx=>{
+    const checked=getChecked();
+    const want=new Set(checked.map(s=>lineIdx[s]));
+    Object.entries(lineIdx).forEach(([name,idx])=>{
       const show=want.has(idx);
       chart.setDatasetVisibility(idx,show);
       const ax=axisOf[idx];
       if(ax) chart.options.scales[ax].display=show;
     });
     chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
+    updatePanDropdown(checked);
+    updateDDLabel(checked);
+    const v2=corrS2.value;
     const shift=parseInt(shiftSlider.value);
     if(v2){
       const ds2=chart.data.datasets[lineIdx[v2]];
@@ -1009,7 +1046,22 @@ function render(rows){
     }
     chart.update();
   }
-  corrS1.addEventListener('change',updateSelection);
+  corrDDToggle.addEventListener('click',e=>{
+    e.stopPropagation();
+    corrDDPanel.classList.toggle('open');
+  });
+  document.addEventListener('click',e=>{
+    if(!corrDD.contains(e.target)) corrDDPanel.classList.remove('open');
+  });
+  document.getElementById('corrAll').addEventListener('click',()=>{
+    corrChecks.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=true);
+    updateSelection();
+  });
+  document.getElementById('corrNone').addEventListener('click',()=>{
+    corrChecks.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
+    updateSelection();
+  });
+  corrChecks.addEventListener('change',updateSelection);
   corrS2.addEventListener('change',updateSelection);
   shiftSlider.addEventListener('input',()=>{
     shiftLabel.textContent=shiftSlider.value>0?'+'+shiftSlider.value:shiftSlider.value;
