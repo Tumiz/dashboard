@@ -10,7 +10,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  background:#f0f2f5;color:#1a1a2e;min-height:100vh
+  background:#050505;color:#e5e7eb;min-height:100vh
 }
 .header{
   background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
@@ -19,44 +19,44 @@ body{
 .header h1{font-size:18px;font-weight:600}
 .header p{font-size:12px;color:#a8b2d1;margin-top:2px}
 .container{max-width:1200px;margin:0 auto;padding:12px}
-.chart-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px}
-.chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
+.chart-card{background:#16161b;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.5);margin-bottom:12px}
+.chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#f3f4f6}
 .chart-controls{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.chart-controls label{font-size:11px;color:#6b7280;font-weight:500;white-space:nowrap}
+.chart-controls label{font-size:11px;color:#9ca3af;font-weight:500;white-space:nowrap}
 .corr-dd{position:relative;flex-shrink:0}
-.corr-dd-btn{font-size:10px;padding:2px 8px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#374151;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px}
-.corr-dd-btn .caret{font-size:8px;color:#6b7280}
-.corr-dd-panel{position:absolute;top:calc(100% + 2px);left:0;z-index:40;display:none;min-width:220px;max-width:320px;background:#fff;border:1px solid #d1d5db;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.15);padding:4px}
+.corr-dd-btn{font-size:10px;padding:2px 8px;border:1px solid #3f3f46;border-radius:4px;background:#16161b;color:#d1d5db;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.corr-dd-btn .caret{font-size:8px;color:#9ca3af}
+.corr-dd-panel{position:absolute;top:calc(100% + 2px);left:0;z-index:40;display:none;min-width:220px;max-width:320px;background:#16161b;border:1px solid #3f3f46;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.5);padding:4px}
 .corr-dd-panel.open{display:block}
 .corr-dd-panel .corr-checks{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:1px}
 .corr-dd-panel::-webkit-scrollbar{width:3px}
-.corr-dd-panel::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:2px}
-.corr-dd-panel label{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#374151;cursor:pointer;white-space:nowrap;padding:2px 4px;border-radius:4px}
-.corr-dd-panel label:hover{background:#f3f4f6}
+.corr-dd-panel::-webkit-scrollbar-thumb{background:#52525b;border-radius:2px}
+.corr-dd-panel label{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#d1d5db;cursor:pointer;white-space:nowrap;padding:2px 4px;border-radius:4px}
+.corr-dd-panel label:hover{background:#1f2937}
 .corr-dd-panel input[type=checkbox]{accent-color:#6366f1;width:12px;height:12px;flex-shrink:0}
-.corr-dd-actions{display:flex;gap:6px;padding:4px 4px 2px;border-top:1px solid #f3f4f6;margin-top:2px}
-.corr-dd-actions button{font-size:10px;padding:1px 6px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#374151;cursor:pointer}
-.corr-dd-actions button:hover{background:#f0f2f5}
+.corr-dd-actions{display:flex;gap:6px;padding:4px 4px 2px;border-top:1px solid #26262c;margin-top:2px}
+.corr-dd-actions button{font-size:10px;padding:1px 6px;border:1px solid #3f3f46;border-radius:4px;background:#16161b;color:#d1d5db;cursor:pointer}
+.corr-dd-actions button:hover{background:#1f2937}
 
 .chart-wrapper{position:relative;height:200px}
 .range-group{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:nowrap}
-.range-group label{font-size:10px;color:#6b7280;white-space:nowrap}
-.range-group .range-label{font-size:10px;color:#374151;min-width:48px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.range-group label{font-size:10px;color:#9ca3af;white-space:nowrap}
+.range-group .range-label{font-size:10px;color:#d1d5db;min-width:48px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .dual-range{position:relative;width:80px;height:18px;flex-shrink:0}
-.dual-range .dr-track{position:absolute;top:50%;left:0;right:0;height:4px;background:#e5e7eb;border-radius:2px;transform:translateY(-50%)}
+.dual-range .dr-track{position:absolute;top:50%;left:0;right:0;height:4px;background:#3f3f46;border-radius:2px;transform:translateY(-50%)}
 .dual-range .dr-fill{position:absolute;top:50%;height:4px;background:#6366f1;border-radius:2px;transform:translateY(-50%)}
 .dual-range input[type=range]{position:absolute;top:0;left:0;width:100%;height:100%;-webkit-appearance:none;appearance:none;background:transparent;pointer-events:none;margin:0;padding:0}
-.dual-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
-.dual-range input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
-.table-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a2e}
-.flow-legend{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:8px;font-size:11px;color:#6b7280}
+.dual-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #16161b;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
+.dual-range input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #16161b;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
+.table-card{background:#16161b;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#f3f4f6}
+.flow-legend{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:8px;font-size:11px;color:#9ca3af}
 .flow-legend .lg{display:flex;align-items:center;gap:5px;white-space:nowrap}
 .flow-legend .lg-line{width:22px;height:3px;border-radius:2px}
 .flow-legend .lg-node{width:12px;height:12px;border-radius:3px}
-.flow-cap{font-size:11px;color:#9ca3af;margin-top:4px}
-.flow-rationale{margin-top:10px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa}
-.flow-rationale summary{cursor:pointer;font-size:12px;font-weight:600;color:#1a1a2e;padding:8px 12px;list-style:none}
+.flow-cap{font-size:11px;color:#71717a;margin-top:4px}
+.flow-rationale{margin-top:10px;border:1px solid #3f3f46;border-radius:8px;background:#141418}
+.flow-rationale summary{cursor:pointer;font-size:12px;font-weight:600;color:#f3f4f6;padding:8px 12px;list-style:none}
 .flow-rationale summary::-webkit-details-marker{display:none}
 .flow-rationale summary::before{content:'▸ ';color:#6366f1;font-size:10px}
 .flow-rationale[open] summary::before{content:'▾ '}
@@ -80,11 +80,11 @@ body{
 .flow-tip .t-hint{font-size:10.5px;color:#9ca3af;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.12)}
 .wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:6px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
-td{padding:6px 6px;border-bottom:1px solid #f3f4f6;white-space:nowrap}
+th{text-align:left;padding:6px 6px;border-bottom:2px solid #2d2d35;color:#9ca3af;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+td{padding:6px 6px;border-bottom:1px solid #26262c;white-space:nowrap}
 td.up{color:#22c55e}
 td.down{color:#ef4444}
-.loading{text-align:center;padding:60px 0;color:#6b7280;font-size:14px}
+.loading{text-align:center;padding:60px 0;color:#9ca3af;font-size:14px}
 .error{text-align:center;padding:60px 0;color:#ef4444;font-size:14px}
 @media(min-width:640px){
   .header{padding:20px 24px}
@@ -307,8 +307,22 @@ function render(rows){
     'Hang Seng Index':'Hong Kong\u2019s benchmark index — reflects China-linked growth, capital flows, and risk sentiment that also drive gold demand.',
   };
 
-  const dirTxt=d=>d==='leads'?'leads gold':d==='lags'?'gold leads':'synchronous';
   const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const sizeData=[
+    {label:'S&P 500',v:62,color:'#2563eb',basis:'Market cap of S&P 500 constituents, ~$62T (mid-2026).'},
+    {label:'NASDAQ',v:45,color:'#06b6d4',basis:'NASDAQ Composite constituents, ~$45T (overlaps S&P 500).'},
+    {label:'US Treasuries',v:31.5,color:'#8b5cf6',basis:'Total outstanding Treasury debt, SIFMA $31.5T (Jul 2026).'},
+    {label:'XAU Gold',v:30,color:'#f59e0b',basis:'Above-ground gold ~212,000 t at ~$4,500/oz ≈ $30T.'},
+    {label:'USD Supply (M2)',v:23.2,color:'#16a34a',basis:'US M2 money stock, FRED M2SL $23.2T (Jul 2026).'},
+    {label:'Shanghai (SSE)',v:11,color:'#dc2626',basis:'Shanghai Stock Exchange market cap, ~$11T (China total ≈ $17T incl. Shenzhen).'},
+    {label:'Hang Seng Index',v:4.5,color:'#ec4899',basis:'HK equity market cap ≈ $6T; HSI constituents ≈ $4.5T.'},
+    {label:'SGE China Gold',v:2.9,color:'#d97706',basis:'Gold held in China (~20,000 t) at ~$4,500/oz ≈ $2.9T.'},
+    {label:'XAG Silver',v:0.2,color:'#94a3b8',basis:'Above-ground silver ~2.5B oz at ~$67/oz ≈ $0.2T.'},
+  ];
+  const sizeRows=sizeData.map(d=>`<tr><td><strong>${d.label}</strong></td><td>$ ${d.v.toFixed(1)}T</td><td>${esc(d.basis)}</td></tr>`).join('');
+
+  const dirTxt=d=>d==='leads'?'leads gold':d==='lags'?'gold leads':'synchronous';
 
   function flowSvg(cors){
     const W=980,H=840,CX=490,CY=445;
@@ -356,8 +370,8 @@ function render(rows){
       const label=nm.length>18?nm.slice(0,17)+'…':nm;
       const vcol=c.r>=0.2?'#16a34a':c.r<=-0.2?'#dc2626':'#6b7280';
       nodes.push(`<g class="flow-node" data-name="${esc(c.name)}" tabindex="0"><title>${esc(c.name)}: r=${rel}, ${stats}, ${rLabel(c.r)} correlation with gold${reason}</title>
-        <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-boxH/2).toFixed(1)}" width="${boxW}" height="${boxH}" rx="8" fill="#fff" stroke="${ccol}" stroke-width="1.5"/>
-        <text x="${x.toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="10.5" fill="#1a1a2e">${esc(label)}</text>
+        <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-boxH/2).toFixed(1)}" width="${boxW}" height="${boxH}" rx="8" fill="#16161b" stroke="${ccol}" stroke-width="1.5"/>
+        <text x="${x.toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="10.5" fill="#e5e7eb">${esc(label)}</text>
         <text x="${x.toFixed(1)}" y="${(y+10).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${vcol}">${c.r>=0?'+':''}${c.r.toFixed(2)}</text></g>`);
     });
     return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Gold lead-lag causality flowchart">
@@ -393,8 +407,8 @@ function render(rows){
             <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
           </div>
         </div>
-        <select id="corrS2" style="font-size:10px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;max-width:110px"><option value="">— pan —</option></select>
-        <label class="shift-group" style="display:flex;align-items:center;gap:4px;font-size:10px;color:#374151;white-space:nowrap">
+        <select id="corrS2" style="font-size:10px;padding:2px 4px;border:1px solid #3f3f46;border-radius:4px;max-width:110px;background:#16161b;color:#d1d5db"><option value="">— pan —</option></select>
+        <label class="shift-group" style="display:flex;align-items:center;gap:4px;font-size:10px;color:#d1d5db;white-space:nowrap">
           Shift: <input type="range" id="shiftSlider" min="-24" max="24" value="0" step="1" style="width:120px;accent-color:#6366f1">
           <span id="shiftLabel" style="min-width:30px;text-align:center;font-variant-numeric:tabular-nums">0</span>
         </label>
@@ -424,6 +438,19 @@ function render(rows){
             <td>${c.r.toFixed(3)} (${c.lag>0?'+':''}${c.lag} mo)</td>
             <td>${esc(explain[c.name]||'')}</td>
           </tr>`).join('')}</tbody>
+        </table></div>
+      </details>
+    </div>
+
+    <div class="chart-card" style="margin-top:8px">
+      <h2>Market Size — Assets &amp; Markets</h2>
+      <div style="height:340px"><canvas id="sizeChart"></canvas></div>
+      <div class="flow-cap">Approximate total market sizes, mid-2026, US$ trillions. Indices overlap (S&amp;P 500 ⊃ NASDAQ), and XAU vs SGE separates international gold from China-held gold.</div>
+      <details class="flow-rationale">
+        <summary>How each size is estimated</summary>
+        <div class="wrap"><table>
+          <thead><tr><th>Asset / Market</th><th>Estimate</th><th>Basis</th></tr></thead>
+          <tbody>${sizeRows}</tbody>
         </table></div>
       </details>
     </div>
@@ -885,10 +912,10 @@ function render(rows){
       },
       animation:false,
       scales:{
-        x:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{maxTicksLimit:window.innerWidth<480?6:10,maxRotation:window.innerWidth<480?45:0}},
+        x:{grid:{color:'rgba(255,255,255,0.07)'},ticks:{maxTicksLimit:window.innerWidth<480?6:10,maxRotation:window.innerWidth<480?45:0}},
         y:{
           position:'left',title:{display:true,text:'Gold (¥/g)'},
-          grid:{color:'rgba(0,0,0,0.06)'},
+          grid:{color:'rgba(255,255,255,0.07)'},
           ticks:{callback:v=>'¥'+v}
         },
         y1:{
@@ -994,6 +1021,38 @@ function render(rows){
 
   chart.update();
 
+  new Chart(document.getElementById('sizeChart'),{
+    type:'pie',
+    data:{
+      labels:sizeData.map(d=>d.label),
+      datasets:[{
+        data:sizeData.map(d=>d.v),
+        backgroundColor:sizeData.map(d=>d.color),
+        borderColor:'#fff',
+        borderWidth:2
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{
+        legend:{position:'right',labels:{boxWidth:12,boxHeight:12,font:{size:11},padding:10,color:'#d1d5db'}},
+        tooltip:{
+          callbacks:{
+            label:ctx=>{
+              const v=ctx.parsed;
+              const total=ctx.dataset.data.reduce((a,b)=>a+b,0);
+              return ctx.label+': $'+v.toFixed(1)+'T ('+(100*v/total).toFixed(1)+'%)';
+            },
+            footer:items=>{
+              const d=sizeData.find(x=>x.label===items[0].label);
+              return d?d.basis:'';
+            }
+          }
+        }
+      }
+    }
+  });
+
   const rangeStart=document.getElementById('rangeStart');
   const rangeEnd=document.getElementById('rangeEnd');
   const rangeFill=document.getElementById('rangeFill');
@@ -1067,7 +1126,13 @@ function render(rows){
       const ds2=chart.data.datasets[lineIdx[v2]];
       ds2.data=shiftArray(signalMap[v2],shift);
     }
-    chart.update();
+Object.values(chart.options.scales).forEach(s=>{
+    if(s.ticks)s.ticks.color='#9ca3af';
+    if(s.grid)s.grid.color='rgba(255,255,255,0.07)';
+    if(s.title)s.title.color='#9ca3af';
+  });
+
+  chart.update();
   }
   corrDDToggle.addEventListener('click',e=>{
     e.stopPropagation();
