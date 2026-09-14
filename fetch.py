@@ -250,6 +250,14 @@ def fetch_kospi():
     fetch_global_index("韩国KOSPI", "kospi_close")
 
 
+def fetch_hsi():
+    df = ak.stock_hk_index_daily_sina(symbol="HSI")
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    update_dashboard(df[["month", "close"]].rename(columns={"close": "hsi_close"}).round(1))
+
+
 def fetch_tencent():
     df = ak.stock_hk_daily(symbol="00700")
     df["date"] = pd.to_datetime(df["date"])
@@ -329,6 +337,7 @@ def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
         ("dax", fetch_dax, (), {}),
         ("cac40", fetch_cac40, (), {}),
         ("kospi", fetch_kospi, (), {}),
+        ("hsi", fetch_hsi, (), {}),
         ("shanghai", fetch_shanghai, (), {}),
         ("cb_demand", fetch_cb_demand, (), {}),
         ("gold_production", fetch_gold_mine_production, (), {}),
@@ -403,6 +412,7 @@ if __name__ == "__main__":
     parser.add_argument("--nikkei", action="store_true", help="Fetch monthly Nikkei 225 index")
     parser.add_argument("--shanghai", action="store_true", help="Fetch monthly Shanghai Composite index")
     parser.add_argument("--kospi", action="store_true", help="Fetch monthly KOSPI index")
+    parser.add_argument("--hsi", action="store_true", help="Fetch monthly Hang Seng Index")
     args = parser.parse_args()
 
     if args.symbols:
@@ -421,6 +431,8 @@ if __name__ == "__main__":
         fetch_shanghai()
     elif args.kospi:
         fetch_kospi()
+    elif args.hsi:
+        fetch_hsi()
     elif args.nasdaq:
         fetch_nasdaq()
     elif args.fed_rates:

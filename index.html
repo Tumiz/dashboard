@@ -178,6 +178,7 @@ function render(rows){
   const nikkeiOnLabels=col('nikkei_close');
   const shanghaiOnLabels=col('shanghai_close');
   const kospiOnLabels=col('kospi_close');
+  const hsiOnLabels=col('hsi_close');
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -239,6 +240,7 @@ function render(rows){
     'Nikkei 225':nikkeiOnLabels,
     'Shanghai':shanghaiOnLabels,
     'KOSPI':kospiOnLabels,
+    'Hang Seng Index':hsiOnLabels,
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
   };
@@ -269,6 +271,7 @@ function render(rows){
     ['Nikkei 225',M,'nikkei_close'],
     ['Shanghai',M,'shanghai_close'],
     ['KOSPI',M,'kospi_close'],
+    ['Hang Seng Index',M,'hsi_close'],
   ].map(([name,map,key])=>{
     const {r,lag}=bestLagCorr(map,key);
     const dir=lag>0?'leads':lag<0?'lags':'sync';
@@ -301,6 +304,7 @@ function render(rows){
     'Nikkei 225':'Japan\u2019s ultra-low rates and yen carry make gold vs Nikkei a risk-on/off switch.',
     'Shanghai':'China A-shares: PBOC easing lifts both domestic equities and gold demand via the liquidity channel.',
     'KOSPI':'Korea equities transmit USD/KRW moves and global risk-on/off; diverges from gold in risk-off episodes.',
+    'Hang Seng Index':'Hong Kong\u2019s benchmark index — reflects China-linked growth, capital flows, and risk sentiment that also drive gold demand.',
   };
 
   const dirTxt=d=>d==='leads'?'leads gold':d==='lags'?'gold leads':'synchronous';
@@ -818,6 +822,21 @@ function render(rows){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y24'
+      },{
+        label:'Hang Seng Index',
+        data:hsiOnLabels,
+        hidden:true,
+        borderColor:'#7c3aed',
+        backgroundColor:'rgba(124,58,237,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#7c3aed',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y25'
       }]
     },
     plugins:[{
@@ -964,6 +983,10 @@ function render(rows){
         y24:{
           position:'right',title:{display:true,text:'Mine Gold Prod (t/yr)'},
           grid:{display:false},display:false,offset:true
+        },
+        y25:{
+          position:'right',title:{display:true,text:'Hang Seng'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
@@ -1003,8 +1026,8 @@ function render(rows){
   const corrDDPanel=document.getElementById('corrDDPanel');
   const corrChecks=document.getElementById('corrChecks');
   const corrS2=document.getElementById('corrS2');
-  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':10,'BTC/XAU':11,'NASDAQ':12,'Au99.99 (¥/g)':13,'Tencent (0700.HK)':14,'USD/CNY':15,'CAC 40':16,'DAX':17,'S&P 500':18,'Nikkei 225':19,'Shanghai':20,'KOSPI':21,'Trade-Wtd USD (TWEXB)':22,'Zijin Mining (601899)':23,'Copper (COMEX)':24,'Gold Mine Production (t)':25};
-  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y15',17:'y16',18:'y17',19:'y18',20:'y19',21:'y20',22:'y21',23:'y22',24:'y23',25:'y24'};
+  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':10,'BTC/XAU':11,'NASDAQ':12,'Au99.99 (¥/g)':13,'Tencent (0700.HK)':14,'USD/CNY':15,'CAC 40':16,'DAX':17,'S&P 500':18,'Nikkei 225':19,'Shanghai':20,'KOSPI':21,'Trade-Wtd USD (TWEXB)':22,'Zijin Mining (601899)':23,'Copper (COMEX)':24,'Gold Mine Production (t)':25,'Hang Seng Index':26};
+  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y15',17:'y16',18:'y17',19:'y18',20:'y19',21:'y20',22:'y21',23:'y22',24:'y23',25:'y24',26:'y25'};
   const shiftSlider=document.getElementById('shiftSlider');
   const shiftLabel=document.getElementById('shiftLabel');
   function shiftArray(arr,n){
