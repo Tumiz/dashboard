@@ -319,6 +319,7 @@ function render(rows){
     {label:'Hang Seng Index',v:4.5,color:'#ec4899',basis:'HK equity market cap ≈ $6T; HSI constituents ≈ $4.5T.'},
     {label:'SGE China Gold',v:2.9,color:'#d97706',basis:'Gold held in China (~20,000 t) at ~$4,500/oz ≈ $2.9T.'},
     {label:'XAG Silver',v:0.2,color:'#94a3b8',basis:'Above-ground silver ~2.5B oz at ~$67/oz ≈ $0.2T.'},
+    {label:'Bitcoin (BTC)',v:1.3,color:'#f7931a',basis:'BTC market cap, ~20.0M circulating coins × ~$65k ≈ $1.3T (mid-2026).'},
   ];
   const sizeRows=sizeData.map(d=>`<tr><td><strong>${d.label}</strong></td><td>$ ${d.v.toFixed(1)}T</td><td>${esc(d.basis)}</td></tr>`).join('');
 
