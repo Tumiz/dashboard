@@ -46,13 +46,25 @@ def update_dashboard(month_df: pd.DataFrame, output: str = "dashboard_monthly.cs
     print(f"Updated {len(merged)} rows in {output}")
 
 
+def last_trading_day_close(df: pd.DataFrame) -> pd.DataFrame:
+    """Return the closing price from the last available trading day of each month."""
+    df = df.sort_values("date").dropna(subset=["close"]).copy()
+    df["month"] = df["date"].dt.to_period("M")
+    return (
+        df.groupby("month", sort=True, as_index=False)
+        .tail(1)
+        .sort_values("month")
+        .reset_index(drop=True)
+    )
+
+
 def fetch_gold(symbol: str = "Au99.99", months: bool = False, output: str = "sge_gold.csv"):
     df = ak.spot_hist_sge(symbol)
     df["date"] = pd.to_datetime(df["date"])
 
     if months:
-        df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
-        df["month"] = df["date"].dt.strftime("%Y-%m")
+        df = last_trading_day_close(df)
+        df["month"] = df["month"].astype(str)
         update_dashboard(df[["month", "close"]].rename(columns={"close": "gold_close"}).round(1))
         return
 
@@ -130,9 +142,10 @@ def fetch_aux():
     df = ak.futures_foreign_hist(symbol="XAU")
     df = df[["date", "close"]].rename(columns={"close": "aux_usd"})
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
-    df["month"] = df["date"].dt.strftime("%Y-%m")
-    update_dashboard(df[["month", "aux_usd"]].round(1))
+    df = df.rename(columns={"aux_usd": "close"})
+    df = last_trading_day_close(df)
+    df["month"] = df["month"].astype(str)
+    update_dashboard(df[["month", "close"]].rename(columns={"close": "aux_usd"}).round(1))
 
 
 def fetch_copper():
@@ -148,16 +161,17 @@ def fetch_xag():
     df = ak.futures_foreign_hist(symbol="XAG")
     df = df[["date", "close"]].rename(columns={"close": "xag_usd"})
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
-    df["month"] = df["date"].dt.strftime("%Y-%m")
-    update_dashboard(df[["month", "xag_usd"]].round(1))
+    df = df.rename(columns={"xag_usd": "close"})
+    df = last_trading_day_close(df)
+    df["month"] = df["month"].astype(str)
+    update_dashboard(df[["month", "close"]].rename(columns={"close": "xag_usd"}).round(1))
 
 
 def fetch_au9999():
     df = ak.spot_hist_sge("Au99.99")
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
-    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df = last_trading_day_close(df)
+    df["month"] = df["month"].astype(str)
     update_dashboard(df[["month", "close"]].rename(columns={"close": "au9999_close"}).round(1))
 
 
