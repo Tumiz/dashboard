@@ -149,18 +149,19 @@ function render(rows){
   const M={}; rows.forEach(r=>M[r.month]=r);
   const months=rows.map(r=>r.month);
   const goldMonths=months.filter(m=>M[m].gold_close!=='');
+  const extMonths=months.filter(m=>M[m].gold_close===''&&M[m].pred_price!=='');
   const [fy,fm]=goldMonths[0].split('-').map(Number);
   const preLabels=[];
   for(let y=2000;y<=fy;y++){const endM=y===fy?fm-1:12;for(let m=1;m<=endM;m++)preLabels.push(y+'-'+String(m).padStart(2,'0'))}
-  const labels=[...preLabels,...goldMonths];
-  const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].gold_close))];
+  const labels=[...preLabels,...goldMonths,...extMonths];
+  const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].gold_close)),...new Array(extMonths.length).fill(null)];
   const col=key=>labels.map(m=>{const r=M[m];return r&&r[key]!==''?num(r[key]):null});
   const usdOnLabels=col('usd_index');
   const cpiOnLabels=col('cpi_yoy_pct');
   const realOnLabels=col('real_yield_pct');
   const gprOnLabels=col('gpr');
   const btcOnLabels=col('btc_usd');
-  const auxOnLabels=col('aux_usd');
+  const auxOnLabels=col('xau_usd');
   const xagOnLabels=col('xag_usd');
   const cbOnLabels=col('cb_demand');
   const goldProdOnLabels=col('gold_mine_production_t');
@@ -179,6 +180,7 @@ function render(rows){
   const shanghaiOnLabels=col('shanghai_close');
   const kospiOnLabels=col('kospi_close');
   const hsiOnLabels=col('hsi_close');
+  const predOnLabels=col('pred_price');
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -243,6 +245,7 @@ function render(rows){
     'Hang Seng Index':hsiOnLabels,
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
+    'Predicted XAU (USD)':predOnLabels,
   };
 
   const cors=[
@@ -251,7 +254,7 @@ function render(rows){
     ['Real 10Y Yield',M,'real_yield_pct'],
     ['GPR',M,'gpr'],
     ['BTC/USD',M,'btc_usd'],
-    ['AUX/USD',M,'aux_usd'],
+    ['AUX/USD',M,'xau_usd'],
     ['XAG/USD',M,'xag_usd'],
     ['AUX/XAG',auxXagByMonth,'v'],
     ['BTC/XAU',btcXauByMonth,'v'],
@@ -404,7 +407,7 @@ function render(rows){
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
           <div class="corr-dd-panel" id="corrDDPanel">
-            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).map(s=>`<label><input type="checkbox" value="${s}"${s==='AUX/USD'?' checked':''}>${s}</label>`).join('')}</div>
+            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).map(s=>`<label><input type="checkbox" value="${s}"${s==='AUX/USD'||s==='Predicted XAU (USD)'?' checked':''}>${s}</label>`).join('')}</div>
             <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
           </div>
         </div>
@@ -865,6 +868,21 @@ function render(rows){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y25'
+      },{
+        label:'Predicted XAU (USD)',
+        data:predOnLabels,
+        borderColor:'#f43f5e',
+        backgroundColor:'rgba(244,63,94,0.05)',
+        borderDash:[5,4],
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#f43f5e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
       }]
     },
     plugins:[{
@@ -901,6 +919,7 @@ function render(rows){
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y8') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y7') v='$'+v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y5') v='$'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y10') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
@@ -1086,8 +1105,8 @@ function render(rows){
   const corrDDPanel=document.getElementById('corrDDPanel');
   const corrChecks=document.getElementById('corrChecks');
   const corrS2=document.getElementById('corrS2');
-  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':10,'BTC/XAU':11,'NASDAQ':12,'Au99.99 (¥/g)':13,'Tencent (0700.HK)':14,'USD/CNY':15,'CAC 40':16,'DAX':17,'S&P 500':18,'Nikkei 225':19,'Shanghai':20,'KOSPI':21,'Trade-Wtd USD (TWEXB)':22,'Zijin Mining (601899)':23,'Copper (COMEX)':24,'Gold Mine Production (t)':25,'Hang Seng Index':26};
-  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y15',17:'y16',18:'y17',19:'y18',20:'y19',21:'y20',22:'y21',23:'y22',24:'y23',25:'y24',26:'y25'};
+  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':10,'BTC/XAU':11,'NASDAQ':12,'Au99.99 (¥/g)':13,'Tencent (0700.HK)':14,'USD/CNY':15,'CAC 40':16,'DAX':17,'S&P 500':18,'Nikkei 225':19,'Shanghai':20,'KOSPI':21,'Trade-Wtd USD (TWEXB)':22,'Zijin Mining (601899)':23,'Copper (COMEX)':24,'Gold Mine Production (t)':25,'Hang Seng Index':26,'Predicted XAU (USD)':27};
+  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y15',17:'y16',18:'y17',19:'y18',20:'y19',21:'y20',22:'y21',23:'y22',24:'y23',25:'y24',26:'y25',27:'y5'};
   const shiftSlider=document.getElementById('shiftSlider');
   const shiftLabel=document.getElementById('shiftLabel');
   function shiftArray(arr,n){

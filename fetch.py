@@ -65,7 +65,7 @@ def fetch_gold(symbol: str = "Au99.99", months: bool = False, output: str = "sge
     if months:
         df = last_trading_day_close(df)
         df["month"] = df["month"].astype(str)
-        update_dashboard(df[["month", "close"]].rename(columns={"close": "gold_close"}).round(1))
+        update_dashboard(df[["month", "close"]].rename(columns={"close": "sge"}).round(1))
         return
 
     df = df.drop(columns=["date"]).round(1)
@@ -140,12 +140,12 @@ def fetch_btc():
 
 def fetch_aux():
     df = ak.futures_foreign_hist(symbol="XAU")
-    df = df[["date", "close"]].rename(columns={"close": "aux_usd"})
+    df = df[["date", "close"]].rename(columns={"close": "xau_usd"})
     df["date"] = pd.to_datetime(df["date"])
-    df = df.rename(columns={"aux_usd": "close"})
+    df = df.rename(columns={"xau_usd": "close"})
     df = last_trading_day_close(df)
     df["month"] = df["month"].astype(str)
-    update_dashboard(df[["month", "close"]].rename(columns={"close": "aux_usd"}).round(1))
+    update_dashboard(df[["month", "close"]].rename(columns={"close": "xau_usd"}).round(1))
 
 
 def fetch_copper():
