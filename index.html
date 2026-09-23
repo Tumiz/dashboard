@@ -181,6 +181,8 @@ function render(rows){
   const kospiOnLabels=col('kospi_close');
   const hsiOnLabels=col('hsi_close');
   const predOnLabels=col('pred_price');
+  const actualReturnOnLabels=col('actual_return');
+  const predReturnOnLabels=col('pred_return');
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -246,6 +248,8 @@ function render(rows){
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
     'Predicted XAU (USD)':predOnLabels,
+    'Actual Gold Return':actualReturnOnLabels,
+    'Predicted Gold Return':predReturnOnLabels,
   };
 
   const cors=[
@@ -869,6 +873,35 @@ function render(rows){
         pointHitRadius:0,
         yAxisID:'y25'
       },{
+        label:'Actual Gold Return',
+        data:actualReturnOnLabels,
+        borderColor:'#22c55e',
+        backgroundColor:'rgba(34,197,94,0.08)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#22c55e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y26'
+      },{
+        label:'Predicted Gold Return',
+        data:predReturnOnLabels,
+        borderColor:'#f43f5e',
+        backgroundColor:'rgba(244,63,94,0.08)',
+        borderDash:[5,4],
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#f43f5e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y26'
+      },{
         label:'Predicted XAU (USD)',
         data:predOnLabels,
         borderColor:'#f43f5e',
@@ -924,6 +957,7 @@ function render(rows){
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y14') v='HK$'+v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y26') v=(v===null?'N/A':(v*100).toFixed(2)+'%');
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -957,7 +991,7 @@ function render(rows){
         },
         y5:{
           position:'right',title:{display:true,text:'AUX/USD'},
-          grid:{display:false},display:false,offset:true
+          grid:{color:'rgba(255,255,255,0.07)'},display:false,offset:true
         },
         y6:{
           position:'right',title:{display:true,text:'CB Demand (t)'},
@@ -1034,6 +1068,10 @@ function render(rows){
         y25:{
           position:'right',title:{display:true,text:'Hang Seng'},
           grid:{display:false},display:false,offset:true
+        },
+        y26:{
+          position:'right',title:{display:true,text:'Gold Return'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
@@ -1105,10 +1143,10 @@ function render(rows){
   const corrDDPanel=document.getElementById('corrDDPanel');
   const corrChecks=document.getElementById('corrChecks');
   const corrS2=document.getElementById('corrS2');
-  const lineIdx={'SGE Gold (¥/g)':0,'USD Index':1,'GPR':2,'US CPI YoY (%)':3,'BTC/USD':4,'AUX/USD':5,'XAG/USD':6,'Real 10Y Yield (%)':7,'CB Demand (tonnes)':8,'Fed Funds Rate (%)':9,'AUX/XAG':10,'BTC/XAU':11,'NASDAQ':12,'Au99.99 (¥/g)':13,'Tencent (0700.HK)':14,'USD/CNY':15,'CAC 40':16,'DAX':17,'S&P 500':18,'Nikkei 225':19,'Shanghai':20,'KOSPI':21,'Trade-Wtd USD (TWEXB)':22,'Zijin Mining (601899)':23,'Copper (COMEX)':24,'Gold Mine Production (t)':25,'Hang Seng Index':26,'Predicted XAU (USD)':27};
-  const axisOf={0:'y',1:'y1',2:'y3',3:'y2',4:'y4',5:'y5',6:'y7',7:'y2',8:'y6',9:'y8',10:'y10',11:'y11',12:'y12',13:'y',14:'y14',15:'y13',16:'y15',17:'y16',18:'y17',19:'y18',20:'y19',21:'y20',22:'y21',23:'y22',24:'y23',25:'y24',26:'y25',27:'y5'};
   const shiftSlider=document.getElementById('shiftSlider');
   const shiftLabel=document.getElementById('shiftLabel');
+  const lineIdx={};
+  chart.data.datasets.forEach((ds,idx)=>{ lineIdx[ds.label]=idx; });
   function shiftArray(arr,n){
     const out=[];
     for(let i=0;i<arr.length;i++){
@@ -1120,6 +1158,10 @@ function render(rows){
   function getChecked(){
     return[...corrChecks.querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.value);
   }
+  function idxForLabel(label){
+    const i=chart.data.datasets.findIndex(ds=>ds.label===label);
+    return i>=0?i:null;
+  }
   function updatePanDropdown(checked){
     const prev=corrS2.value;
     corrS2.innerHTML='<option value="">— pan —</option>'+checked.map(s=>`<option value="${s}"${s===prev?' selected':''}>${s}</option>`).join('');
@@ -1130,29 +1172,32 @@ function render(rows){
   }
   function updateSelection(){
     const checked=getChecked();
-    const want=new Set(checked.map(s=>lineIdx[s]));
-    Object.entries(lineIdx).forEach(([name,idx])=>{
-      const show=want.has(idx);
-      chart.setDatasetVisibility(idx,show);
-      const ax=axisOf[idx];
-      if(ax) chart.options.scales[ax].display=show;
+    const visibleNames=new Set(checked);
+    chart.data.datasets.forEach((ds,idx)=>{
+      const show=visibleNames.has(ds.label);
+      ds.hidden=!show;
+      chart.getDatasetMeta(idx).hidden=!show;
     });
-    chart.options.scales.y2.display=!chart.getDatasetMeta(3).hidden||!chart.getDatasetMeta(7).hidden;
+    Object.keys(chart.options.scales).forEach(axisKey=>{
+      const anyVisible=chart.data.datasets.some(ds => !ds.hidden && ds.yAxisID===axisKey);
+      chart.options.scales[axisKey].display=axisKey==='x'||anyVisible;
+    });
     updatePanDropdown(checked);
     updateDDLabel(checked);
     const v2=corrS2.value;
     const shift=parseInt(shiftSlider.value);
-    if(v2){
-      const ds2=chart.data.datasets[lineIdx[v2]];
-      ds2.data=shiftArray(signalMap[v2],shift);
+    if(v2 && signalMap[v2]){
+      const dsIndex=idxForLabel(v2);
+      if(dsIndex!==null){
+        chart.data.datasets[dsIndex].data=shiftArray(signalMap[v2],shift);
+      }
     }
-Object.values(chart.options.scales).forEach(s=>{
-    if(s.ticks)s.ticks.color='#9ca3af';
-    if(s.grid)s.grid.color='rgba(255,255,255,0.07)';
-    if(s.title)s.title.color='#9ca3af';
-  });
-
-  chart.update();
+    Object.values(chart.options.scales).forEach(s=>{
+      if(s.ticks)s.ticks.color='#9ca3af';
+      if(s.grid)s.grid.color='rgba(255,255,255,0.07)';
+      if(s.title)s.title.color='#9ca3af';
+    });
+    chart.update();
   }
   corrDDToggle.addEventListener('click',e=>{
     e.stopPropagation();
