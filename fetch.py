@@ -6,6 +6,7 @@ import io
 import json
 import multiprocessing
 import os
+import xml.etree.ElementTree as ET
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import TimeoutError as TaskTimeoutError
 
@@ -327,6 +328,56 @@ def fetch_cb_demand():
     update_dashboard(pd.DataFrame(rows))
 
 
+def fetch_central_bank_reserves():
+    """Fetch IMF COFER world USD claims and their share of allocated reserves."""
+    base_url = (
+        "https://api.imf.org/external/sdmx/2.1/data/"
+        "IMF.STA,COFER,latest/"
+    )
+    series_specs = {
+        "G001.AFXRA.CI_USD.NV_USD.Q": "central_bank_usd_reserves",
+        "G001.AFXRA.CI_USD.SHRO_PT.Q": "central_bank_usd_share_pct",
+    }
+    series_data = {}
+    for series_code, column in series_specs.items():
+        payload = ET.fromstring(http_get(f"{base_url}{series_code}", timeout=60))
+        observations = {
+            obs.attrib["TIME_PERIOD"]: float(obs.attrib["OBS_VALUE"])
+            for obs in payload.iter()
+            if obs.tag.rsplit("}", 1)[-1] == "Obs"
+            and "TIME_PERIOD" in obs.attrib
+            and "OBS_VALUE" in obs.attrib
+        }
+        if not observations:
+            raise ValueError(f"IMF COFER series returned no observations: {series_code}")
+        series_data[column] = observations
+
+    rows = []
+    for period in series_data["central_bank_usd_reserves"]:
+        year, quarter = period.split("-Q")
+        end_month = int(quarter) * 3
+        for month in range(end_month - 2, end_month + 1):
+            reserves = series_data["central_bank_usd_reserves"][period]
+            share = series_data["central_bank_usd_share_pct"].get(period)
+            if reserves is not None or share is not None:
+                rows.append({
+                    "month": f"{int(year)}-{month:02d}",
+                    "central_bank_usd_reserves": (
+                        None if reserves is None else round(reserves / 1_000_000_000, 2)
+                    ),
+                    "central_bank_usd_share_pct": (
+                        None if share is None else round(float(share), 2)
+                    ),
+                })
+    if not rows:
+        raise ValueError("IMF COFER reserves response contained no observations")
+    update_dashboard(pd.DataFrame(rows))
+    merged = pd.read_csv("dashboard_monthly.csv")
+    if "central_bank_reserves_usd" in merged.columns:
+        merged = merged.drop(columns=["central_bank_reserves_usd"])
+        merged.to_csv("dashboard_monthly.csv", index=False)
+
+
 def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
     """Run every fetcher to refresh all series in dashboard_monthly.csv."""
     tasks = [
@@ -354,6 +405,7 @@ def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
         ("hsi", fetch_hsi, (), {}),
         ("shanghai", fetch_shanghai, (), {}),
         ("cb_demand", fetch_cb_demand, (), {}),
+        ("central_bank_reserves", fetch_central_bank_reserves, (), {}),
         ("gold_production", fetch_gold_mine_production, (), {}),
     ]
     failures = []
@@ -413,6 +465,11 @@ if __name__ == "__main__":
     parser.add_argument("--copper", action="store_true", help="Fetch monthly COMEX copper (HG) price")
     parser.add_argument("--au9999", action="store_true", help="Fetch monthly SGE Au99.99 gold price (CNY/g)")
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
+    parser.add_argument(
+        "--central-bank-reserves",
+        action="store_true",
+        help="Fetch IMF COFER world foreign-exchange reserves (USD billions)",
+    )
     parser.add_argument("--gold-production", action="store_true", help="Fetch annual global mine gold production (tonnes), spread monthly")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
@@ -453,6 +510,8 @@ if __name__ == "__main__":
         fetch_fed_rates()
     elif args.cb_demand:
         fetch_cb_demand()
+    elif args.central_bank_reserves:
+        fetch_central_bank_reserves()
     elif args.gold_production:
         fetch_gold_mine_production()
     elif args.btc:
