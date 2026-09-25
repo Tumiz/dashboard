@@ -19,6 +19,13 @@ body{
 .header h1{font-size:18px;font-weight:600}
 .header p{font-size:12px;color:#a8b2d1;margin-top:2px}
 .container{max-width:1200px;margin:0 auto;padding:12px}
+.formula-card{background:#16161b;border:1px solid #2d2d35;border-radius:10px;padding:12px 14px;margin:12px 0 16px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.formula-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#f3f4f6}
+.formula-card .formula{font-size:12px;line-height:1.6;color:#dfe7ff;font-weight:600;word-break:break-word}
+.formula-card .formula-note{margin-top:6px;font-size:11px;color:#a8b2d1}
+.next-month-forecast{margin-top:10px;padding:8px 10px;border:1px solid #2d2d35;border-radius:8px;background:#101014;font-size:12px;color:#dfe7ff;font-weight:600}
+.next-month-forecast:empty{display:none}
+.next-month-forecast .forecast-label{color:#9ca3af;font-weight:500}
 .chart-card{background:#16161b;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.5);margin-bottom:12px}
 .chart-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#f3f4f6}
 .chart-controls{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -118,7 +125,25 @@ td.down{color:#ef4444}
 <div class="header">
   <h1>Gold &middot; Macro &middot; Stock Dashboard</h1>
 </div>
-<div class="container" id="app"><div class="loading">Loading...</div></div>
+<div class="container">
+  <div class="formula-card">
+    <h2>Final XAU forecast equations</h2>
+    <div class="formula" style="margin-bottom:8px;">
+      Monthly: ln(XAU_t / XAU_{t-1}) = 0.0086 - 0.7055 × ln(TWEXB_t / TWEXB_{t-1}) - 0.0919 × ΔRealYield_t
+    </div>
+    <div class="formula-note" style="margin-bottom:8px;">
+      Monthly forecast: XAU_{t+1} = XAU_t × exp(0.0086 - 0.7055 × DXYReturn_t - 0.0919 × RealYieldChange_t)
+    </div>
+    <div class="formula">
+      Quarterly: ln(XAU_q / XAU_{q-1}) = -0.0145 - 0.6475 × ln(TWEXB_q / TWEXB_{q-1}) - 0.1267 × ΔRealYield_q + 0.000375 × GPR_q
+    </div>
+    <div class="formula-note">
+      Quarterly forecast: XAU_{q+1} = XAU_q × exp(-0.0145 - 0.6475 × DXYReturn_q - 0.1267 × RealYieldChange_q + 0.000375 × GPR_q)
+    </div>
+    <div class="next-month-forecast" id="nextMonthForecast"></div>
+  </div>
+  <div id="app"><div class="loading">Loading...</div></div>
+</div>
 
 <script>
 function parseCSV(text){
@@ -134,7 +159,9 @@ function render(rows){
   const M={}; rows.forEach(r=>M[r.month]=r);
   const months=rows.map(r=>r.month);
   const goldMonths=months.filter(m=>M[m].gold_close!=='');
-  const extMonths=months.filter(m=>M[m].gold_close===''&&M[m].pred_price!=='');
+  const actualMonths=months.filter(m=>num(M[m].xau_usd)!=null);
+  const lastActualMonth=actualMonths.at(-1);
+  const extMonths=lastActualMonth?months.filter(m=>m>lastActualMonth):[];
   const [fy,fm]=goldMonths[0].split('-').map(Number);
   const preLabels=[];
   for(let y=2000;y<=fy;y++){const endM=y===fy?fm-1:12;for(let m=1;m<=endM;m++)preLabels.push(y+'-'+String(m).padStart(2,'0'))}
@@ -167,9 +194,140 @@ function render(rows){
   const hsiOnLabels=col('hsi_close');
   const centralBankUsdReservesOnLabels=col('central_bank_usd_reserves');
   const centralBankUsdShareOnLabels=col('central_bank_usd_share_pct');
-  const predOnLabels=col('pred_price');
-  const actualReturnOnLabels=col('actual_return');
-  const predReturnOnLabels=col('pred_return');
+  const monthlyAlpha=0.0086;
+  const monthlyBetaDxy=-0.7055;
+  const monthlyBetaRealYield=-0.0919;
+  const predictedPriceByMonth={};
+  const logReturn=(current,previous)=>current!=null&&previous!=null&&current>0&&previous>0?Math.log(current/previous):null;
+  const actualReturnByMonth={};
+  const predReturnByMonth={};
+  const dxyReturnByMonth={};
+  const realYieldChangeByMonth={};
+  let previousActual=null;
+  let previousTwexb=null;
+  let previousRealYield=null;
+  rows.forEach(r=>{
+    const actual=num(r.xau_usd);
+    const twexb=num(r.twexb);
+    const realYield=num(r.real_yield_pct);
+    if(actual!=null&&previousActual!=null){
+      actualReturnByMonth[r.month]=logReturn(actual,previousActual);
+    }
+    if(twexb!=null&&realYield!=null&&previousTwexb!=null&&previousRealYield!=null&&previousActual!=null){
+      const dxyReturn=logReturn(twexb,previousTwexb);
+      const realYieldChange=realYield-previousRealYield;
+      dxyReturnByMonth[r.month]=dxyReturn;
+      realYieldChangeByMonth[r.month]=realYieldChange;
+      const predReturn=monthlyAlpha+monthlyBetaDxy*dxyReturn+monthlyBetaRealYield*realYieldChange;
+      predReturnByMonth[r.month]=predReturn;
+      predictedPriceByMonth[r.month]=previousActual*Math.exp(predReturn);
+    }
+    if(actual!=null) previousActual=actual;
+    if(twexb!=null) previousTwexb=twexb;
+    if(realYield!=null) previousRealYield=realYield;
+  });
+  const forecastMonth=extMonths[0];
+  if(lastActualMonth&&forecastMonth){
+    const lastActual=num(M[lastActualMonth].xau_usd);
+    const priorActualMonth=months.filter(m=>m<lastActualMonth&&num(M[m].xau_usd)!=null).at(-1);
+    const priorMacroMonth=months.filter(m=>m<lastActualMonth&&num(M[m].twexb)!=null&&num(M[m].real_yield_pct)!=null).at(-1);
+    if(priorActualMonth&&priorMacroMonth){
+      const dxyReturn=logReturn(num(M[lastActualMonth].twexb),num(M[priorMacroMonth].twexb));
+      const realYieldChange=num(M[lastActualMonth].real_yield_pct)-num(M[priorMacroMonth].real_yield_pct);
+      const predReturn=monthlyAlpha+monthlyBetaDxy*dxyReturn+monthlyBetaRealYield*realYieldChange;
+      predReturnByMonth[forecastMonth]=predReturn;
+      predictedPriceByMonth[forecastMonth]=lastActual*Math.exp(predReturn);
+    }
+  }
+  const predOnLabels=labels.map(m=>predictedPriceByMonth[m]??null);
+  const actualReturnOnLabels=labels.map(m=>actualReturnByMonth[m]??null);
+  const predReturnOnLabels=labels.map(m=>predReturnByMonth[m]??null);
+
+  const quarterKey=(month)=>{
+    if(!month) return null;
+    const year=month.slice(0,4);
+    const mon=Number(month.slice(5,7));
+    const q=Math.floor((mon-1)/3)+1;
+    return `${year}-${String(q).padStart(2,'0')}`;
+  };
+  const quarterActualAgg={};
+  const quarterDxyAgg={};
+  const quarterRealChangeAgg={};
+  const quarterGprAgg={};
+  rows.forEach(r=>{
+    const q=quarterKey(r.month);
+    if(!q) return;
+    const actualVal=actualReturnByMonth[r.month]??null;
+    if(actualVal!=null && Number.isFinite(actualVal)) quarterActualAgg[q]=(quarterActualAgg[q]||0)+actualVal;
+    const dxyVal=dxyReturnByMonth[r.month]??null;
+    const realChangeVal=realYieldChangeByMonth[r.month]??null;
+    if(dxyVal!=null && Number.isFinite(dxyVal)) quarterDxyAgg[q]=(quarterDxyAgg[q]||0)+dxyVal;
+    if(realChangeVal!=null && Number.isFinite(realChangeVal)) quarterRealChangeAgg[q]=(quarterRealChangeAgg[q]||0)+realChangeVal;
+    const gprVal=num(r.gpr);
+    if(gprVal!=null && Number.isFinite(gprVal)) quarterGprAgg[q]=gprVal;
+  });
+
+  const quarterlyAlpha=-0.0145;
+  const quarterlyBetaDxy=-0.6475;
+  const quarterlyBetaRealYield=-0.1267;
+  const quarterlyBetaGpr=0.000375;
+  const quarterCountAgg={};
+  rows.forEach(r=>{
+    const q=quarterKey(r.month);
+    if(q&&Number.isFinite(dxyReturnByMonth[r.month]??null)) quarterCountAgg[q]=(quarterCountAgg[q]||0)+1;
+  });
+  const nextQuarter=m=>{
+    if(!m) return null;
+    const year=Number(m.slice(0,4));
+    const q=Number(m.slice(5,7));
+    return q===4?`${year+1}-01`:`${year}-${String(q+1).padStart(2,'0')}`;
+  };
+  let forecastQuarter=null;
+  let forecastQuarterReturn=null;
+  let forecastQuarterPrice=null;
+  const fullQuarters=Object.keys(quarterCountAgg).filter(q=>quarterCountAgg[q]>=3).sort();
+  const predictorQuarter=fullQuarters.at(-1);
+  if(predictorQuarter&&Number.isFinite(quarterDxyAgg[predictorQuarter])&&Number.isFinite(quarterRealChangeAgg[predictorQuarter])&&Number.isFinite(quarterGprAgg[predictorQuarter])){
+    forecastQuarter=nextQuarter(predictorQuarter);
+    forecastQuarterReturn=quarterlyAlpha+quarterlyBetaDxy*quarterDxyAgg[predictorQuarter]+quarterlyBetaRealYield*quarterRealChangeAgg[predictorQuarter]+quarterlyBetaGpr*quarterGprAgg[predictorQuarter];
+    const qEndMonth=`${predictorQuarter.slice(0,4)}-${String(Number(predictorQuarter.slice(5,7))*3).padStart(2,'0')}`;
+    const endPrice=M[qEndMonth]?num(M[qEndMonth].xau_usd):null;
+    if(endPrice!=null) forecastQuarterPrice=endPrice*Math.exp(forecastQuarterReturn);
+  }
+  const quarterActualOnLabels=labels.map(m=>{
+    if(!m) return null;
+    const q=quarterKey(m);
+    const mNum=Number(m.slice(5,7));
+    if(mNum%3!==0) return null;
+    return q && quarterActualAgg[q]!=null ? quarterActualAgg[q] : null;
+  });
+  const quarterPredOnLabels=labels.map(m=>{
+    if(!m) return null;
+    const q=quarterKey(m);
+    const mNum=Number(m.slice(5,7));
+    if(mNum%3!==0) return null;
+    if(!q || !Number.isFinite(quarterDxyAgg[q]) || !Number.isFinite(quarterRealChangeAgg[q]) || !Number.isFinite(quarterGprAgg[q])) return null;
+    return quarterlyAlpha+quarterlyBetaDxy*quarterDxyAgg[q]+quarterlyBetaRealYield*quarterRealChangeAgg[q]+quarterlyBetaGpr*quarterGprAgg[q];
+  });
+
+  const forecastNote=document.getElementById('nextMonthForecast');
+  if(forecastNote){
+    let html='';
+    if(forecastMonth&&predReturnByMonth[forecastMonth]!=null&&predictedPriceByMonth[forecastMonth]!=null){
+      const ret=predReturnByMonth[forecastMonth];
+      const price=predictedPriceByMonth[forecastMonth];
+      const cls=ret>=0?'up':'down';
+      html+=`<div style="margin:2px 0"><span class="forecast-label">Next month (${forecastMonth}) predicted:</span> XAU return <span class="${cls}">${(ret*100).toFixed(2)}%</span> &middot; XAU price <span class="${cls}">$${price.toFixed(0)}</span></div>`;
+    }
+    if(forecastQuarter&&forecastQuarterReturn!=null&&forecastQuarterPrice!=null){
+      const qNum=Number(forecastQuarter.slice(5,7));
+      const qLabel=`Q${qNum} ${forecastQuarter.slice(0,4)}`;
+      const cls=forecastQuarterReturn>=0?'up':'down';
+      html+=`<div style="margin:2px 0"><span class="forecast-label">Next quarter (${qLabel}) predicted:</span> XAU return <span class="${cls}">${(forecastQuarterReturn*100).toFixed(2)}%</span> &middot; XAU price <span class="${cls}">$${forecastQuarterPrice.toFixed(0)}</span></div>`;
+    }
+    forecastNote.innerHTML=html;
+  }
+
   const auxXagOnLabels=labels.map((m,i)=>auxOnLabels[i]!=null&&xagOnLabels[i]!=null?auxOnLabels[i]/xagOnLabels[i]:null);
   const btcXauOnLabels=labels.map((m,i)=>btcOnLabels[i]!=null&&auxOnLabels[i]!=null?btcOnLabels[i]/auxOnLabels[i]:null);
 
@@ -253,7 +411,7 @@ function render(rows){
     'Real 10Y Yield (%)':realOnLabels,
     'GPR':gprOnLabels,
     'BTC/USD':btcOnLabels,
-    'AUX/USD':auxOnLabels,
+    'XAU/USD (Actual)':auxOnLabels,
     'XAG/USD':xagOnLabels,
     'CB Demand (tonnes)':cbOnLabels,
     'Central Bank USD Reserves (USD bn)':centralBankUsdReservesOnLabels,
@@ -276,9 +434,11 @@ function render(rows){
     'Hang Seng Index':hsiOnLabels,
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
-    'Predicted XAU (USD)':predOnLabels,
-    'Actual Gold Return':actualReturnOnLabels,
-    'Predicted Gold Return':predReturnOnLabels,
+    'XAU/USD (Predicted)':predOnLabels,
+    'XAU Return (Actual)':actualReturnOnLabels,
+    'XAU Return (Predicted)':predReturnOnLabels,
+    'XAU Return (Actual, Quarterly)':quarterActualOnLabels,
+    'XAU Return (Predicted, Quarterly)':quarterPredOnLabels,
   };
 
   const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -315,7 +475,7 @@ function render(rows){
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
           <div class="corr-dd-panel" id="corrDDPanel">
-            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).map(s=>`<label><input type="checkbox" value="${s}"${s==='AUX/USD'||s==='Predicted XAU (USD)'||s==='Central Bank USD Reserves (USD bn)'||s==='Central Bank USD Share (%)'?' checked':''}>${s}</label>`).join('')}</div>
+            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'||s==='XAU/USD (Predicted)'?' checked':''}>${s}</label>`).join('')}</div>
             <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
           </div>
         </div>
@@ -423,7 +583,7 @@ function render(rows){
         pointHitRadius:0,
         yAxisID:'y4'
       },{
-        label:'AUX/USD',
+        label:'XAU/USD (Actual)',
         data:auxOnLabels,
         hidden:true,
         borderColor:'#06b6d4',
@@ -783,10 +943,11 @@ function render(rows){
         pointHitRadius:0,
         yAxisID:'y25'
       },{
-        label:'Actual Gold Return',
+        label:'XAU Return (Actual)',
         data:actualReturnOnLabels,
         borderColor:'#22c55e',
         backgroundColor:'rgba(34,197,94,0.08)',
+        spanGaps:true,
         fill:false,
         tension:.3,
         pointBackgroundColor:'#22c55e',
@@ -797,11 +958,12 @@ function render(rows){
         pointHitRadius:0,
         yAxisID:'y26'
       },{
-        label:'Predicted Gold Return',
+        label:'XAU Return (Predicted)',
         data:predReturnOnLabels,
         borderColor:'#f43f5e',
         backgroundColor:'rgba(244,63,94,0.08)',
         borderDash:[5,4],
+        spanGaps:true,
         fill:false,
         tension:.3,
         pointBackgroundColor:'#f43f5e',
@@ -812,11 +974,43 @@ function render(rows){
         pointHitRadius:0,
         yAxisID:'y26'
       },{
-        label:'Predicted XAU (USD)',
+        label:'XAU Return (Actual, Quarterly)',
+        data:quarterActualOnLabels,
+        borderColor:'#10b981',
+        backgroundColor:'rgba(16,185,129,0.08)',
+        spanGaps:true,
+        fill:false,
+        tension:.25,
+        pointBackgroundColor:'#10b981',
+        pointBorderColor:'#fff',
+        pointBorderWidth:2,
+        pointRadius:3,
+        pointHoverRadius:4,
+        pointHitRadius:6,
+        yAxisID:'y26'
+      },{
+        label:'XAU Return (Predicted, Quarterly)',
+        data:quarterPredOnLabels,
+        borderColor:'#f97316',
+        backgroundColor:'rgba(249,115,22,0.08)',
+        borderDash:[6,4],
+        spanGaps:true,
+        fill:false,
+        tension:.25,
+        pointBackgroundColor:'#f97316',
+        pointBorderColor:'#fff',
+        pointBorderWidth:2,
+        pointRadius:3,
+        pointHoverRadius:4,
+        pointHitRadius:6,
+        yAxisID:'y26'
+      },{
+        label:'XAU/USD (Predicted)',
         data:predOnLabels,
         borderColor:'#f43f5e',
         backgroundColor:'rgba(244,63,94,0.05)',
         borderDash:[5,4],
+        spanGaps:true,
         fill:false,
         tension:.3,
         pointBackgroundColor:'#f43f5e',
@@ -909,7 +1103,7 @@ function render(rows){
           offset:true
         },
         y5:{
-          position:'right',title:{display:true,text:'AUX/USD'},
+          position:'right',title:{display:true,text:'XAU/USD'},
           grid:{color:'rgba(255,255,255,0.07)'},display:false,offset:true
         },
         y6:{

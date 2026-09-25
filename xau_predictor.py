@@ -17,6 +17,10 @@ def next_month(m):
     return f"{y2:04d}-{m2:02d}"
 
 
+def _quarter_label(month):
+    return f"{month[:4]}-{((int(month[5:7]) - 1) // 3) + 1:02d}"
+
+
 def gold_dxy_linear_regression():
     df = d[["xau_usd", "twexb", "real_yield_pct"]].dropna()
     real_yield_change = df["real_yield_pct"].diff()
@@ -36,12 +40,55 @@ def gold_dxy_linear_regression():
     r2 = 1 - np.sum((y - y_hat) ** 2) / np.sum((y - y.mean()) ** 2)
 
     print(
-        f"Gold_Return_t = {alpha:.4f} + {beta_dxy:.4f} * DXY_Return_t + "
+        f"Monthly model: Gold_Return_t = {alpha:.4f} + {beta_dxy:.4f} * DXY_Return_t + "
         f"{beta_real_yield_change:.4f} * RealYield_Change_t"
     )
-    print(f"R-squared = {r2:.4f}, n = {len(reg)}")
+    print(f"Monthly R-squared = {r2:.4f}, n = {len(reg)}")
 
-    return alpha, beta_dxy, beta_real_yield_change, r2
+    quarter_source = d[["xau_usd", "twexb", "real_yield_pct", "gpr"]].dropna()
+    quarter_df = pd.DataFrame({
+        "gold_return": ln_return(quarter_source["xau_usd"]),
+        "dxy_return": ln_return(quarter_source["twexb"]),
+        "real_yield_change": quarter_source["real_yield_pct"].diff(),
+        "gpr": quarter_source["gpr"],
+    }).dropna()
+    quarter_df["quarter"] = quarter_df.index.map(_quarter_label)
+    quarterly = quarter_df.groupby("quarter").agg({
+        "gold_return": "sum",
+        "dxy_return": "sum",
+        "real_yield_change": "sum",
+        "gpr": "last",
+    })
+
+    X_q = quarterly[["dxy_return", "real_yield_change", "gpr"]].to_numpy()
+    y_q = quarterly["gold_return"].to_numpy()
+    X_q_design = np.column_stack([np.ones(len(X_q)), X_q])
+    coef_q, *_ = np.linalg.lstsq(X_q_design, y_q, rcond=None)
+    alpha_q, beta_dxy_q, beta_real_yield_change_q, beta_gpr_q = coef_q
+    y_hat_q = X_q_design @ coef_q
+    r2_q = 1 - np.sum((y_q - y_hat_q) ** 2) / np.sum((y_q - y_q.mean()) ** 2)
+
+    print(
+        f"Quarterly model: Gold_Return_q = {alpha_q:.4f} + {beta_dxy_q:.4f} * DXY_Return_q + "
+        f"{beta_real_yield_change_q:.4f} * RealYield_Change_q + {beta_gpr_q:.6f} * GPR_q"
+    )
+    print(f"Quarterly R-squared = {r2_q:.4f}, n = {len(quarterly)}")
+
+    return {
+        "monthly": {
+            "alpha": alpha,
+            "beta_dxy": beta_dxy,
+            "beta_real_yield_change": beta_real_yield_change,
+            "r2": r2,
+        },
+        "quarterly": {
+            "alpha": alpha_q,
+            "beta_dxy": beta_dxy_q,
+            "beta_real_yield_change": beta_real_yield_change_q,
+            "beta_gpr": beta_gpr_q,
+            "r2": r2_q,
+        },
+    }
 
 
 def generate_predicted_prices(alpha, beta_dxy, beta_real_yield_change, output=DATA_PATH):
@@ -60,10 +107,6 @@ def generate_predicted_prices(alpha, beta_dxy, beta_real_yield_change, output=DA
             out = out.drop(columns=[col])
     out = out[~out.index.duplicated(keep="last")]
 
-    out = out.join(actual_ret.rename("actual_return").to_frame(), how="outer")
-    out = out.join(pred_ret.rename("pred_return").to_frame(), how="outer")
-    out = out.join(pred_price.rename("pred_price").to_frame(), how="outer")
-
     last_month = gold.dropna().index[-1]
     forecast_month = next_month(last_month)
     latest_dxy_ret = dxy_ret.dropna().iloc[-1]
@@ -76,19 +119,19 @@ def generate_predicted_prices(alpha, beta_dxy, beta_real_yield_change, output=DA
     out = pd.concat([
         out,
         pd.DataFrame({
-            "actual_return": [np.nan],
-            "pred_return": [forecast_return],
-            "pred_price": [forecast_price],
         }, index=pd.Index([forecast_month], name="month")),
     ])
     out = out.sort_index().reset_index()
     out = out[["month"] + [c for c in out.columns if c != "month"]]
     out.to_csv(output_path, index=False)
 
-    print(f"Wrote actual_return/pred_return/pred_price for {actual_ret.notna().sum()} months")
+    print("Removed derived monthly return and prediction columns from CSV")
     print(f"Next-month forecast ({forecast_month}): {forecast_price} USD, return={forecast_return:.4f}")
 
 
 if __name__ == "__main__":
-    alpha, beta_dxy, beta_real_yield_change, r2 = gold_dxy_linear_regression()
+    model = gold_dxy_linear_regression()
+    alpha = model["monthly"]["alpha"]
+    beta_dxy = model["monthly"]["beta_dxy"]
+    beta_real_yield_change = model["monthly"]["beta_real_yield_change"]
     generate_predicted_prices(alpha, beta_dxy, beta_real_yield_change, output=DATA_PATH)
