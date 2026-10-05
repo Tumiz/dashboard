@@ -64,9 +64,8 @@ def fetch_gold(symbol: str = "Au99.99", months: bool = False, output: str = "sge
     df["date"] = pd.to_datetime(df["date"])
 
     if months:
-        df = last_trading_day_close(df)
-        df["month"] = df["month"].astype(str)
-        update_dashboard(df[["month", "close"]].rename(columns={"close": "sge"}).round(1))
+        # This series is the same as au9999_close; avoid storing duplicate monthly gold values.
+        print("Skipping monthly SGE dashboard update; au9999_close is the canonical series.")
         return
 
     df = df.drop(columns=["date"]).round(1)
@@ -134,12 +133,19 @@ def fetch_btc():
     df = pd.read_csv(io.BytesIO(http_get(url)))
     df.columns = ["date", "btc_usd"]
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
-    df["month"] = df["date"].dt.strftime("%Y-%m")
+    df = df.sort_values("date").dropna(subset=["btc_usd"]).copy()
+    df["month"] = df["date"].dt.to_period("M")
+    df = (
+        df.groupby("month", sort=True, as_index=False)
+        .tail(1)
+        .sort_values("month")
+        .reset_index(drop=True)
+    )
+    df["month"] = df["month"].astype(str)
     update_dashboard(df[["month", "btc_usd"]].round(1))
 
 
-def fetch_aux():
+def fetch_xau():
     df = ak.futures_foreign_hist(symbol="XAU")
     df = df[["date", "close"]].rename(columns={"close": "xau_usd"})
     df["date"] = pd.to_datetime(df["date"])
@@ -378,16 +384,15 @@ def fetch_central_bank_reserves():
         merged.to_csv("dashboard_monthly.csv", index=False)
 
 
-def update_all(symbol: str, timeout: int = TASK_TIMEOUT):
+def update_all(timeout: int = TASK_TIMEOUT):
     """Run every fetcher to refresh all series in dashboard_monthly.csv."""
     tasks = [
-        ("gold", fetch_gold, (symbol,), {"months": True}),
         ("usd_index", fetch_usd_index, (), {"months": True}),
         ("us_cpi", fetch_us_cpi, (), {}),
         ("real_yield", fetch_us_real_yield, (), {}),
         ("gpr", fetch_gpr, (), {}),
         ("btc", fetch_btc, (), {}),
-        ("aux", fetch_aux, (), {}),
+        ("xau", fetch_xau, (), {}),
         ("xag", fetch_xag, (), {}),
         ("copper", fetch_copper, (), {}),
         ("au9999", fetch_au9999, (), {}),
@@ -450,8 +455,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Fetch series and update dashboard_monthly.csv (or write daily files for gold/USD index)"
     )
-    parser.add_argument("--all", action="store_true", help="Update all series in dashboard_monthly.csv")
-    parser.add_argument("--symbol", default="Au99.99", help="Gold contract symbol (default: Au99.99)")
     parser.add_argument("--symbols", action="store_true", help="List all available gold symbols")
     parser.add_argument("--monthly", action="store_true", help="Resample gold/USD index to monthly and update dashboard")
     parser.add_argument("-o", "--output", default="", help="Output CSV file (daily gold/USD index only)")
@@ -460,7 +463,7 @@ if __name__ == "__main__":
     parser.add_argument("--real-yield", action="store_true", help="Fetch monthly US real 10-year yield (TIPS)")
     parser.add_argument("--gpr", action="store_true", help="Fetch monthly Geopolitical Risk Index")
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
-    parser.add_argument("--aux", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
+    parser.add_argument("--xau", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
     parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
     parser.add_argument("--copper", action="store_true", help="Fetch monthly COMEX copper (HG) price")
     parser.add_argument("--au9999", action="store_true", help="Fetch monthly SGE Au99.99 gold price (CNY/g)")
@@ -488,8 +491,6 @@ if __name__ == "__main__":
 
     if args.symbols:
         list_gold_symbols()
-    elif args.all:
-        update_all(args.symbol)
     elif args.cac40:
         fetch_cac40()
     elif args.dax:
@@ -516,8 +517,8 @@ if __name__ == "__main__":
         fetch_gold_mine_production()
     elif args.btc:
         fetch_btc()
-    elif args.aux:
-        fetch_aux()
+    elif args.xau:
+        fetch_xau()
     elif args.xag:
         fetch_xag()
     elif args.copper:
@@ -541,4 +542,4 @@ if __name__ == "__main__":
     elif args.zijin:
         fetch_zijin()
     else:
-        fetch_gold(args.symbol, args.monthly, args.output or "sge_gold.csv")
+        update_all()

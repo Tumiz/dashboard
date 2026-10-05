@@ -158,7 +158,7 @@ function render(rows){
   const num=v=>v===''||v==null?null:+v;
   const M={}; rows.forEach(r=>M[r.month]=r);
   const months=rows.map(r=>r.month);
-  const goldMonths=months.filter(m=>M[m].gold_close!=='');
+  const goldMonths=months.filter(m=>M[m].au9999_close!=='');
   const actualMonths=months.filter(m=>num(M[m].xau_usd)!=null);
   const lastActualMonth=actualMonths.at(-1);
   const extMonths=lastActualMonth?months.filter(m=>m>lastActualMonth):[];
@@ -166,7 +166,7 @@ function render(rows){
   const preLabels=[];
   for(let y=2000;y<=fy;y++){const endM=y===fy?fm-1:12;for(let m=1;m<=endM;m++)preLabels.push(y+'-'+String(m).padStart(2,'0'))}
   const labels=[...preLabels,...goldMonths,...extMonths];
-  const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].gold_close)),...new Array(extMonths.length).fill(null)];
+  const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].au9999_close)),...new Array(extMonths.length).fill(null)];
   const col=key=>labels.map(m=>{const r=M[m];return r&&r[key]!==''?num(r[key]):null});
   const usdOnLabels=col('usd_index');
   const cpiOnLabels=col('cpi_yoy_pct');
@@ -179,7 +179,6 @@ function render(rows){
   const goldProdOnLabels=col('gold_mine_production_t');
   const fedOnLabels=col('fed_rate_pct');
   const nasdaqOnLabels=col('nasdaq_close');
-  const au9999OnLabels=col('au9999_close');
   const usdCnyOnLabels=col('usd_cny');
   const twexbOnLabels=col('twexb');
   const zijinOnLabels=col('zijin_close');
@@ -405,7 +404,7 @@ function render(rows){
   const auxXagByMonth={}; labels.forEach((m,i)=>{if(auxXagOnLabels[i]!=null)auxXagByMonth[m]={v:auxXagOnLabels[i]}});
   const btcXauByMonth={}; labels.forEach((m,i)=>{if(btcXauOnLabels[i]!=null)btcXauByMonth[m]={v:btcXauOnLabels[i]}});
   const signalMap={
-    'SGE Gold (¥/g)':gprices,
+    'Au99.99 (¥/g)':gprices,
     'USD Index':usdOnLabels,
     'US CPI YoY (%)':cpiOnLabels,
     'Real 10Y Yield (%)':realOnLabels,
@@ -419,7 +418,6 @@ function render(rows){
     'Gold Mine Production (t)':goldProdOnLabels,
     'Fed Funds Rate (%)':fedOnLabels,
     'NASDAQ':nasdaqOnLabels,
-    'Au99.99 (¥/g)':au9999OnLabels,
     'Tencent (0700.HK)':tencentOnLabels,
     'USD/CNY':usdCnyOnLabels,
     'Trade-Wtd USD (TWEXB)':twexbOnLabels,
@@ -509,7 +507,7 @@ function render(rows){
     data:{
       labels,
       datasets:[{
-        label:'SGE Gold (¥/g)',
+        label:'Au99.99 (¥/g)',
         data:gprices,
         borderColor:'#f59e0b',
         backgroundColor:'rgba(245,158,11,0.1)',
@@ -732,21 +730,6 @@ function render(rows){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y12'
-      },{
-        label:'Au99.99 (¥/g)',
-        data:au9999OnLabels,
-        hidden:true,
-        borderColor:'#d97706',
-        backgroundColor:'rgba(217,119,6,0.1)',
-        fill:false,
-        tension:.3,
-        pointBackgroundColor:'#d97706',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y'
       },{
         label:'Tencent (0700.HK)',
         data:tencentOnLabels,
