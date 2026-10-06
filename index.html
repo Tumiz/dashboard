@@ -73,6 +73,12 @@ body{
 .flow-rationale td.dir{white-space:nowrap;font-weight:600}
 .wrap{overflow-x:auto}
 .xau-events{margin-top:10px;padding:10px;border:1px solid #2d2d35;border-radius:8px;background:#101014}
+.xau-events.pinned{border-color:#fbbf55;background:#141210}
+.xau-events-head{display:flex;align-items:center;gap:8px}
+.xau-events .event-hint{margin-top:4px;color:#6b7280;font-size:9px;line-height:1.45}
+.xau-release{flex-shrink:0;font-size:10px;line-height:1.4;padding:1px 8px;border:1px solid #fbbf24;border-radius:4px;background:transparent;color:#fbbf24;cursor:pointer}
+.xau-release[hidden]{display:none}
+.xau-release:hover{background:rgba(251,191,36,.14)}
 .xau-events h3{font-size:12px;font-weight:600;color:#f3f4f6}
 .xau-events .event-note{margin-top:4px;color:#9ca3af;font-size:10px;line-height:1.45}
 .xau-event-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:8px;margin-top:8px}
@@ -168,8 +174,8 @@ function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 
 let currentXauEventMonth;
-function renderXauEvents(month){
-  if(month===currentXauEventMonth) return;
+function renderXauEvents(month,force){
+  if(!force&&month===currentXauEventMonth) return;
   currentXauEventMonth=month;
   const events=window.XAU_EVENTS;
   if(!Array.isArray(events)) throw new Error('Failed to load XAU event data');
@@ -406,6 +412,7 @@ function render(rows){
   };
 
   let hoverValues;
+  let pinnedXauMonth=null;
   function hoverValue(dataset,value){
     if(value==null||!Number.isFinite(value)) return null;
     const axis=dataset.yAxisID;
@@ -421,15 +428,7 @@ function render(rows){
     return `<span class="hover-value" style="color:${dataset.borderColor}">${esc(dataset.label)}: ${formatted}</span>`;
   }
 
-  function updateHoverValues(chart){
-    const active=chart._active||[];
-    if(!active.length){
-      hoverValues.textContent='';
-      renderXauEvents(null);
-      return;
-    }
-    const index=active[0].index;
-    renderXauEvents(labels[index]||null);
+  function showValuesForIndex(chart,index){
     const values=chart.data.datasets
       .filter((dataset,datasetIndex)=>{
         const meta=chart.getDatasetMeta(datasetIndex);
@@ -438,6 +437,51 @@ function render(rows){
       .map(dataset=>hoverValue(dataset,dataset.data[index]))
       .filter(Boolean);
     hoverValues.innerHTML=`<span class="hover-month">${esc(labels[index]||'')}</span>${values.join('')}`;
+  }
+
+  function updateHoverValues(chart){
+    if(pinnedXauMonth!=null) return;
+    const active=chart._active||[];
+    if(!active.length){
+      hoverValues.textContent='';
+      renderXauEvents(null);
+      return;
+    }
+    const index=active[0].index;
+    renderXauEvents(labels[index]||null);
+    showValuesForIndex(chart,index);
+  }
+
+  function updateXauPanel(){
+    const on=pinnedXauMonth!=null;
+    xauEventsEl.classList.toggle('pinned',on);
+    xauRelease.hidden=!on;
+    xauHeading.textContent=on
+      ?`XAU events for selected month (${pinnedXauMonth})`
+      :'XAU events for hovered month';
+  }
+
+  function setPin(month,on){
+    pinnedXauMonth=on?month:null;
+    updateXauPanel();
+    if(pinnedXauMonth!=null){
+      showValuesForIndex(chart,labels.indexOf(pinnedXauMonth));
+      renderXauEvents(pinnedXauMonth,true);
+    }else{
+      const active=chart._active||[];
+      if(active.length){
+        showValuesForIndex(chart,active[0].index);
+        renderXauEvents(labels[active[0].index]||null,true);
+      }else{
+        hoverValues.textContent='';
+        renderXauEvents(null,true);
+      }
+    }
+    chart.render();
+  }
+
+  function togglePin(month){
+    setPin(month,pinnedXauMonth!==month);
   }
 
   function r2(pairs){
@@ -555,9 +599,13 @@ function render(rows){
       </div>
       <div class="hover-values" id="hoverValues" aria-live="polite"></div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
-      <section class="xau-events" aria-labelledby="xauEventsHeading">
-        <h3 id="xauEventsHeading">XAU events for hovered month</h3>
+      <section class="xau-events" id="xauEvents" aria-labelledby="xauEventsHeading">
+        <div class="xau-events-head">
+          <h3 id="xauEventsHeading">XAU events for hovered month</h3>
+          <button type="button" class="xau-release" id="xauRelease" hidden>Release</button>
+        </div>
         <p class="event-note">Selected, source-linked events may affect gold through rates, currencies, inflation expectations, official-sector demand, or risk sentiment; inclusion does not imply direct causation.</p>
+        <p class="event-hint">Click a month on the chart to lock the line and its events; click the same month again to release.</p>
         <div class="xau-event-list" id="xauEventList" aria-live="polite"></div>
       </section>
     </div>
@@ -577,6 +625,9 @@ function render(rows){
   `;
 
   hoverValues=document.getElementById('hoverValues');
+  const xauEventsEl=document.getElementById('xauEvents');
+  const xauHeading=document.getElementById('xauEventsHeading');
+  const xauRelease=document.getElementById('xauRelease');
   const chart=new Chart(document.getElementById('priceChart'),{
     type:'line',
     data:{
@@ -1084,22 +1135,46 @@ function render(rows){
       id:'crosshair',
       afterDraw(chart){
         updateHoverValues(chart);
-        if(!chart._active.length) return;
+        const pinned=pinnedXauMonth!=null;
+        let x=null;
+        if(pinned){
+          const idx=labels.indexOf(pinnedXauMonth);
+          if(idx>=0){
+            const px=chart.scales.x.getPixelForValue(idx);
+            const area=chart.chartArea;
+            if(px>=area.left&&px<=area.right) x=px;
+          }
+        }else if(chart._active.length){
+          x=chart._active[0].element.x;
+        }
+        if(x==null) return;
         const ctx=chart.ctx;
-        const x=chart._active[0].element.x;
         const top=chart.chartArea.top;
         const bot=chart.chartArea.bottom;
         ctx.save();
         ctx.beginPath();
-        ctx.setLineDash([4,3]);
-        ctx.strokeStyle='rgba(255,255,255,0.85)';
-        ctx.lineWidth=1.5;
+        if(pinned){
+          ctx.setLineDash([]);
+          ctx.strokeStyle='#fbbf24';
+          ctx.lineWidth=2;
+        }else{
+          ctx.setLineDash([4,3]);
+          ctx.strokeStyle='rgba(255,255,255,0.85)';
+          ctx.lineWidth=1.5;
+        }
         ctx.moveTo(x,top);
         ctx.lineTo(x,bot);
         ctx.stroke();
+        if(pinned){
+          ctx.font='10px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';
+          ctx.textAlign=x>chart.chartArea.right-52?'right':'left';
+          ctx.fillStyle='#fbbf24';
+          ctx.fillText(pinnedXauMonth,x+(ctx.textAlign==='right'?-4:4),top+10);
+        }
         ctx.restore();
       },
       afterEvent(chart,args){
+        if(pinnedXauMonth!=null) return;
         if(args.event.type==='mouseout'||args.event.type==='mouseleave'){
           hoverValues.textContent='';
           renderXauEvents(null);
@@ -1109,6 +1184,13 @@ function render(rows){
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
+      onClick(evt,els,chart){
+        const area=chart.chartArea;
+        if(!area||evt.x<area.left||evt.x>area.right||evt.y<area.top||evt.y>area.bottom) return;
+        const idx=chart.scales.x.getValueForPixel(evt.x);
+        if(!(idx>=0&&idx<labels.length)) return;
+        togglePin(labels[idx]);
+      },
       plugins:{
         legend:{display:false},
         tooltip:{
@@ -1321,6 +1403,10 @@ function render(rows){
   }
   rangeStart.addEventListener('input',()=>updateRange('start'));
   rangeEnd.addEventListener('input',()=>updateRange('end'));
+  xauRelease.addEventListener('click',()=>setPin(null,false));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&pinnedXauMonth!=null) setPin(null,false);
+  });
   renderXauEvents(null);
   updateRange('end');
 
