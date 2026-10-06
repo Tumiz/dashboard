@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gold & Macro & Stock Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="xau_events.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -71,6 +72,18 @@ body{
 .flow-rationale td{white-space:normal;line-height:1.45;vertical-align:top}
 .flow-rationale td.dir{white-space:nowrap;font-weight:600}
 .wrap{overflow-x:auto}
+.xau-events{margin-top:10px;padding:10px;border:1px solid #2d2d35;border-radius:8px;background:#101014}
+.xau-events h3{font-size:12px;font-weight:600;color:#f3f4f6}
+.xau-events .event-note{margin-top:4px;color:#9ca3af;font-size:10px;line-height:1.45}
+.xau-event-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:8px;margin-top:8px}
+.xau-event-month{padding:8px;border:1px solid #26262c;border-radius:6px;background:#141418}
+.xau-event-month h4{font-size:11px;color:#fbbf24;margin-bottom:5px}
+.xau-event-month ul{padding-left:15px}
+.xau-event-month li{padding:2px 0;color:#d1d5db;font-size:10px;line-height:1.45}
+.xau-event-month li strong{color:#f3f4f6}
+.xau-event-sources{display:block;margin-top:2px;color:#9ca3af;font-size:9px}
+.xau-event-sources a{color:#93c5fd;text-decoration:none;margin-right:6px}
+.xau-event-sources a:hover{text-decoration:underline}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:6px 6px;border-bottom:2px solid #2d2d35;color:#9ca3af;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
 td{padding:6px 6px;border-bottom:1px solid #26262c;white-space:nowrap}
@@ -154,6 +167,53 @@ function parseCSV(text){
 function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
 
+let currentXauEventMonth;
+function renderXauEvents(month){
+  if(month===currentXauEventMonth) return;
+  currentXauEventMonth=month;
+  const events=window.XAU_EVENTS;
+  if(!Array.isArray(events)) throw new Error('Failed to load XAU event data');
+  const list=document.getElementById('xauEventList');
+  list.replaceChildren();
+  const monthEvents=month?events.filter(event=>event.month===month):[];
+  if(!monthEvents.length){
+    const empty=document.createElement('p');
+    empty.className='event-note';
+    empty.textContent=month?`No curated major events for ${month}.`:'Hover over a month on the chart to see its events.';
+    list.append(empty);
+    return;
+  }
+  const section=document.createElement('section');
+  section.className='xau-event-month';
+  const heading=document.createElement('h4');
+  heading.textContent=month;
+  section.append(heading);
+  const items=document.createElement('ul');
+  for(const event of monthEvents){
+    const li=document.createElement('li');
+    const title=document.createElement('strong');
+    title.textContent=event.title;
+    li.append(title,document.createTextNode(' — '+event.context));
+    const sources=document.createElement('span');
+    sources.className='xau-event-sources';
+    sources.append(document.createTextNode('Sources: '));
+    for(const source of event.sources){
+      const url=new URL(source.url);
+      if(url.protocol!=='https:'&&url.protocol!=='http:') throw new Error('Invalid XAU event source URL');
+      const link=document.createElement('a');
+      link.href=url.href;
+      link.target='_blank';
+      link.rel='noopener noreferrer';
+      link.textContent=source.label;
+      sources.append(link);
+    }
+    li.append(sources);
+    items.append(li);
+  }
+  section.append(items);
+  list.append(section);
+}
+
 function render(rows){
   const num=v=>v===''||v==null?null:+v;
   const M={}; rows.forEach(r=>M[r.month]=r);
@@ -166,7 +226,15 @@ function render(rows){
   const preLabels=[];
   for(let y=2000;y<=fy;y++){const endM=y===fy?fm-1:12;for(let m=1;m<=endM;m++)preLabels.push(y+'-'+String(m).padStart(2,'0'))}
   const labels=[...preLabels,...goldMonths,...extMonths];
-  const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].au9999_close)),...new Array(extMonths.length).fill(null)];
+  const today=new Date();
+  const nextQuarterEnd=new Date(today.getFullYear(),(Math.floor(today.getMonth()/3)+2)*3,0);
+  const nextQuarterEndMonth=nextQuarterEnd.getFullYear()+'-'+String(nextQuarterEnd.getMonth()+1).padStart(2,'0');
+  while(labels.at(-1)<nextQuarterEndMonth){
+    let [year,month]=labels.at(-1).split('-').map(Number);
+    if(++month>12){year++;month=1}
+    labels.push(year+'-'+String(month).padStart(2,'0'));
+  }
+  const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].au9999_close)),...new Array(extMonths.length).fill(null),...new Array(labels.length-preLabels.length-goldMonths.length-extMonths.length).fill(null)];
   const col=key=>labels.map(m=>{const r=M[m];return r&&r[key]!==''?num(r[key]):null});
   const usdOnLabels=col('usd_index');
   const cpiOnLabels=col('cpi_yoy_pct');
@@ -357,9 +425,11 @@ function render(rows){
     const active=chart._active||[];
     if(!active.length){
       hoverValues.textContent='';
+      renderXauEvents(null);
       return;
     }
     const index=active[0].index;
+    renderXauEvents(labels[index]||null);
     const values=chart.data.datasets
       .filter((dataset,datasetIndex)=>{
         const meta=chart.getDatasetMeta(datasetIndex);
@@ -485,6 +555,11 @@ function render(rows){
       </div>
       <div class="hover-values" id="hoverValues" aria-live="polite"></div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
+      <section class="xau-events" aria-labelledby="xauEventsHeading">
+        <h3 id="xauEventsHeading">XAU events for hovered month</h3>
+        <p class="event-note">Selected, source-linked events may affect gold through rates, currencies, inflation expectations, official-sector demand, or risk sentiment; inclusion does not imply direct causation.</p>
+        <div class="xau-event-list" id="xauEventList" aria-live="polite"></div>
+      </section>
     </div>
 
     <div class="chart-card" style="margin-top:8px">
@@ -1027,6 +1102,7 @@ function render(rows){
       afterEvent(chart,args){
         if(args.event.type==='mouseout'||args.event.type==='mouseleave'){
           hoverValues.textContent='';
+          renderXauEvents(null);
         }
       }
     }],
@@ -1221,10 +1297,14 @@ function render(rows){
   const rangeStartLabel=document.getElementById('rangeStartLabel');
   const rangeEndLabel=document.getElementById('rangeEndLabel');
   const lastIdx=labels.length-1;
-  rangeStart.max=lastIdx;rangeStart.value=0;
-  rangeEnd.max=lastIdx;rangeEnd.value=lastIdx;
-  rangeStartLabel.textContent=labels[0];
-  rangeEndLabel.textContent=labels[lastIdx];
+  const firstBtcIdx=btcOnLabels.findIndex(v=>v!=null);
+  const defaultStart=firstBtcIdx>=0?firstBtcIdx:0;
+  const nextQuarterEndIdx=labels.indexOf(nextQuarterEndMonth);
+  const defaultEnd=nextQuarterEndIdx>=0?nextQuarterEndIdx:lastIdx;
+  rangeStart.max=lastIdx;rangeStart.value=defaultStart;
+  rangeEnd.max=lastIdx;rangeEnd.value=defaultEnd;
+  rangeStartLabel.textContent=labels[defaultStart];
+  rangeEndLabel.textContent=labels[defaultEnd];
   function updateRange(active){
     const s=parseInt(rangeStart.value),e=parseInt(rangeEnd.value);
     const lo=Math.min(s,e),hi=Math.max(s,e);
@@ -1241,6 +1321,8 @@ function render(rows){
   }
   rangeStart.addEventListener('input',()=>updateRange('start'));
   rangeEnd.addEventListener('input',()=>updateRange('end'));
+  renderXauEvents(null);
+  updateRange('end');
 
   const corrDD=document.getElementById('corrDD');
   const corrDDToggle=document.getElementById('corrDDToggle');
