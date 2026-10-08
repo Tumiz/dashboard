@@ -73,25 +73,39 @@ def fetch_gold(symbol: str = "Au99.99", months: bool = False, output: str = "sge
     print(f"Saved {len(df)} rows to {output}")
 
 
+def usd_index_from_rates(df: pd.DataFrame) -> pd.Series:
+    """ICE Dollar Index formula applied to noon rates quoted as units per USD."""
+    return (
+        50.14348112
+        * (1 / df["DEXUSEU"]) ** 0.576
+        * df["DEXJPUS"] ** 0.136
+        * (1 / df["DEXUSUK"]) ** 0.119
+        * df["DEXCAUS"] ** 0.091
+        * df["DEXSDUS"] ** 0.042
+        * df["DEXSZUS"] ** 0.036
+    )
+
+
 def fetch_usd_index(months: bool = False, output: str = "usd_index.csv"):
-    df = ak.index_global_hist_em(symbol="美元指数")
-    df = df.rename(columns={
-        "日期": "date",
-        "今开": "open",
-        "最新价": "close",
-        "最高": "high",
-        "最低": "low",
-    })
+    # FRED instead of eastmoney: push2his.eastmoney.com throttles this IP, so
+    # index_global_hist_em dropped the connection and the series went stale.
+    url = (
+        "https://fred.stlouisfed.org/graph/fredgraph.csv"
+        "?id=DEXUSEU,DEXJPUS,DEXUSUK,DEXCAUS,DEXSDUS,DEXSZUS"
+    )
+    df = pd.read_csv(io.BytesIO(http_get(url)))
+    df = df.rename(columns={"observation_date": "date"})
     df["date"] = pd.to_datetime(df["date"])
-    df = df[["date", "open", "high", "low", "close"]]
+    df = df.set_index("date").apply(pd.to_numeric, errors="coerce").dropna()
+    df["close"] = usd_index_from_rates(df)
 
     if months:
-        df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+        df = df.resample("ME").mean(numeric_only=True).dropna().reset_index()
         df["month"] = df["date"].dt.strftime("%Y-%m")
         update_dashboard(df[["month", "close"]].rename(columns={"close": "usd_index"}).round(1))
         return
 
-    df = df.drop(columns=["date"]).round(1)
+    df = df[["close"]].round(1)
     df.to_csv(output, index=False)
     print(f"Saved {len(df)} rows to {output}")
 
