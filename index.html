@@ -12,6 +12,8 @@ window.MathJax = {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script src="xau_events.js"></script>
 
 <style>
@@ -34,6 +36,20 @@ body{
 .formula-card .formula{font-size:12px;line-height:1.6;color:#dfe7ff;font-weight:600;overflow-x:auto;padding:2px 0}
 .formula-card .formula-note{margin-top:6px;font-size:11px;color:#a8b2d1}
 .formula-card .equation-status{margin-top:6px;font-size:10px;color:#ef4444}
+.notes-card{background:#16161b;border:1px solid #2d2d35;border-radius:10px;padding:12px 14px;margin:12px 0 16px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.notes-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#f3f4f6}
+.notes-content{font-size:12px;line-height:1.6;color:#d1d5db;overflow-wrap:anywhere}
+.notes-content h1,.notes-content h2,.notes-content h3{color:#f3f4f6;margin:10px 0 5px}
+.notes-content h1{font-size:16px}
+.notes-content h2{font-size:14px}
+.notes-content h3{font-size:12px}
+.notes-content p,.notes-content ul,.notes-content ol,.notes-content blockquote,.notes-content pre{margin:6px 0}
+.notes-content ul,.notes-content ol{padding-left:20px}
+.notes-content a{color:#93c5fd}
+.notes-content code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#101014;padding:1px 4px;border-radius:3px}
+.notes-content pre{overflow-x:auto;padding:8px;background:#101014;border-radius:6px}
+.notes-content pre code{padding:0}
+.notes-error{color:#ef4444}
 .equation-breakdown{margin-top:5px;color:#9ca3af;font-size:10px;line-height:1.55}
 .equation-breakdown summary{cursor:pointer;color:#a8b2d1}
 .equation-breakdown ul{padding:4px 0 0 16px}
@@ -184,6 +200,10 @@ td.down{color:#ef4444}
     <div class="equation-status" id="equationStatus" role="status" aria-live="polite"></div>
     <div class="next-month-forecast" id="nextMonthForecast"></div>
   </div>
+  <section class="notes-card" aria-labelledby="notesHeading">
+    <h2 id="notesHeading">Notes</h2>
+    <div class="notes-content" id="notesContent" aria-live="polite">Loading notes...</div>
+  </section>
   <div id="app"><div class="loading">Loading...</div></div>
 </div>
 
@@ -1675,6 +1695,22 @@ function render(rows){
 }
 
 document.addEventListener('DOMContentLoaded',async ()=>{
+  const notesContent=document.getElementById('notesContent');
+  fetch('notes.md')
+    .then(res=>{
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.text();
+    })
+    .then(markdown=>{
+      if(!window.marked?.parse||!window.DOMPurify?.sanitize){
+        throw new Error('Markdown renderer or HTML sanitizer failed to load');
+      }
+      notesContent.innerHTML=window.DOMPurify.sanitize(window.marked.parse(markdown));
+    })
+    .catch(error=>{
+      notesContent.classList.add('notes-error');
+      notesContent.textContent=`Failed to load notes: ${error.message}`;
+    });
   try{
     if(!window.MathJax?.startup?.promise){
       throw new Error('Mathematical equation renderer failed to load');
