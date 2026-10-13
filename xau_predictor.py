@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from pathlib import Path
 
 import numpy as np
@@ -7,22 +8,57 @@ DATA_PATH = Path(__file__).resolve().parent / "dashboard_monthly.csv"
 d = pd.read_csv(DATA_PATH, index_col="month")
 
 
+def normalize_month(month):
+    try:
+        year, mm = str(month).split("-")
+        period = pd.Period(year=int(year), month=int(mm), freq="M")
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"invalid month {month!r}, expected YYYY-MM") from exc
+    return f"{period.year:04d}-{period.month:02d}"
+
+
+def data_before(month):
+    return d[d.index < normalize_month(month)]
+
+
 def ln_return(series):
     return np.log(series / series.shift(1))
-
-
-def next_month(m):
-    y, mm = int(m[:4]), int(m[5:7])
-    y2, m2 = (y + 1, 1) if mm == 12 else (y, mm + 1)
-    return f"{y2:04d}-{m2:02d}"
 
 
 def _quarter_label(month):
     return f"{month[:4]}-{((int(month[5:7]) - 1) // 3) + 1:02d}"
 
 
-def gold_dxy_linear_regression():
-    df = d[["xau_usd", "twexb", "real_yield_pct"]].dropna()
+def _quarterly_data(data):
+    source = data[["xau_usd", "twexb", "real_yield_pct", "gpr"]].dropna()
+    df = pd.DataFrame({
+        "gold_return": ln_return(source["xau_usd"]),
+        "dxy_return": ln_return(source["twexb"]),
+        "real_yield_change": source["real_yield_pct"].diff(),
+        "gpr": source["gpr"],
+    }).dropna()
+    df["quarter"] = df.index.map(_quarter_label)
+    return df.groupby("quarter").agg({
+        "gold_return": "sum",
+        "dxy_return": "sum",
+        "real_yield_change": "sum",
+        "gpr": "last",
+    })
+
+
+def actual_price(month):
+    if month in d.index and pd.notna(d.loc[month, "xau_usd"]):
+        return float(d.loc[month, "xau_usd"])
+    return None
+
+
+def actual_quarter_end_price(quarter):
+    q = d[d.index.map(_quarter_label) == quarter]["xau_usd"].dropna()
+    return float(q.iloc[-1]) if len(q) else None
+
+
+def gold_dxy_linear_regression(data):
+    df = data[["xau_usd", "twexb", "real_yield_pct"]].dropna()
     real_yield_change = df["real_yield_pct"].diff()
     reg = pd.DataFrame({
         "gold_return": ln_return(df["xau_usd"]),
@@ -45,20 +81,7 @@ def gold_dxy_linear_regression():
     )
     print(f"Monthly R-squared = {r2:.4f}, n = {len(reg)}")
 
-    quarter_source = d[["xau_usd", "twexb", "real_yield_pct", "gpr"]].dropna()
-    quarter_df = pd.DataFrame({
-        "gold_return": ln_return(quarter_source["xau_usd"]),
-        "dxy_return": ln_return(quarter_source["twexb"]),
-        "real_yield_change": quarter_source["real_yield_pct"].diff(),
-        "gpr": quarter_source["gpr"],
-    }).dropna()
-    quarter_df["quarter"] = quarter_df.index.map(_quarter_label)
-    quarterly = quarter_df.groupby("quarter").agg({
-        "gold_return": "sum",
-        "dxy_return": "sum",
-        "real_yield_change": "sum",
-        "gpr": "last",
-    })
+    quarterly = _quarterly_data(data)
 
     X_q = quarterly[["dxy_return", "real_yield_change", "gpr"]].to_numpy()
     y_q = quarterly["gold_return"].to_numpy()
@@ -91,47 +114,72 @@ def gold_dxy_linear_regression():
     }
 
 
-def generate_predicted_prices(alpha, beta_dxy, beta_real_yield_change, output=DATA_PATH):
-    gold = d["xau_usd"]
-    dxy_ret = ln_return(d["twexb"])
-    real_yield_change = d["real_yield_pct"].diff()
-
-    actual_ret = ln_return(gold)
-    pred_ret = alpha + beta_dxy * dxy_ret + beta_real_yield_change * real_yield_change
-    pred_price = (gold.shift(1) * np.exp(pred_ret)).round(1)
-
-    output_path = Path(output)
-    out = pd.read_csv(output_path, index_col="month")
-    for col in ["actual_return", "pred_return", "pred_price"]:
-        if col in out.columns:
-            out = out.drop(columns=[col])
-    out = out[~out.index.duplicated(keep="last")]
+def predict_price(data, predict_month, alpha, beta_dxy, beta_real_yield_change):
+    gold = data["xau_usd"]
+    dxy_ret = ln_return(data["twexb"])
+    real_yield_change = data["real_yield_pct"].diff()
 
     last_month = gold.dropna().index[-1]
-    forecast_month = next_month(last_month)
+    print(f"Last month used for regression: {last_month}, gold price: {gold.loc[last_month]} USD")
     latest_dxy_ret = dxy_ret.dropna().iloc[-1]
     latest_real_yield_change = real_yield_change.dropna().iloc[-1]
     forecast_return = (
         alpha + beta_dxy * latest_dxy_ret + beta_real_yield_change * latest_real_yield_change
     )
     forecast_price = gold.loc[last_month] * np.exp(forecast_return)
-    out = out.drop(index=[forecast_month], errors="ignore")
-    out = pd.concat([
-        out,
-        pd.DataFrame({
-        }, index=pd.Index([forecast_month], name="month")),
-    ])
-    out = out.sort_index().reset_index()
-    out = out[["month"] + [c for c in out.columns if c != "month"]]
-    out.to_csv(output_path, index=False)
 
-    print("Removed derived monthly return and prediction columns from CSV")
-    print(f"Next-month forecast ({forecast_month}): {forecast_price} USD, return={forecast_return:.4f}")
+    actual = actual_price(predict_month)
+    actual_str = f"{actual:.1f} USD" if actual is not None else "N/A"
+    print(
+        f"Monthly forecast ({predict_month}): {forecast_price:.1f} USD, "
+        f"return={forecast_return:.4f}, actual={actual_str}"
+    )
+    return forecast_price
+
+
+def predict_quarterly_price(data, predict_month, alpha, beta_dxy, beta_real_yield_change, beta_gpr):
+    gold = data["xau_usd"]
+    quarterly = _quarterly_data(data)
+
+    forecast_quarter = _quarter_label(predict_month)
+    prev = quarterly[quarterly.index < forecast_quarter]
+    if prev.empty:
+        raise SystemExit(f"No completed quarter before {forecast_quarter} to build a forecast.")
+    prev = prev.iloc[-1]
+
+    quarterly_return = (
+        alpha
+        + beta_dxy * prev["dxy_return"]
+        + beta_real_yield_change * prev["real_yield_change"]
+        + beta_gpr * prev["gpr"]
+    )
+    last_month = gold.dropna().index[-1]
+    forecast_price = gold.loc[last_month] * np.exp(quarterly_return)
+
+    actual = actual_quarter_end_price(forecast_quarter)
+    actual_str = f"{actual:.1f} USD" if actual is not None else "N/A"
+    print(
+        f"Quarterly forecast ({forecast_quarter} quarter-end): {forecast_price:.1f} USD, "
+        f"return={quarterly_return:.4f}, actual={actual_str}"
+    )
+    return forecast_price
+
+
+def parse_args():
+    parser = ArgumentParser(description="Predict the gold price for a given month.")
+    parser.add_argument(
+        "month",
+        type=normalize_month,
+        help="Predicting month in YYYY-MM format; only data before it is used to regress.",
+    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    model = gold_dxy_linear_regression()
-    alpha = model["monthly"]["alpha"]
-    beta_dxy = model["monthly"]["beta_dxy"]
-    beta_real_yield_change = model["monthly"]["beta_real_yield_change"]
-    generate_predicted_prices(alpha, beta_dxy, beta_real_yield_change, output=DATA_PATH)
+    args = parse_args()
+    data = data_before(args.month)
+    model = gold_dxy_linear_regression(data)
+    predict_price(data, args.month, **{k: model["monthly"][k] for k in
+                                       ("alpha", "beta_dxy", "beta_real_yield_change")})
+    predict_quarterly_price(data, args.month, **{k: model["quarterly"][k] for k in
+                                                 ("alpha", "beta_dxy", "beta_real_yield_change", "beta_gpr")})
