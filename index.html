@@ -263,7 +263,7 @@ function renderXauEvents(month,force){
   list.append(section);
 }
 
-function render(rows){
+function render(rows,predictions){
   const num=v=>v===''||v==null?null:+v;
   const M={}; rows.forEach(r=>M[r.month]=r);
   const months=rows.map(r=>r.month);
@@ -311,96 +311,25 @@ function render(rows){
   const hsiOnLabels=col('hsi_close');
   const centralBankUsdReservesOnLabels=col('central_bank_usd_reserves');
   const centralBankUsdShareOnLabels=col('central_bank_usd_share_pct');
-  const monthlyAlpha=0.0086;
-  const monthlyBetaDxy=-0.7055;
-  const monthlyBetaRealYield=-0.0919;
+  const monthlySeries=predictions.monthly_series||{};
   const predictedPriceByMonth={};
+  const predReturnByMonth={};
+  Object.entries(monthlySeries).forEach(([month,entry])=>{
+    if(entry==null) return;
+    if(entry.predicted_price!=null) predictedPriceByMonth[month]=entry.predicted_price;
+    if(entry.predicted_return!=null) predReturnByMonth[month]=entry.predicted_return;
+  });
   const logReturn=(current,previous)=>current!=null&&previous!=null&&current>0&&previous>0?Math.log(current/previous):null;
   const actualReturnByMonth={};
-  const predReturnByMonth={};
-  const dxyReturnByMonth={};
-  const realYieldChangeByMonth={};
-  const dxyReturnSourceByMonth={};
-  const realYieldChangeSourceByMonth={};
   let previousActual=null;
-  let previousTwexb=null;
-  let previousTwexbMonth=null;
-  let previousRealYield=null;
-  let previousRealYieldMonth=null;
   rows.forEach(r=>{
     const actual=num(r.xau_usd);
-    const twexb=num(r.twexb);
-    const realYield=num(r.real_yield_pct);
     if(actual!=null&&previousActual!=null){
       actualReturnByMonth[r.month]=logReturn(actual,previousActual);
     }
-    if(twexb!=null&&realYield!=null&&previousTwexb!=null&&previousRealYield!=null&&previousActual!=null){
-      const dxyReturn=logReturn(twexb,previousTwexb);
-      const realYieldChange=realYield-previousRealYield;
-      dxyReturnByMonth[r.month]=dxyReturn;
-      realYieldChangeByMonth[r.month]=realYieldChange;
-      dxyReturnSourceByMonth[r.month]={previousMonth:previousTwexbMonth,previous:previousTwexb,current:twexb};
-      realYieldChangeSourceByMonth[r.month]={previousMonth:previousRealYieldMonth,previous:previousRealYield,current:realYield};
-      const predReturn=monthlyAlpha+monthlyBetaDxy*dxyReturn+monthlyBetaRealYield*realYieldChange;
-      predReturnByMonth[r.month]=predReturn;
-      predictedPriceByMonth[r.month]=previousActual*Math.exp(predReturn);
-    }
     if(actual!=null) previousActual=actual;
-    if(twexb!=null){previousTwexb=twexb;previousTwexbMonth=r.month}
-    if(realYield!=null){previousRealYield=realYield;previousRealYieldMonth=r.month}
   });
-  const currentMonth=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-  const forecastMonth=lastActualMonth===currentMonth?currentMonth:extMonths[0];
-  let monthlyForecastInputs=null;
-  const monthlyInputBreakdownLines=[];
-  if(forecastMonth){
-    const baseActualMonth=months.filter(m=>m<forecastMonth&&num(M[m].xau_usd)!=null).at(-1);
-    const inputMonth=months.filter(m=>m<=forecastMonth&&num(M[m].twexb)!=null&&num(M[m].real_yield_pct)!=null).at(-1);
-    const priorMacroMonth=inputMonth
-      ?months.filter(m=>m<inputMonth&&num(M[m].twexb)!=null&&num(M[m].real_yield_pct)!=null).at(-1)
-      :null;
-    const forecastBasePrice=baseActualMonth?num(M[baseActualMonth].xau_usd):null;
-    monthlyInputBreakdownLines.push(`Forecast target month: ${forecastMonth}; predictor inputs from ${inputMonth||'an unavailable month'}.`);
-    if(Number.isFinite(forecastBasePrice)){
-      monthlyInputBreakdownLines.push(`X_{t-1} = last XAU/USD value before the forecast month, from ${baseActualMonth} = ${forecastBasePrice.toFixed(2)} USD/oz.`);
-      if(M[forecastMonth]&&num(M[forecastMonth].xau_usd)!=null){
-        monthlyInputBreakdownLines.push(`The current ${forecastMonth} XAU/USD reading (${num(M[forecastMonth].xau_usd).toFixed(2)} USD/oz) is not used as the forecast starting price; it may be month-to-date, not the final monthly close.`);
-      }
-    }else{
-      monthlyInputBreakdownLines.push(`X_{t-1} is unavailable: no XAU/USD value before ${forecastMonth}.`);
-    }
-    if(inputMonth&&priorMacroMonth){
-      const currentTwexb=num(M[inputMonth].twexb);
-      const previousTwexb=num(M[priorMacroMonth].twexb);
-      const currentRealYield=num(M[inputMonth].real_yield_pct);
-      const previousRealYield=num(M[priorMacroMonth].real_yield_pct);
-      const dxyReturn=logReturn(currentTwexb,previousTwexb);
-      const realYieldChange=Number.isFinite(currentRealYield)&&Number.isFinite(previousRealYield)
-        ?currentRealYield-previousRealYield
-        :NaN;
-      if(Number.isFinite(dxyReturn)){
-        monthlyInputBreakdownLines.push(`DXYReturn_t = ln(TWEXB_${inputMonth} / TWEXB_${priorMacroMonth}) = ln(${currentTwexb.toFixed(4)} / ${previousTwexb.toFixed(4)}) = ${dxyReturn.toFixed(8)}.`);
-      }else{
-        monthlyInputBreakdownLines.push('DXYReturn_t is unavailable: TWEXB must be positive in both months.');
-      }
-      if(Number.isFinite(realYieldChange)){
-        monthlyInputBreakdownLines.push(`Δy_t = real yield in ${inputMonth} − real yield in ${priorMacroMonth} = ${currentRealYield.toFixed(4)}% − ${previousRealYield.toFixed(4)}% = ${realYieldChange.toFixed(8)} percentage points.`);
-      }else{
-        monthlyInputBreakdownLines.push(`Δy_t is unavailable: a real-yield value is missing in ${inputMonth} or ${priorMacroMonth}.`);
-      }
-      const predReturn=monthlyAlpha+monthlyBetaDxy*dxyReturn+monthlyBetaRealYield*realYieldChange;
-      predReturnByMonth[forecastMonth]=predReturn;
-      predictedPriceByMonth[forecastMonth]=forecastBasePrice*Math.exp(predReturn);
-      if(Number.isFinite(forecastBasePrice)&&Number.isFinite(dxyReturn)&&Number.isFinite(realYieldChange)&&Number.isFinite(predictedPriceByMonth[forecastMonth])){
-        monthlyForecastInputs={xau:forecastBasePrice,dxyReturn,realYieldChange,predReturn,price:predictedPriceByMonth[forecastMonth]};
-        monthlyInputBreakdownLines.push(`Predicted log return = 0.0086 − 0.7055 × (${dxyReturn.toFixed(8)}) − 0.0919 × (${realYieldChange.toFixed(8)}) = ${predReturn.toFixed(8)}.`);
-      }
-    }else{
-      monthlyInputBreakdownLines.push(`The latest prior TWEXB and real-yield observations before ${forecastMonth} are incomplete.`);
-    }
-  }else{
-    monthlyInputBreakdownLines.push('Monthly forecast inputs are unavailable because the dataset contains no upcoming month and its latest XAU observation is not in the current month.');
-  }
+  const monthlyForecast=predictions.forecasts?.next_month||null;
   const predOnLabels=labels.map(m=>predictedPriceByMonth[m]??null);
   const actualReturnOnLabels=labels.map(m=>actualReturnByMonth[m]??null);
   const predReturnOnLabels=labels.map(m=>predReturnByMonth[m]??null);
@@ -413,83 +342,12 @@ function render(rows){
     return `${year}-${String(q).padStart(2,'0')}`;
   };
   const quarterActualAgg={};
-  const quarterDxyAgg={};
-  const quarterRealChangeAgg={};
-  const quarterGprAgg={};
-  const quarterDxyTerms={};
-  const quarterRealChangeTerms={};
-  const quarterGprMonth={};
   rows.forEach(r=>{
     const q=quarterKey(r.month);
     if(!q) return;
     const actualVal=actualReturnByMonth[r.month]??null;
     if(actualVal!=null && Number.isFinite(actualVal)) quarterActualAgg[q]=(quarterActualAgg[q]||0)+actualVal;
-    const dxyVal=dxyReturnByMonth[r.month]??null;
-    const realChangeVal=realYieldChangeByMonth[r.month]??null;
-    if(dxyVal!=null && Number.isFinite(dxyVal)){
-      quarterDxyAgg[q]=(quarterDxyAgg[q]||0)+dxyVal;
-      (quarterDxyTerms[q]??=[]).push({month:r.month,value:dxyVal,...dxyReturnSourceByMonth[r.month]});
-    }
-    if(realChangeVal!=null && Number.isFinite(realChangeVal)){
-      quarterRealChangeAgg[q]=(quarterRealChangeAgg[q]||0)+realChangeVal;
-      (quarterRealChangeTerms[q]??=[]).push({month:r.month,value:realChangeVal,...realYieldChangeSourceByMonth[r.month]});
-    }
-    const gprVal=num(r.gpr);
-    if(gprVal!=null && Number.isFinite(gprVal)){
-      quarterGprAgg[q]=gprVal;
-      quarterGprMonth[q]=r.month;
-    }
   });
-
-  const quarterlyAlpha=-0.0145;
-  const quarterlyBetaDxy=-0.6475;
-  const quarterlyBetaRealYield=-0.1267;
-  const quarterlyBetaGpr=0.000375;
-  const quarterCountAgg={};
-  rows.forEach(r=>{
-    const q=quarterKey(r.month);
-    if(q&&Number.isFinite(dxyReturnByMonth[r.month]??null)) quarterCountAgg[q]=(quarterCountAgg[q]||0)+1;
-  });
-  const nextQuarter=m=>{
-    if(!m) return null;
-    const year=Number(m.slice(0,4));
-    const q=Number(m.slice(5,7));
-    return q===4?`${year+1}-01`:`${year}-${String(q+1).padStart(2,'0')}`;
-  };
-  let forecastQuarter=null;
-  let forecastQuarterReturn=null;
-  let forecastQuarterPrice=null;
-  let quarterlyForecastInputs=null;
-  const quarterlyInputBreakdownLines=[];
-  const fullQuarters=Object.keys(quarterCountAgg).filter(q=>quarterCountAgg[q]>=3).sort();
-  const predictorQuarter=fullQuarters.at(-1);
-  if(predictorQuarter&&Number.isFinite(quarterDxyAgg[predictorQuarter])&&Number.isFinite(quarterRealChangeAgg[predictorQuarter])&&Number.isFinite(quarterGprAgg[predictorQuarter])){
-    forecastQuarter=nextQuarter(predictorQuarter);
-    forecastQuarterReturn=quarterlyAlpha+quarterlyBetaDxy*quarterDxyAgg[predictorQuarter]+quarterlyBetaRealYield*quarterRealChangeAgg[predictorQuarter]+quarterlyBetaGpr*quarterGprAgg[predictorQuarter];
-    const qEndMonth=`${predictorQuarter.slice(0,4)}-${String(Number(predictorQuarter.slice(5,7))*3).padStart(2,'0')}`;
-    const endPrice=M[qEndMonth]?num(M[qEndMonth].xau_usd):null;
-    if(endPrice!=null) forecastQuarterPrice=endPrice*Math.exp(forecastQuarterReturn);
-    if(endPrice!=null&&Number.isFinite(forecastQuarterPrice)){
-      quarterlyForecastInputs={
-        xau:endPrice,
-        dxyReturn:quarterDxyAgg[predictorQuarter],
-        realYieldChange:quarterRealChangeAgg[predictorQuarter],
-        gpr:quarterGprAgg[predictorQuarter],
-        price:forecastQuarterPrice,
-        predReturn:forecastQuarterReturn,
-        predictorQuarter,
-        quarterEndMonth:qEndMonth,
-        dxyTerms:quarterDxyTerms[predictorQuarter]||[],
-        realYieldTerms:quarterRealChangeTerms[predictorQuarter]||[],
-        gprMonth:quarterGprMonth[predictorQuarter]
-      };
-    }
-    if(!quarterlyForecastInputs){
-      quarterlyInputBreakdownLines.push(`Forecast inputs for Q${Number(predictorQuarter.slice(5,7))} ${predictorQuarter.slice(0,4)} are incomplete; a quarter-end XAU/USD value is also required.`);
-    }
-  }else{
-    quarterlyInputBreakdownLines.push('No complete quarter with the required DXY return, real-yield changes, and GPR value is available.');
-  }
   const quarterActualOnLabels=labels.map(m=>{
     if(!m) return null;
     const q=quarterKey(m);
@@ -497,19 +355,9 @@ function render(rows){
     if(mNum%3!==0) return null;
     return q && quarterActualAgg[q]!=null ? quarterActualAgg[q] : null;
   });
-  const quarterPredOnLabels=labels.map(m=>{
-    if(!m) return null;
-    const q=quarterKey(m);
-    const mNum=Number(m.slice(5,7));
-    if(mNum%3!==0) return null;
-    if(!q || !Number.isFinite(quarterDxyAgg[q]) || !Number.isFinite(quarterRealChangeAgg[q]) || !Number.isFinite(quarterGprAgg[q])) return null;
-    return quarterlyAlpha+quarterlyBetaDxy*quarterDxyAgg[q]+quarterlyBetaRealYield*quarterRealChangeAgg[q]+quarterlyBetaGpr*quarterGprAgg[q];
-  });
+  const quarterlyReturns=predictions.quarterly_returns||{};
+  const quarterPredOnLabels=labels.map(m=>quarterlyReturns[m]??null);
 
-  const texNumber=(value,digits=8)=>{
-    const rounded=Number(value.toFixed(digits));
-    return (Object.is(rounded,-0)?0:rounded).toFixed(digits);
-  };
   const monthlyEquation=document.getElementById('monthlyForecastEquation');
   const quarterlyEquation=document.getElementById('quarterlyForecastEquation');
   const updateInputBreakdown=(id,lines)=>{
@@ -520,62 +368,22 @@ function render(rows){
       return item;
     }));
   };
-  updateInputBreakdown('monthlyInputBreakdown',monthlyInputBreakdownLines);
-  updateInputBreakdown('quarterlyInputBreakdown',quarterlyInputBreakdownLines);
-  if(monthlyForecastInputs){
-    const {xau,dxyReturn,realYieldChange,price}=monthlyForecastInputs;
-    monthlyEquation.textContent=
-      `\\[\\widehat{X}_{t+1}=${texNumber(xau,2)}\\exp\\left(0.0086-0.7055\\left(${texNumber(dxyReturn)}\\right)-0.0919\\left(${texNumber(realYieldChange)}\\right)\\right)\\approx ${texNumber(price,2)}\\]`;
-  }else{
-    monthlyEquation.textContent='Upcoming monthly forecast inputs are unavailable.';
-  }
-  if(quarterlyForecastInputs){
-    const {xau,dxyReturn,realYieldChange,gpr,price}=quarterlyForecastInputs;
-    const quarterLabel=`Q${Number(quarterlyForecastInputs.predictorQuarter.slice(5,7))} ${quarterlyForecastInputs.predictorQuarter.slice(0,4)}`;
-    const dxyTermsText=quarterlyForecastInputs.dxyTerms.map(term=>
-      `${term.month}: ln(${term.current.toFixed(4)} / ${term.previous.toFixed(4)}) [${term.previousMonth} → ${term.month}] = ${term.value.toFixed(8)}`
-    ).join(' + ');
-    const realYieldTermsText=quarterlyForecastInputs.realYieldTerms.map(term=>
-      `${term.month}: ${term.current.toFixed(4)}% − ${term.previous.toFixed(4)}% [${term.previousMonth} → ${term.month}] = ${term.value.toFixed(8)}`
-    ).join(' + ');
-    quarterlyInputBreakdownLines.push(
-      `${quarterLabel} DXYReturn_q = sum of monthly log returns (${dxyTermsText}) = ${dxyReturn.toFixed(8)}.`
-    );
-    quarterlyInputBreakdownLines.push(
-      `${quarterLabel} Δy_q = sum of monthly real-yield changes (${realYieldTermsText}) = ${realYieldChange.toFixed(8)} percentage points.`
-    );
-    quarterlyInputBreakdownLines.push(
-      `GPR_q = latest GPR observation in ${quarterlyForecastInputs.gprMonth} = ${gpr.toFixed(4)}.`
-    );
-    quarterlyInputBreakdownLines.push(
-      `X_q = quarter-end XAU/USD in ${quarterlyForecastInputs.quarterEndMonth} = ${xau.toFixed(2)} USD/oz.`
-    );
-    quarterlyInputBreakdownLines.push(
-      `Predicted log return = −0.0145 − 0.6475 × (${dxyReturn.toFixed(8)}) − 0.1267 × (${realYieldChange.toFixed(8)}) + 0.000375 × (${gpr.toFixed(4)}) = ${quarterlyForecastInputs.predReturn.toFixed(8)}.`
-    );
-    updateInputBreakdown('quarterlyInputBreakdown',quarterlyInputBreakdownLines);
-    quarterlyEquation.textContent=
-      `\\[\\widehat{X}_{q+1}=${texNumber(xau,2)}\\exp\\left(-0.0145-0.6475\\left(${texNumber(dxyReturn)}\\right)-0.1267\\left(${texNumber(realYieldChange)}\\right)+0.000375\\left(${texNumber(gpr)}\\right)\\right)\\approx ${texNumber(price,2)}\\]`;
-  }else{
-    quarterlyEquation.textContent='Upcoming quarterly forecast inputs are unavailable.';
-  }
+  const quarterlyForecast=predictions.forecasts?.three_months||null;
+  updateInputBreakdown('monthlyInputBreakdown',monthlyForecast?.breakdown||[]);
+  updateInputBreakdown('quarterlyInputBreakdown',quarterlyForecast?.breakdown||[]);
+  monthlyEquation.textContent=monthlyForecast?.equation||'Upcoming monthly forecast inputs are unavailable.';
+  quarterlyEquation.textContent=quarterlyForecast?.equation||'Upcoming quarterly forecast inputs are unavailable.';
 
   const forecastNote=document.getElementById('nextMonthForecast');
   if(forecastNote){
     let html='';
-    if(forecastMonth&&predReturnByMonth[forecastMonth]!=null&&predictedPriceByMonth[forecastMonth]!=null){
-      const ret=predReturnByMonth[forecastMonth];
-      const price=predictedPriceByMonth[forecastMonth];
-      const cls=ret>=0?'up':'down';
-      const forecastLabel=forecastMonth===currentMonth?'Current month':'Next month';
-      html+=`<div style="margin:2px 0"><span class="forecast-label">${forecastLabel} (${forecastMonth}) predicted:</span> XAU return <span class="${cls}">${(ret*100).toFixed(2)}%</span> &middot; XAU price <span class="${cls}">$${price.toFixed(0)}</span></div>`;
-    }
-    if(forecastQuarter&&forecastQuarterReturn!=null&&forecastQuarterPrice!=null){
-      const qNum=Number(forecastQuarter.slice(5,7));
-      const qLabel=`Q${qNum} ${forecastQuarter.slice(0,4)}`;
-      const cls=forecastQuarterReturn>=0?'up':'down';
-      html+=`<div style="margin:2px 0"><span class="forecast-label">Next quarter (${qLabel}) predicted:</span> XAU return <span class="${cls}">${(forecastQuarterReturn*100).toFixed(2)}%</span> &middot; XAU price <span class="${cls}">$${forecastQuarterPrice.toFixed(0)}</span></div>`;
-    }
+    const addForecastLine=forecast=>{
+      if(!forecast||forecast.predicted_price==null||forecast.predicted_return==null) return;
+      const cls=forecast.predicted_return>=0?'up':'down';
+      html+=`<div style="margin:2px 0"><span class="forecast-label">${forecast.label} (${forecast.month}) predicted:</span> XAU return <span class="${cls}">${(forecast.predicted_return*100).toFixed(2)}%</span> &middot; XAU price <span class="${cls}">$${forecast.predicted_price.toFixed(0)}</span></div>`;
+    };
+    addForecastLine(predictions.forecasts?.next_month);
+    addForecastLine(predictions.forecasts?.three_months);
     forecastNote.innerHTML=html;
   }
 
@@ -1716,8 +1524,13 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       throw new Error('Mathematical equation renderer failed to load');
     }
     await window.MathJax.startup.promise;
-    const res=await fetch('dashboard_monthly.csv');
-    render(parseCSV(await res.text()));
+    const [res,predRes]=await Promise.all([
+      fetch('dashboard_monthly.csv'),
+      fetch('predictions.json'),
+    ]);
+    if(!predRes.ok) throw new Error(`predictions.json is unavailable (HTTP ${predRes.status}); run xau_predictor.py to regenerate it`);
+    const predictions=await predRes.json();
+    render(parseCSV(await res.text()),predictions);
     await window.MathJax.typesetPromise([document.getElementById('formulaCard')]);
   }catch(e){
     const equationStatus=document.getElementById('equationStatus');
