@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-10-14T23:28:40+08:00",
+  "generated_at": "2026-10-15T09:31:11+08:00",
   "current_month": "2026-10",
+  "target_month": "2026-10",
   "last_actual_month": "2026-10",
   "models": {
     "monthly": {
@@ -989,8 +990,8 @@
       "predicted_return": -0.01208673010468939
     },
     "2026-10": {
-      "predicted_price": 4022.429878116229,
-      "predicted_return": -0.03285938017530474
+      "predicted_price": 4105.648785299954,
+      "predicted_return": -0.012381769501838525
     },
     "2026-12": {
       "predicted_price": 4129.908827977619,
@@ -1088,26 +1089,26 @@
       "label": "Current month",
       "base_month": "2026-09",
       "base_price": 4156.8,
-      "input_month": "2026-10",
-      "prior_macro_month": "2026-09",
-      "dxy_return": 0.01968420351654642,
-      "real_yield_change": 0.2999999999999998,
-      "predicted_return": -0.03285938017530474,
-      "predicted_price": 4022.429878116229,
+      "input_month": "2026-09",
+      "prior_macro_month": "2026-08",
+      "dxy_return": 0.003108331985577549,
+      "real_yield_change": 0.20000000000000018,
+      "predicted_return": -0.012381769501838525,
+      "predicted_price": 4105.648785299954,
       "actual_price": 4140.2,
       "breakdown": [
-        "Forecast target month: 2026-10; predictor inputs from 2026-10.",
+        "Forecast target month: 2026-10; predictor inputs from 2026-09.",
         "X_{t-1} = last XAU/USD value before the forecast month, from 2026-09 = 4156.80 USD/oz.",
         "The current 2026-10 XAU/USD reading (4140.20 USD/oz) is not used as the forecast starting price; it may be month-to-date, not the final monthly close.",
-        "DXYReturn_t = ln(TWEXB_2026-10 / TWEXB_2026-09) = ln(121.5900 / 119.2200) = 0.01968420.",
-        "Δy_t = real yield in 2026-10 − real yield in 2026-09 = 2.9000% − 2.6000% = 0.30000000 percentage points.",
-        "Predicted log return = 0.0085 − 0.6969 × (0.01968420) − 0.0922 × (0.30000000) = -0.03285938."
+        "DXYReturn_t = ln(TWEXB_2026-09 / TWEXB_2026-08) = ln(119.2200 / 118.8500) = 0.00310833.",
+        "Δy_t = real yield in 2026-09 − real yield in 2026-08 = 2.6000% − 2.4000% = 0.20000000 percentage points.",
+        "Predicted log return = 0.0084 − 0.7053 × (0.00310833) − 0.0930 × (0.20000000) = -0.01238177."
       ],
-      "equation": "\\[\\widehat{X}_{t+1}=4156.80\\exp\\left(0.0085-0.6969\\left(0.01968420\\right)-0.0922\\left(0.30000000\\right)\\right)\\approx 4022.43\\]"
+      "equation": "\\[\\widehat{X}_{t+1}=4156.80\\exp\\left(0.0084-0.7053\\left(0.00310833\\right)-0.0930\\left(0.20000000\\right)\\right)\\approx 4105.65\\]"
     },
     "three_months": {
       "month": "2026-12",
-      "label": "Three months",
+      "label": "Quarterly",
       "predictor_quarter": "2026-03",
       "forecast_quarter": "2026-04",
       "quarter_end_month": "2026-09",
@@ -1118,7 +1119,7 @@
       "gpr_month": "2026-09",
       "predicted_return": -0.00649021631508389,
       "predicted_price": 4129.908827977619,
-      "actual_price": 4140.2,
+      "actual_price": null,
       "breakdown": [
         "Q3 2026 DXYReturn_q = sum of monthly log returns (2026-07: ln(120.6000 / 120.0800) [2026-06 → 2026-07] = 0.00432110 + 2026-08: ln(118.8500 / 120.6000) [2026-07 → 2026-08] = -0.01461709 + 2026-09: ln(119.2200 / 118.8500) [2026-08 → 2026-09] = 0.00310833) = -0.00718766.",
         "Q3 2026 Δy_q = sum of monthly real-yield changes (2026-07: 2.4000% − 2.2000% [2026-06 → 2026-07] = 0.20000000 + 2026-08: 2.4000% − 2.4000% [2026-07 → 2026-08] = 0.00000000 + 2026-09: 2.6000% − 2.4000% [2026-08 → 2026-09] = 0.20000000) = 0.40000000 percentage points.",

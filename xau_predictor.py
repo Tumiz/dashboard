@@ -43,11 +43,6 @@ def _quarter_end(quarter):
     return f"{quarter[:4]}-{3 * int(quarter[5:7]):02d}"
 
 
-def _next_quarter(quarter):
-    year, q = int(quarter[:4]), int(quarter[5:7])
-    return f"{year + 1}-01" if q == 4 else f"{year}-{q + 1:02d}"
-
-
 def _quarterly_data(data):
     source = data[["xau_usd", "twexb", "real_yield_pct", "gpr"]].dropna()
     df = pd.DataFrame({
@@ -71,12 +66,7 @@ def actual_price(month):
     return None
 
 
-def actual_quarter_end_price(quarter):
-    q = d[d.index.map(_quarter_label) == quarter]["xau_usd"].dropna()
-    return float(q.iloc[-1]) if len(q) else None
-
-
-def gold_dxy_linear_regression(data):
+def gold_dxy_linear_regression(data, verbose=True):
     df = data[["xau_usd", "twexb", "real_yield_pct"]].dropna()
     real_yield_change = df["real_yield_pct"].diff()
     reg = pd.DataFrame({
@@ -94,11 +84,12 @@ def gold_dxy_linear_regression(data):
     y_hat = X_design @ coef
     r2 = 1 - np.sum((y - y_hat) ** 2) / np.sum((y - y.mean()) ** 2)
 
-    print(
-        f"Monthly model: Gold_Return_t = {alpha:.4f} + {beta_dxy:.4f} * DXY_Return_t + "
-        f"{beta_real_yield_change:.4f} * RealYield_Change_t"
-    )
-    print(f"Monthly R-squared = {r2:.4f}, n = {len(reg)}")
+    if verbose:
+        print(
+            f"Monthly model: Gold_Return_t = {alpha:.4f} + {beta_dxy:.4f} * DXY_Return_t + "
+            f"{beta_real_yield_change:.4f} * RealYield_Change_t"
+        )
+        print(f"Monthly R-squared = {r2:.4f}, n = {len(reg)}")
 
     quarterly = _quarterly_data(data)
 
@@ -110,11 +101,12 @@ def gold_dxy_linear_regression(data):
     y_hat_q = X_q_design @ coef_q
     r2_q = 1 - np.sum((y_q - y_hat_q) ** 2) / np.sum((y_q - y_q.mean()) ** 2)
 
-    print(
-        f"Quarterly model: Gold_Return_q = {alpha_q:.4f} + {beta_dxy_q:.4f} * DXY_Return_q + "
-        f"{beta_real_yield_change_q:.4f} * RealYield_Change_q + {beta_gpr_q:.6f} * GPR_q"
-    )
-    print(f"Quarterly R-squared = {r2_q:.4f}, n = {len(quarterly)}")
+    if verbose:
+        print(
+            f"Quarterly model: Gold_Return_q = {alpha_q:.4f} + {beta_dxy_q:.4f} * DXY_Return_q + "
+            f"{beta_real_yield_change_q:.4f} * RealYield_Change_q + {beta_gpr_q:.6f} * GPR_q"
+        )
+        print(f"Quarterly R-squared = {r2_q:.4f}, n = {len(quarterly)}")
 
     return {
         "monthly": {
@@ -133,57 +125,6 @@ def gold_dxy_linear_regression(data):
             "n": int(len(quarterly)),
         },
     }
-
-
-def predict_price(data, predict_month, alpha, beta_dxy, beta_real_yield_change):
-    gold = data["xau_usd"]
-    dxy_ret = ln_return(data["twexb"])
-    real_yield_change = data["real_yield_pct"].diff()
-
-    last_month = gold.dropna().index[-1]
-    print(f"Last month used for regression: {last_month}, gold price: {gold.loc[last_month]} USD")
-    latest_dxy_ret = dxy_ret.dropna().iloc[-1]
-    latest_real_yield_change = real_yield_change.dropna().iloc[-1]
-    forecast_return = (
-        alpha + beta_dxy * latest_dxy_ret + beta_real_yield_change * latest_real_yield_change
-    )
-    forecast_price = gold.loc[last_month] * np.exp(forecast_return)
-
-    actual = actual_price(predict_month)
-    actual_str = f"{actual:.1f} USD" if actual is not None else "N/A"
-    print(
-        f"Monthly forecast ({predict_month}): {forecast_price:.1f} USD, "
-        f"return={forecast_return:.4f}, actual={actual_str}"
-    )
-    return forecast_price
-
-
-def predict_quarterly_price(data, predict_month, alpha, beta_dxy, beta_real_yield_change, beta_gpr):
-    gold = data["xau_usd"]
-    quarterly = _quarterly_data(data)
-
-    forecast_quarter = _quarter_label(predict_month)
-    prev = quarterly[quarterly.index < forecast_quarter]
-    if prev.empty:
-        raise SystemExit(f"No completed quarter before {forecast_quarter} to build a forecast.")
-    prev = prev.iloc[-1]
-
-    quarterly_return = (
-        alpha
-        + beta_dxy * prev["dxy_return"]
-        + beta_real_yield_change * prev["real_yield_change"]
-        + beta_gpr * prev["gpr"]
-    )
-    last_month = gold.dropna().index[-1]
-    forecast_price = gold.loc[last_month] * np.exp(quarterly_return)
-
-    actual = actual_quarter_end_price(forecast_quarter)
-    actual_str = f"{actual:.1f} USD" if actual is not None else "N/A"
-    print(
-        f"Quarterly forecast ({forecast_quarter} quarter-end): {forecast_price:.1f} USD, "
-        f"return={quarterly_return:.4f}, actual={actual_str}"
-    )
-    return forecast_price
 
 
 def _features(data):
@@ -290,7 +231,7 @@ def _monthly_forecast(f, params, target, label):
     base_month = before.index[-1] if len(before) else None
     base_price = float(before.iloc[-1]) if base_month is not None else None
 
-    input_candidates = f.index[(f.index <= target) & has_macro]
+    input_candidates = f.index[(f.index < target) & has_macro]
     input_month = input_candidates[-1] if len(input_candidates) else None
     prior_candidates = (
         f.index[(f.index < input_month) & has_macro] if input_month is not None else pd.Index([])
@@ -425,9 +366,12 @@ def _quarter_context(f):
     return quarters
 
 
-def _quarterly_forecast(f, quarters, params, label="Three months"):
-    """Three-months-ahead forecast from the quarterly model."""
-    full = sorted(q for q, ctx in quarters.items() if ctx["dxy_n"] >= 3)
+def _quarterly_forecast(f, quarters, params, target_month, cutoff_month, label="Quarterly"):
+    """Forecast `target_month` using only data from months before `cutoff_month`."""
+    full = sorted(
+        q for q, ctx in quarters.items()
+        if ctx["dxy_n"] >= 3 and _quarter_end(q) < cutoff_month
+    )
     predictor = full[-1] if full else None
     no_quarter = (
         "No complete quarter with the required DXY return, real-yield changes, "
@@ -473,8 +417,8 @@ def _quarterly_forecast(f, quarters, params, label="Three months"):
     )
 
     quarter_end_month = _quarter_end(predictor)
-    forecast_quarter = _next_quarter(predictor)
-    target = _quarter_end(forecast_quarter)
+    forecast_quarter = _quarter_label(target_month)
+    target = target_month
     base_price = None
     if quarter_end_month in f.index:
         value = f.at[quarter_end_month, "gold"]
@@ -525,20 +469,18 @@ def _quarterly_forecast(f, quarters, params, label="Three months"):
         gpr_month=ctx["gpr_month"],
         predicted_return=float(predicted_return),
         predicted_price=predicted_price,
-        actual_price=actual_quarter_end_price(forecast_quarter),
+        actual_price=actual_price(target),
         breakdown=breakdown,
         equation=_quarterly_equation(base_price, params, dxy, ryc, gpr, predicted_price),
     )
 
 
-def build_dashboard_predictions():
-    """Fit on all available data and produce the dashboard's predictions."""
+def build_dashboard_predictions(target=None):
+    """Fit forecasts for `target` (default: current month) for the dashboard."""
     model = gold_dxy_linear_regression(d)
     f = _features(d)
-    monthly_params = model["monthly"]
-    quarterly_params = model["quarterly"]
 
-    series = _monthly_series(f, monthly_params)
+    series = _monthly_series(f, model["monthly"])
     quarters = _quarter_context(f)
 
     quarterly_returns = {}
@@ -546,23 +488,28 @@ def build_dashboard_predictions():
         if ctx["dxy_n"] == 0 or ctx["ryc_n"] == 0 or ctx["gpr"] is None:
             continue
         value = (
-            quarterly_params["alpha"]
-            + quarterly_params["beta_dxy"] * ctx["dxy"]
-            + quarterly_params["beta_real_yield_change"] * ctx["ryc"]
-            + quarterly_params["beta_gpr"] * ctx["gpr"]
+            model["quarterly"]["alpha"]
+            + model["quarterly"]["beta_dxy"] * ctx["dxy"]
+            + model["quarterly"]["beta_real_yield_change"] * ctx["ryc"]
+            + model["quarterly"]["beta_gpr"] * ctx["gpr"]
         )
         quarterly_returns[_quarter_end(q)] = float(value)
 
-    actual_months = d["xau_usd"].dropna()
-    if actual_months.empty:
-        raise SystemExit("No actual XAU/USD price available to anchor a forecast.")
-    base_month = actual_months.index[-1]
     current_month = date.today().strftime("%Y-%m")
+    target = normalize_month(target) if target else current_month
 
-    next_month = base_month if base_month == current_month else add_months(base_month, 1)
-    next_label = "Current month" if next_month == current_month else "Next month"
-    forecast_next = _monthly_forecast(f, monthly_params, next_month, next_label)
-    forecast_three = _quarterly_forecast(f, quarters, quarterly_params)
+    monthly_label = "Current month" if target == current_month else "Target month"
+    monthly_params = gold_dxy_linear_regression(data_before(target), verbose=False)["monthly"]
+    forecast_next = _monthly_forecast(f, monthly_params, target, monthly_label)
+
+    quarterly_target = add_months(target, 2)
+    quarterly_cutoff = target
+    quarterly_params = gold_dxy_linear_regression(
+        data_before(quarterly_cutoff), verbose=False
+    )["quarterly"]
+    forecast_three = _quarterly_forecast(
+        f, quarters, quarterly_params, quarterly_target, quarterly_cutoff
+    )
 
     if forecast_next["predicted_price"] is not None and np.isfinite(forecast_next["predicted_price"]):
         series[forecast_next["month"]] = {
@@ -575,10 +522,14 @@ def build_dashboard_predictions():
             "predicted_return": None,
         }
 
+    actual_months = d["xau_usd"].dropna()
+    last_actual_month = actual_months.index[-1] if len(actual_months) else None
+
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "current_month": current_month,
-        "last_actual_month": base_month,
+        "target_month": target,
+        "last_actual_month": last_actual_month,
         "models": model,
         "monthly_series": series,
         "quarterly_returns": quarterly_returns,
@@ -598,47 +549,25 @@ def write_predictions(predictions, path=PREDICTIONS_PATH):
 
 def parse_args():
     parser = ArgumentParser(
-        description="Predict gold prices; without a month it writes predictions.json for the dashboard."
+        description="Predict gold prices for a target month and write predictions.json."
     )
     parser.add_argument(
         "month",
         nargs="?",
         type=normalize_month,
         default=None,
-        help="Optional backtest month in YYYY-MM format; only data before it is used to regress.",
+        help="Target month to predict in YYYY-MM format (default: current month).",
     )
     return parser.parse_args()
 
 
-def backtest(month):
-    data = data_before(month)
-    model = gold_dxy_linear_regression(data)
-    predict_price(
-        data, month,
-        model["monthly"]["alpha"],
-        model["monthly"]["beta_dxy"],
-        model["monthly"]["beta_real_yield_change"],
-    )
-    predict_quarterly_price(
-        data, month,
-        model["quarterly"]["alpha"],
-        model["quarterly"]["beta_dxy"],
-        model["quarterly"]["beta_real_yield_change"],
-        model["quarterly"]["beta_gpr"],
-    )
-
-
 if __name__ == "__main__":
     args = parse_args()
-    if args.month:
-        backtest(args.month)
-    else:
-        predictions = build_dashboard_predictions()
-        write_predictions(predictions)
-        for name in ("next_month", "three_months"):
-            forecast = predictions["forecasts"][name]
-            price = forecast["predicted_price"]
-            target = forecast["month"] or forecast.get("forecast_quarter")
-            rendered = f"{price:.1f} USD" if price is not None else "unavailable"
-            print(f"{forecast['label']} ({target}) predicted: {rendered}")
-        print(f"Wrote {PREDICTIONS_PATH}")
+    predictions = build_dashboard_predictions(args.month)
+    write_predictions(predictions)
+    for name in ("next_month", "three_months"):
+        forecast = predictions["forecasts"][name]
+        price = forecast["predicted_price"]
+        rendered = f"{price:.1f} USD" if price is not None else "unavailable"
+        print(f"{forecast['label']} ({forecast['month']}) predicted: {rendered}")
+    print(f"Wrote {PREDICTIONS_PATH}")
