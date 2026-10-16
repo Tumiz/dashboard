@@ -179,7 +179,7 @@ td.down{color:#ef4444}
     <h2>Final XAU forecast equations</h2>
     <div class="equation-section">
       <h3>Monthly model</h3>
-      <div class="formula">\[\ln\left(\frac{X_t}{X_{t-1}}\right)=0.0086-0.7055\ln\left(\frac{\mathrm{TWEXB}_t}{\mathrm{TWEXB}_{t-1}}\right)-0.0919\,\Delta y_t\]</div>
+      <div class="formula" id="monthlyModelEquation"></div>
       <div class="formula-note">Next-month forecast with the latest input values:</div>
       <div class="formula" id="monthlyForecastEquation"></div>
       <details class="equation-breakdown">
@@ -189,8 +189,8 @@ td.down{color:#ef4444}
     </div>
     <div class="equation-section">
       <h3>Quarterly model</h3>
-      <div class="formula">\[\ln\left(\frac{X_q}{X_{q-1}}\right)=-0.0145-0.6475\ln\left(\frac{\mathrm{TWEXB}_q}{\mathrm{TWEXB}_{q-1}}\right)-0.1267\,\Delta y_q+0.000375\,\mathrm{GPR}_q\]</div>
-      <div class="formula-note">Next-quarter forecast with the latest complete-quarter input values:</div>
+      <div class="formula" id="quarterlyModelEquation"></div>
+      <div class="formula-note">Next-quarter forecast with the latest three-month window input values:</div>
       <div class="formula" id="quarterlyForecastEquation"></div>
       <details class="equation-breakdown">
         <summary>How the quarterly values were calculated</summary>
@@ -355,8 +355,15 @@ function render(rows,predictions){
     if(mNum%3!==0) return null;
     return q && quarterActualAgg[q]!=null ? quarterActualAgg[q] : null;
   });
-  const quarterlyReturns=predictions.quarterly_returns||{};
-  const quarterPredOnLabels=labels.map(m=>quarterlyReturns[m]??null);
+  const quarterlySeries=predictions.quarterly_series||{};
+  const quarterPredOnLabels=labels.map(m=>{
+    const entry=quarterlySeries[m];
+    return entry&&entry.predicted_return!=null?entry.predicted_return:null;
+  });
+  const quarterlyPredPriceOnLabels=labels.map(m=>{
+    const entry=quarterlySeries[m];
+    return entry&&entry.predicted_price!=null?entry.predicted_price:null;
+  });
 
   const monthlyEquation=document.getElementById('monthlyForecastEquation');
   const quarterlyEquation=document.getElementById('quarterlyForecastEquation');
@@ -373,6 +380,10 @@ function render(rows,predictions){
   updateInputBreakdown('quarterlyInputBreakdown',quarterlyForecast?.breakdown||[]);
   monthlyEquation.textContent=monthlyForecast?.equation||'Upcoming monthly forecast inputs are unavailable.';
   quarterlyEquation.textContent=quarterlyForecast?.equation||'Upcoming quarterly forecast inputs are unavailable.';
+  const monthlyModelEquation=document.getElementById('monthlyModelEquation');
+  const quarterlyModelEquation=document.getElementById('quarterlyModelEquation');
+  if(monthlyModelEquation) monthlyModelEquation.textContent=predictions.models?.monthly?.equation||'';
+  if(quarterlyModelEquation) quarterlyModelEquation.textContent=predictions.models?.quarterly?.equation||'';
 
   const forecastNote=document.getElementById('nextMonthForecast');
   if(forecastNote){
@@ -534,6 +545,7 @@ function render(rows,predictions){
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
     'XAU/USD (Predicted)':predOnLabels,
+    'XAU/USD (Predicted, Quarterly)':quarterlyPredPriceOnLabels,
     'XAU Return (Actual)':actualReturnOnLabels,
     'XAU Return (Predicted)':predReturnOnLabels,
     'XAU Return (Actual, Quarterly)':quarterActualOnLabels,
@@ -574,7 +586,7 @@ function render(rows,predictions){
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
           <div class="corr-dd-panel" id="corrDDPanel">
-            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'||s==='XAU/USD (Predicted)'?' checked':''}>${s}</label>`).join('')}</div>
+            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'||s==='XAU/USD (Predicted)'||s==='XAU/USD (Predicted, Quarterly)'?' checked':''}>${s}</label>`).join('')}</div>
             <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
           </div>
         </div>
@@ -1126,6 +1138,22 @@ function render(rows,predictions){
         fill:false,
         tension:.3,
         pointBackgroundColor:'#f43f5e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
+      },{
+        label:'XAU/USD (Predicted, Quarterly)',
+        data:quarterlyPredPriceOnLabels,
+        borderColor:'#8b5cf6',
+        backgroundColor:'rgba(139,92,246,0.05)',
+        borderDash:[2,3],
+        spanGaps:true,
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#8b5cf6',
         pointBorderColor:'#fff',
         pointBorderWidth:1.5,
         pointRadius:0,

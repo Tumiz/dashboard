@@ -35,35 +35,34 @@ def ln_return(series):
     return np.log(series / series.shift(1))
 
 
-def _quarter_label(month):
-    return f"{month[:4]}-{((int(month[5:7]) - 1) // 3) + 1:02d}"
-
-
-def _quarter_end(quarter):
-    return f"{quarter[:4]}-{3 * int(quarter[5:7]):02d}"
-
-
-def _quarterly_data(data):
-    source = data[["xau_usd", "twexb", "real_yield_pct", "gpr"]].dropna()
-    df = pd.DataFrame({
-        "gold_return": ln_return(source["xau_usd"]),
-        "dxy_return": ln_return(source["twexb"]),
-        "real_yield_change": source["real_yield_pct"].diff(),
-        "gpr": source["gpr"],
-    }).dropna()
-    df["quarter"] = df.index.map(_quarter_label)
-    return df.groupby("quarter").agg({
-        "gold_return": "sum",
-        "dxy_return": "sum",
-        "real_yield_change": "sum",
-        "gpr": "last",
-    })
+def _quarterly_windows(f):
+    """Rolling three-month windows: aggregated features and the window's gold return."""
+    gpr = f["gpr"]
+    obs = gpr.notna().to_numpy()
+    last_obs = np.where(obs, np.arange(len(obs)), np.nan)
+    if obs.any():
+        last_obs = pd.Series(last_obs, index=gpr.index).ffill().fillna(-4).to_numpy()
+    age = np.arange(len(obs)) - last_obs
+    gpr_window = gpr.ffill().where(pd.Series(age < 3, index=gpr.index))
+    return pd.DataFrame({
+        "gold_return": np.log(f["gold"] / f["gold"].shift(3)),
+        "dxy_return": f["dxy_return"].rolling(3).sum(),
+        "real_yield_change": f["ryc"].rolling(3).sum(),
+        "gpr": gpr_window,
+    }, index=f.index)
 
 
 def actual_price(month):
     if month in d.index and pd.notna(d.loc[month, "xau_usd"]):
         return float(d.loc[month, "xau_usd"])
     return None
+
+
+def _r2(y, y_hat):
+    ss_total = np.sum((y - y.mean()) ** 2)
+    if len(y) < 2 or not np.isfinite(ss_total) or ss_total == 0:
+        return float("nan")
+    return float(1 - np.sum((y - y_hat) ** 2) / ss_total)
 
 
 def gold_dxy_linear_regression(data, verbose=True):
@@ -75,14 +74,16 @@ def gold_dxy_linear_regression(data, verbose=True):
         "real_yield_change": real_yield_change,
     }).dropna()
 
-    X = reg[["dxy_return", "real_yield_change"]].to_numpy()
-    y = reg["gold_return"].to_numpy()
-    X_design = np.column_stack([np.ones(len(X)), X])
-    coef, *_ = np.linalg.lstsq(X_design, y, rcond=None)
-    alpha, beta_dxy, beta_real_yield_change = coef
-
-    y_hat = X_design @ coef
-    r2 = 1 - np.sum((y - y_hat) ** 2) / np.sum((y - y.mean()) ** 2)
+    if len(reg):
+        X = reg[["dxy_return", "real_yield_change"]].to_numpy()
+        y = reg["gold_return"].to_numpy()
+        X_design = np.column_stack([np.ones(len(X)), X])
+        coef, *_ = np.linalg.lstsq(X_design, y, rcond=None)
+        alpha, beta_dxy, beta_real_yield_change = coef
+        r2 = _r2(y, X_design @ coef)
+    else:
+        alpha = beta_dxy = beta_real_yield_change = np.nan
+        r2 = float("nan")
 
     if verbose:
         print(
@@ -91,15 +92,18 @@ def gold_dxy_linear_regression(data, verbose=True):
         )
         print(f"Monthly R-squared = {r2:.4f}, n = {len(reg)}")
 
-    quarterly = _quarterly_data(data)
+    quarterly = _quarterly_windows(_features(data)).dropna()
 
-    X_q = quarterly[["dxy_return", "real_yield_change", "gpr"]].to_numpy()
-    y_q = quarterly["gold_return"].to_numpy()
-    X_q_design = np.column_stack([np.ones(len(X_q)), X_q])
-    coef_q, *_ = np.linalg.lstsq(X_q_design, y_q, rcond=None)
-    alpha_q, beta_dxy_q, beta_real_yield_change_q, beta_gpr_q = coef_q
-    y_hat_q = X_q_design @ coef_q
-    r2_q = 1 - np.sum((y_q - y_hat_q) ** 2) / np.sum((y_q - y_q.mean()) ** 2)
+    if len(quarterly):
+        X_q = quarterly[["dxy_return", "real_yield_change", "gpr"]].to_numpy()
+        y_q = quarterly["gold_return"].to_numpy()
+        X_q_design = np.column_stack([np.ones(len(X_q)), X_q])
+        coef_q, *_ = np.linalg.lstsq(X_q_design, y_q, rcond=None)
+        alpha_q, beta_dxy_q, beta_real_yield_change_q, beta_gpr_q = coef_q
+        r2_q = _r2(y_q, X_q_design @ coef_q)
+    else:
+        alpha_q = beta_dxy_q = beta_real_yield_change_q = beta_gpr_q = np.nan
+        r2_q = float("nan")
 
     if verbose:
         print(
@@ -153,7 +157,6 @@ def _features(data):
         "prev_ry_month": prev_ry_month,
         "dxy_return": dxy_return,
         "ryc": ry - prev_ry,
-        "quarter": [_quarter_label(m) for m in data.index],
     }, index=data.index)
 
 
@@ -181,6 +184,29 @@ def _latex_op(value, digits=4):
     return f"{'-' if value < 0 else '+'}{abs(value):.{digits}f}"
 
 
+def _model_equation(params, kind):
+    """LaTeX display equation for the fitted model (rendered by the dashboard)."""
+    if kind == "monthly":
+        return (
+            "\\[\\ln\\left(\\frac{X_t}{X_{t-1}}\\right)="
+            + _latex_alpha(params["alpha"])
+            + _latex_op(params["beta_dxy"])
+            + "\\ln\\left(\\frac{\\mathrm{TWEXB}_t}{\\mathrm{TWEXB}_{t-1}}\\right)"
+            + _latex_op(params["beta_real_yield_change"])
+            + "\\,\\Delta y_t\\]"
+        )
+    return (
+        "\\[\\ln\\left(\\frac{X_q}{X_{q-1}}\\right)="
+        + _latex_alpha(params["alpha"])
+        + _latex_op(params["beta_dxy"])
+        + "\\ln\\left(\\frac{\\mathrm{TWEXB}_q}{\\mathrm{TWEXB}_{q-1}}\\right)"
+        + _latex_op(params["beta_real_yield_change"])
+        + "\\,\\Delta y_q"
+        + _latex_op(params["beta_gpr"], 6)
+        + "\\,\\mathrm{GPR}_q\\]"
+    )
+
+
 def _monthly_equation(xau, alpha, beta_dxy, beta_real_yield_change, dxy, ryc, price):
     return (
         "\\[\\widehat{X}_{t+1}=" + _tex_number(xau, 2)
@@ -202,23 +228,21 @@ def _quarterly_equation(xau, params, dxy, ryc, gpr, price):
     )
 
 
-def _monthly_series(f, params):
-    """In-sample predicted price/return for every month with available inputs."""
-    alpha = params["alpha"]
-    beta_dxy = params["beta_dxy"]
-    beta_real_yield_change = params["beta_real_yield_change"]
+def _monthly_series(f):
+    """Walk-forward monthly predictions: refit on data before each month, like the headline forecast."""
     series = {}
     for month in f.index:
-        row = f.loc[month]
-        if any(pd.isna(row[k]) for k in
-               ("dxy_return", "ryc", "prev_gold", "twexb", "ry", "prev_twexb", "prev_ry")):
+        before = data_before(month)
+        if len(before) < 2 or before["xau_usd"].dropna().empty:
             continue
-        predicted_return = alpha + beta_dxy * row["dxy_return"] + beta_real_yield_change * row["ryc"]
-        predicted_price = row["prev_gold"] * np.exp(predicted_return)
-        series[month] = {
-            "predicted_price": float(predicted_price),
-            "predicted_return": float(predicted_return),
-        }
+        params = gold_dxy_linear_regression(before, verbose=False)["monthly"]
+        forecast = _monthly_forecast(f, params, month, "Target month")
+        price = forecast["predicted_price"]
+        if price is not None and np.isfinite(price):
+            series[month] = {
+                "predicted_price": float(price),
+                "predicted_return": float(forecast["predicted_return"]),
+            }
     return series
 
 
@@ -323,37 +347,24 @@ def _monthly_forecast(f, params, target, label):
     }
 
 
-def _quarter_context(f):
-    """Per-quarter aggregates, month-by-month terms and predictor metadata."""
-    quarters = {}
-    for month in f.index:
+def _window_context(f, window):
+    """Month-by-month terms and predictor metadata for a three-month window."""
+    dxy_terms = []
+    ryc_terms = []
+    gpr = None
+    gpr_month = None
+    for month in window:
         row = f.loc[month]
-        q = row["quarter"]
-        ctx = quarters.setdefault(q, {
-            "dxy": 0.0,
-            "ryc": 0.0,
-            "dxy_n": 0,
-            "ryc_n": 0,
-            "gpr": None,
-            "gpr_month": None,
-            "dxy_terms": [],
-            "ryc_terms": [],
-        })
         if pd.notna(row["dxy_return"]):
-            value = float(row["dxy_return"])
-            ctx["dxy"] += value
-            ctx["dxy_n"] += 1
-            ctx["dxy_terms"].append({
+            dxy_terms.append({
                 "month": month,
                 "previous_month": row["prev_twexb_month"],
                 "previous": float(row["prev_twexb"]),
                 "current": float(row["twexb"]),
-                "value": value,
+                "value": float(row["dxy_return"]),
             })
         if pd.notna(row["ryc"]):
-            ctx["ryc"] += float(row["ryc"])
-            ctx["ryc_n"] += 1
-            ctx["ryc_terms"].append({
+            ryc_terms.append({
                 "month": month,
                 "previous_month": row["prev_ry_month"],
                 "previous": float(row["prev_ry"]),
@@ -361,30 +372,40 @@ def _quarter_context(f):
                 "value": float(row["ryc"]),
             })
         if pd.notna(row["gpr"]):
-            ctx["gpr"] = float(row["gpr"])
-            ctx["gpr_month"] = month
-    return quarters
+            gpr = float(row["gpr"])
+            gpr_month = month
+    return {
+        "dxy": sum(t["value"] for t in dxy_terms),
+        "ryc": sum(t["value"] for t in ryc_terms),
+        "gpr": gpr,
+        "gpr_month": gpr_month,
+        "dxy_terms": dxy_terms,
+        "ryc_terms": ryc_terms,
+    }
 
 
-def _quarterly_forecast(f, quarters, params, target_month, cutoff_month, label="Quarterly"):
-    """Forecast `target_month` using only data from months before `cutoff_month`."""
-    full = sorted(
-        q for q, ctx in quarters.items()
-        if ctx["dxy_n"] >= 3 and _quarter_end(q) < cutoff_month
-    )
-    predictor = full[-1] if full else None
-    no_quarter = (
-        "No complete quarter with the required DXY return, real-yield changes, "
-        "and GPR value is available."
+def _quarterly_forecast(f, params, target_month, cutoff_month, label="Quarterly"):
+    """Forecast `target_month` using only data from months before `cutoff_month`.
+
+    Features come from the rolling three-month window ending at the cutoff
+    (falling back to the most recent complete window before it); the anchor
+    is the last XAU/USD close before the cutoff.
+    """
+    windows = _quarterly_windows(f).dropna()
+    windows = windows[windows.index < cutoff_month]
+    predictor = windows.index[-1] if len(windows) else None
+    no_window = (
+        "No complete three-month window with the required DXY return, "
+        "real-yield changes, and GPR value ends before the cutoff."
     )
 
     def result(**overrides):
         base = {
             "month": None,
             "label": label,
-            "predictor_quarter": predictor,
-            "forecast_quarter": None,
-            "quarter_end_month": None,
+            "predictor_window": None,
+            "window_end_month": None,
+            "base_month": None,
             "base_price": None,
             "dxy_return": None,
             "real_yield_change": None,
@@ -400,14 +421,25 @@ def _quarterly_forecast(f, quarters, params, target_month, cutoff_month, label="
         return base
 
     if predictor is None:
-        return result(breakdown=[no_quarter])
+        return result(breakdown=[no_window])
 
-    ctx = quarters[predictor]
-    dxy = ctx["dxy"] if ctx["dxy_n"] else np.nan
-    ryc = ctx["ryc"] if ctx["ryc_n"] else np.nan
-    gpr = ctx["gpr"] if ctx["gpr"] is not None else np.nan
-    if not (np.isfinite(dxy) and np.isfinite(ryc) and np.isfinite(gpr)):
-        return result(breakdown=[no_quarter])
+    window = [add_months(predictor, -2), add_months(predictor, -1), predictor]
+    ctx = _window_context(f, window)
+    dxy = ctx["dxy"]
+    ryc = ctx["ryc"]
+    gpr = ctx["gpr"]
+
+    gold_before = f["gold"][f.index < cutoff_month].dropna()
+    if not len(gold_before):
+        return result(
+            predictor_window=window,
+            window_end_month=predictor,
+            breakdown=[
+                f"X_{{t-1}} is unavailable: no XAU/USD value before {cutoff_month}."
+            ],
+        )
+    base_month = gold_before.index[-1]
+    base_price = float(gold_before.iloc[-1])
 
     predicted_return = (
         params["alpha"]
@@ -415,28 +447,9 @@ def _quarterly_forecast(f, quarters, params, target_month, cutoff_month, label="
         + params["beta_real_yield_change"] * ryc
         + params["beta_gpr"] * gpr
     )
-
-    quarter_end_month = _quarter_end(predictor)
-    forecast_quarter = _quarter_label(target_month)
-    target = target_month
-    base_price = None
-    if quarter_end_month in f.index:
-        value = f.at[quarter_end_month, "gold"]
-        base_price = float(value) if pd.notna(value) else None
-
-    quarter_label = f"Q{int(predictor[5:7])} {predictor[:4]}"
-    if base_price is None:
-        breakdown = [
-            f"Forecast inputs for {quarter_label} are incomplete; "
-            f"a quarter-end XAU/USD value is also required."
-        ]
-        return result(
-            forecast_quarter=forecast_quarter,
-            quarter_end_month=quarter_end_month,
-            breakdown=breakdown,
-        )
-
     predicted_price = float(base_price * np.exp(predicted_return))
+
+    window_label = f"{window[0]} to {window[2]}"
     dxy_terms = " + ".join(
         f"{t['month']}: ln({t['current']:.4f} / {t['previous']:.4f}) "
         f"[{t['previous_month']} \u2192 {t['month']}] = {t['value']:.8f}"
@@ -448,20 +461,33 @@ def _quarterly_forecast(f, quarters, params, target_month, cutoff_month, label="
         for t in ctx["ryc_terms"]
     )
     breakdown = [
-        f"{quarter_label} DXYReturn_q = sum of monthly log returns ({dxy_terms}) = {dxy:.8f}.",
-        f"{quarter_label} \u0394y_q = sum of monthly real-yield changes ({ryc_terms}) = "
+        f"Forecast target month: {target_month}; quarterly features from the "
+        f"three-month window {window_label}.",
+        f"X_{{t-1}} = last XAU/USD value before the forecast month, "
+        f"from {base_month} = {base_price:.2f} USD/oz.",
+    ]
+    target_gold = f.at[target_month, "gold"] if target_month in f.index else np.nan
+    if pd.notna(target_gold):
+        breakdown.append(
+            f"The current {target_month} XAU/USD reading ({float(target_gold):.2f} USD/oz) "
+            f"is not used as the forecast starting price; it may be month-to-date, "
+            f"not the final monthly close."
+        )
+    breakdown.extend([
+        f"Window DXYReturn = sum of monthly log returns ({dxy_terms}) = {dxy:.8f}.",
+        f"Window \u0394y = sum of monthly real-yield changes ({ryc_terms}) = "
         f"{ryc:.8f} percentage points.",
-        f"GPR_q = latest GPR observation in {ctx['gpr_month']} = {gpr:.4f}.",
-        f"X_q = quarter-end XAU/USD in {quarter_end_month} = {base_price:.2f} USD/oz.",
+        f"GPR = latest GPR observation in {ctx['gpr_month']} = {gpr:.4f}.",
         f"Predicted log return = {_alpha_txt(params['alpha'])} "
         f"{_term_txt(params['beta_dxy'])} \u00d7 ({dxy:.8f}) "
         f"{_term_txt(params['beta_real_yield_change'])} \u00d7 ({ryc:.8f}) "
         f"{_term_txt(params['beta_gpr'], 6)} \u00d7 ({gpr:.4f}) = {predicted_return:.8f}.",
-    ]
+    ])
     return result(
-        month=target,
-        forecast_quarter=forecast_quarter,
-        quarter_end_month=quarter_end_month,
+        month=target_month,
+        predictor_window=window,
+        window_end_month=predictor,
+        base_month=base_month,
         base_price=base_price,
         dxy_return=float(dxy),
         real_yield_change=float(ryc),
@@ -469,57 +495,69 @@ def _quarterly_forecast(f, quarters, params, target_month, cutoff_month, label="
         gpr_month=ctx["gpr_month"],
         predicted_return=float(predicted_return),
         predicted_price=predicted_price,
-        actual_price=actual_price(target),
+        actual_price=actual_price(target_month),
         breakdown=breakdown,
         equation=_quarterly_equation(base_price, params, dxy, ryc, gpr, predicted_price),
     )
 
 
+def _quarterly_series(f):
+    """Walk-forward quarterly predictions: apply rule 5 with T = month - 2 for every month."""
+    complete_windows = _quarterly_windows(f).dropna()
+    first_window = complete_windows.index[0] if len(complete_windows) else None
+    series = {}
+    for month in f.index:
+        cutoff = add_months(month, -2)
+        if first_window is None or cutoff <= first_window:
+            continue
+        params = gold_dxy_linear_regression(data_before(cutoff), verbose=False)["quarterly"]
+        forecast = _quarterly_forecast(f, params, month, cutoff)
+        price = forecast["predicted_price"]
+        if price is not None and np.isfinite(price):
+            series[month] = {
+                "predicted_price": float(price),
+                "predicted_return": float(forecast["predicted_return"]),
+            }
+    return series
+
+
 def build_dashboard_predictions(target=None):
     """Fit forecasts for `target` (default: current month) for the dashboard."""
-    model = gold_dxy_linear_regression(d)
-    f = _features(d)
-
-    series = _monthly_series(f, model["monthly"])
-    quarters = _quarter_context(f)
-
-    quarterly_returns = {}
-    for q, ctx in quarters.items():
-        if ctx["dxy_n"] == 0 or ctx["ryc_n"] == 0 or ctx["gpr"] is None:
-            continue
-        value = (
-            model["quarterly"]["alpha"]
-            + model["quarterly"]["beta_dxy"] * ctx["dxy"]
-            + model["quarterly"]["beta_real_yield_change"] * ctx["ryc"]
-            + model["quarterly"]["beta_gpr"] * ctx["gpr"]
-        )
-        quarterly_returns[_quarter_end(q)] = float(value)
-
     current_month = date.today().strftime("%Y-%m")
     target = normalize_month(target) if target else current_month
+    if target > current_month:
+        raise ValueError(
+            f"target month {target} is later than the current month {current_month}; "
+            "the month before a future target may still be month-to-date."
+        )
+
+    model = gold_dxy_linear_regression(d)
+    model["monthly"]["equation"] = _model_equation(model["monthly"], "monthly")
+    model["quarterly"]["equation"] = _model_equation(model["quarterly"], "quarterly")
+    f = _features(d)
+
+    monthly_series = _monthly_series(f)
+    quarterly_series = _quarterly_series(f)
 
     monthly_label = "Current month" if target == current_month else "Target month"
     monthly_params = gold_dxy_linear_regression(data_before(target), verbose=False)["monthly"]
     forecast_next = _monthly_forecast(f, monthly_params, target, monthly_label)
 
     quarterly_target = add_months(target, 2)
-    quarterly_cutoff = target
     quarterly_params = gold_dxy_linear_regression(
-        data_before(quarterly_cutoff), verbose=False
+        data_before(target), verbose=False
     )["quarterly"]
-    forecast_three = _quarterly_forecast(
-        f, quarters, quarterly_params, quarterly_target, quarterly_cutoff
-    )
+    forecast_three = _quarterly_forecast(f, quarterly_params, quarterly_target, target)
 
     if forecast_next["predicted_price"] is not None and np.isfinite(forecast_next["predicted_price"]):
-        series[forecast_next["month"]] = {
+        monthly_series[forecast_next["month"]] = {
             "predicted_price": forecast_next["predicted_price"],
             "predicted_return": forecast_next["predicted_return"],
         }
     if forecast_three["predicted_price"] is not None and np.isfinite(forecast_three["predicted_price"]):
-        series[forecast_three["month"]] = {
+        quarterly_series[forecast_three["month"]] = {
             "predicted_price": forecast_three["predicted_price"],
-            "predicted_return": None,
+            "predicted_return": forecast_three["predicted_return"],
         }
 
     actual_months = d["xau_usd"].dropna()
@@ -531,8 +569,8 @@ def build_dashboard_predictions(target=None):
         "target_month": target,
         "last_actual_month": last_actual_month,
         "models": model,
-        "monthly_series": series,
-        "quarterly_returns": quarterly_returns,
+        "monthly_series": monthly_series,
+        "quarterly_series": quarterly_series,
         "forecasts": {
             "next_month": forecast_next,
             "three_months": forecast_three,
@@ -563,7 +601,10 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    predictions = build_dashboard_predictions(args.month)
+    try:
+        predictions = build_dashboard_predictions(args.month)
+    except ValueError as exc:
+        raise SystemExit(f"error: {exc}") from exc
     write_predictions(predictions)
     for name in ("next_month", "three_months"):
         forecast = predictions["forecasts"][name]

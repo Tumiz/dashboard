@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-15T09:31:11+08:00",
+  "generated_at": "2026-10-16T00:02:09+08:00",
   "current_month": "2026-10",
   "target_month": "2026-10",
   "last_actual_month": "2026-10",
@@ -9,1079 +9,1946 @@
       "beta_dxy": -0.6968798645343056,
       "beta_real_yield_change": -0.0922125896357574,
       "r2": 0.21009511525662428,
-      "n": 243
+      "n": 243,
+      "equation": "\\[\\ln\\left(\\frac{X_t}{X_{t-1}}\\right)=0.0085-0.6969\\ln\\left(\\frac{\\mathrm{TWEXB}_t}{\\mathrm{TWEXB}_{t-1}}\\right)-0.0922\\,\\Delta y_t\\]"
     },
     "quarterly": {
-      "alpha": -0.015980167984308426,
-      "beta_dxy": -0.6328125910803565,
-      "beta_real_yield_change": -0.12735571884682959,
-      "beta_gpr": 0.00038224211004911357,
-      "r2": 0.4385611276245268,
-      "n": 81
+      "alpha": -0.01792271245693041,
+      "beta_dxy": -0.5679252861180679,
+      "beta_real_yield_change": -0.11164011913306274,
+      "beta_gpr": 0.0004197190821570995,
+      "r2": 0.34999890084877516,
+      "n": 241,
+      "equation": "\\[\\ln\\left(\\frac{X_q}{X_{q-1}}\\right)=-0.0179-0.5679\\ln\\left(\\frac{\\mathrm{TWEXB}_q}{\\mathrm{TWEXB}_{q-1}}\\right)-0.1116\\,\\Delta y_q+0.000420\\,\\mathrm{GPR}_q\\]"
     }
   },
   "monthly_series": {
-    "2006-08": {
-      "predicted_price": 648.0029241155497,
-      "predicted_return": 0.03215153786015092
-    },
     "2006-09": {
-      "predicted_price": 623.1988906432839,
-      "predicted_return": 0.006598903932341487
+      "predicted_price": 610.8124462151395,
+      "predicted_return": -0.013476860480752464
     },
     "2006-10": {
-      "predicted_price": 596.4401548353374,
-      "predicted_return": -0.0031133910741290675
+      "predicted_price": 578.1988208690033,
+      "predicted_return": -0.034174510129200496
     },
     "2006-11": {
-      "predicted_price": 632.290624883623,
-      "predicted_return": 0.023508139237315574
+      "predicted_price": 637.5225806451614,
+      "predicted_return": 0.031748698314580444
     },
     "2006-12": {
-      "predicted_price": 656.882642483531,
-      "predicted_return": 0.013614679819869756
+      "predicted_price": 683.1376360859425,
+      "predicted_return": 0.05280565988001208
     },
     "2007-01": {
-      "predicted_price": 631.5791530869253,
-      "predicted_return": -0.008075311698370764
+      "predicted_price": 648.5443571073793,
+      "predicted_return": 0.018431813943149328
     },
     "2007-02": {
-      "predicted_price": 660.437791100159,
-      "predicted_return": 0.011019573873513114
+      "predicted_price": 660.2221615834399,
+      "predicted_return": 0.010693025744000977
     },
     "2007-03": {
-      "predicted_price": 690.0157078456849,
-      "predicted_return": 0.03033257354870656
+      "predicted_price": 678.1668617759615,
+      "predicted_return": 0.013011577697465568
     },
     "2007-04": {
-      "predicted_price": 669.9922195755533,
-      "predicted_return": 0.009285200457910286
+      "predicted_price": 658.0024479920617,
+      "predicted_return": -0.008772247614800135
     },
     "2007-05": {
-      "predicted_price": 682.4579404745492,
-      "predicted_return": 0.005963815004165226
+      "predicted_price": 695.7941605231633,
+      "predicted_return": 0.025316785740377483
     },
     "2007-06": {
-      "predicted_price": 649.3152545494607,
-      "predicted_return": -0.017078770885225778
+      "predicted_price": 665.5108476072999,
+      "predicted_return": 0.007557813675781352
     },
     "2007-07": {
-      "predicted_price": 667.297421396022,
-      "predicted_return": 0.02687906681968262
+      "predicted_price": 650.3947400349432,
+      "predicted_return": 0.0012226820762828478
     },
     "2007-08": {
-      "predicted_price": 679.6638457802214,
-      "predicted_return": 0.02286447682960946
+      "predicted_price": 667.7552281428138,
+      "predicted_return": 0.00518782677952193
     },
     "2007-09": {
-      "predicted_price": 692.2612593743885,
-      "predicted_return": 0.027623920088016535
+      "predicted_price": 680.7323014072255,
+      "predicted_return": 0.010829625821608999
     },
     "2007-10": {
-      "predicted_price": 768.7744871162882,
-      "predicted_return": 0.03329441592553686
+      "predicted_price": 761.9295452782857,
+      "predicted_return": 0.02435083529992639
     },
     "2007-11": {
-      "predicted_price": 842.391661611539,
-      "predicted_return": 0.055892391651365544
+      "predicted_price": 832.3868230909413,
+      "predicted_return": 0.043944593626145875
     },
     "2007-12": {
-      "predicted_price": 784.6837379122774,
-      "predicted_return": 0.0011268691978540968
+      "predicted_price": 801.7671646799366,
+      "predicted_return": 0.022664361596258262
     },
     "2008-01": {
-      "predicted_price": 868.6676586141034,
-      "predicted_return": 0.04084711984262493
+      "predicted_price": 841.456148623703,
+      "predicted_return": 0.009020410215989497
     },
     "2008-02": {
-      "predicted_price": 948.201468131821,
-      "predicted_return": 0.023692764156245223
+      "predicted_price": 957.6076302405712,
+      "predicted_return": 0.03356388765331924
     },
     "2008-03": {
-      "predicted_price": 1024.6428812549138,
-      "predicted_return": 0.050482800959921054
+      "predicted_price": 1000.1300050459561,
+      "predicted_return": 0.026268654205727222
     },
     "2008-04": {
-      "predicted_price": 901.6150609531759,
-      "predicted_return": -0.016810747774628616
+      "predicted_price": 934.517112394593,
+      "predicted_return": 0.01903152349082235
     },
     "2008-05": {
-      "predicted_price": 875.0849614051333,
-      "predicted_return": -0.0028699285684607046
+      "predicted_price": 876.5739952465204,
+      "predicted_return": -0.0011697868891668364
     },
     "2008-06": {
-      "predicted_price": 884.1069078896913,
-      "predicted_return": -0.0027031336620512124
+      "predicted_price": 897.2931672520994,
+      "predicted_return": 0.01210151397428559
     },
     "2008-07": {
-      "predicted_price": 937.9794380536173,
-      "predicted_return": 0.013501951241474925
+      "predicted_price": 939.1562003869083,
+      "predicted_return": 0.01475573649102925
     },
     "2008-08": {
-      "predicted_price": 895.5626635349813,
-      "predicted_return": -0.02048777957708497
+      "predicted_price": 925.7750802739215,
+      "predicted_return": 0.01269133661025709
     },
     "2008-09": {
-      "predicted_price": 815.7840512071589,
-      "predicted_return": -0.01872076297356458
+      "predicted_price": 812.9795691246854,
+      "predicted_return": -0.022164460780915753
     },
     "2008-10": {
-      "predicted_price": 762.107160867958,
-      "predicted_return": -0.13355479999316475
+      "predicted_price": 868.8949029944728,
+      "predicted_return": -0.002419799068427656
     },
     "2008-11": {
-      "predicted_price": 710.3661509637881,
-      "predicted_return": -0.019839235773239688
+      "predicted_price": 629.1965359489144,
+      "predicted_return": -0.14117611277688796
     },
     "2008-12": {
-      "predicted_price": 886.828771321502,
-      "predicted_return": 0.08078958459315758
+      "predicted_price": 813.5726999682408,
+      "predicted_return": -0.005427047042672058
     },
     "2009-01": {
-      "predicted_price": 910.1136710615905,
-      "predicted_return": 0.031377448957588525
+      "predicted_price": 962.5821818785205,
+      "predicted_return": 0.08742739028005292
     },
     "2009-02": {
-      "predicted_price": 927.597828441457,
-      "predicted_return": -0.00021792798961395646
+      "predicted_price": 967.4437988055066,
+      "predicted_return": 0.04184114180914147
     },
     "2009-03": {
-      "predicted_price": 956.2308581842901,
-      "predicted_return": 0.014569554458012793
+      "predicted_price": 957.3940954373162,
+      "predicted_return": 0.01578529675286461
     },
     "2009-04": {
-      "predicted_price": 953.1925269917565,
-      "predicted_return": 0.03631317874298105
+      "predicted_price": 936.7606428493242,
+      "predicted_return": 0.018924072536491802
     },
     "2009-05": {
-      "predicted_price": 907.5814840890662,
-      "predicted_return": 0.021586408879981284
+      "predicted_price": 906.4301282805302,
+      "predicted_return": 0.020317005800870508
     },
     "2009-06": {
-      "predicted_price": 980.1315992436655,
-      "predicted_return": 0.0009509358336559012
+      "predicted_price": 997.3900754069493,
+      "predicted_return": 0.018406030840196434
     },
     "2009-07": {
-      "predicted_price": 945.7969988131471,
-      "predicted_return": 0.020505984049372962
+      "predicted_price": 921.8768414336037,
+      "predicted_return": -0.005110335969059437
     },
     "2009-08": {
-      "predicted_price": 971.3114218474618,
-      "predicted_return": 0.017983468231392997
+      "predicted_price": 974.0481113903905,
+      "predicted_return": 0.020797026652341316
     },
     "2009-09": {
-      "predicted_price": 982.3539068422027,
-      "predicted_return": 0.03222729198459589
+      "predicted_price": 964.0948974364629,
+      "predicted_return": 0.013465385713075899
     },
     "2009-10": {
-      "predicted_price": 1036.252989252913,
-      "predicted_return": 0.02823855781694276
+      "predicted_price": 1040.8150560960692,
+      "predicted_return": 0.03263135966996043
     },
     "2009-11": {
-      "predicted_price": 1077.3072017200566,
-      "predicted_return": 0.030447710450632184
+      "predicted_price": 1071.7782191125616,
+      "predicted_return": 0.025302270671957273
     },
     "2009-12": {
-      "predicted_price": 1174.278168988886,
-      "predicted_return": -0.004182607896058346
+      "predicted_price": 1221.7799223409622,
+      "predicted_return": 0.03547250579319358
     },
     "2010-01": {
-      "predicted_price": 1104.4838393950433,
-      "predicted_return": 0.007163628180685071
+      "predicted_price": 1093.4918569234633,
+      "predicted_return": -0.0028383696815267624
     },
     "2010-02": {
-      "predicted_price": 1078.7895609056025,
-      "predicted_return": -0.0023243853126362676
+      "predicted_price": 1090.9343040639815,
+      "predicted_return": 0.008870467811845697
     },
     "2010-03": {
-      "predicted_price": 1122.1902746205342,
-      "predicted_return": 0.004814924919877759
+      "predicted_price": 1123.3232425033673,
+      "predicted_return": 0.005824019695155036
     },
     "2010-04": {
-      "predicted_price": 1126.625871986483,
-      "predicted_return": 0.012347850248164293
+      "predicted_price": 1113.580741284291,
+      "predicted_return": 0.0007013547160352324
     },
     "2010-05": {
-      "predicted_price": 1184.664645685598,
-      "predicted_return": 0.0055567638438288585
+      "predicted_price": 1193.157712311004,
+      "predicted_return": 0.012700361189757085
     },
     "2010-06": {
-      "predicted_price": 1221.6875059799434,
-      "predicted_return": 0.004666321081950817
+      "predicted_price": 1247.8335857764891,
+      "predicted_return": 0.02584213278168434
     },
     "2010-07": {
-      "predicted_price": 1279.316076813128,
-      "predicted_return": 0.02952212457664881
+      "predicted_price": 1254.535524090678,
+      "predicted_return": 0.009961908185554957
     },
     "2010-08": {
-      "predicted_price": 1220.6325241847326,
-      "predicted_return": 0.032669010945451826
+      "predicted_price": 1210.69630011654,
+      "predicted_return": 0.024495472848890754
     },
     "2010-09": {
-      "predicted_price": 1278.3907334843832,
-      "predicted_return": 0.02462083232809284
+      "predicted_price": 1292.0452637726723,
+      "predicted_return": 0.035245223476989225
     },
     "2010-10": {
-      "predicted_price": 1395.501515546528,
-      "predicted_return": 0.06467815730563177
+      "predicted_price": 1340.355382878194,
+      "predicted_return": 0.02435908719165768
     },
     "2010-11": {
-      "predicted_price": 1341.99072336932,
-      "predicted_return": -0.012079791862199924
+      "predicted_price": 1443.8843064041378,
+      "predicted_return": 0.06110299919578917
     },
     "2010-12": {
-      "predicted_price": 1352.9463341588726,
-      "predicted_return": -0.02428150643169612
+      "predicted_price": 1369.7510102111876,
+      "predicted_return": -0.011937211550619177
     },
     "2011-01": {
-      "predicted_price": 1428.3104357333461,
-      "predicted_return": 0.007526931392633199
+      "predicted_price": 1387.766405374307,
+      "predicted_return": -0.021269748787237076
     },
     "2011-02": {
-      "predicted_price": 1339.029673100278,
-      "predicted_return": 0.004813305959670449
+      "predicted_price": 1333.7715759495313,
+      "predicted_return": 0.0008787792635467258
     },
     "2011-03": {
-      "predicted_price": 1460.1434949584896,
-      "predicted_return": 0.03409430883842145
+      "predicted_price": 1414.5273867780595,
+      "predicted_return": 0.002355066756637464
     },
     "2011-04": {
-      "predicted_price": 1475.9330582211073,
-      "predicted_return": 0.030218303102590625
+      "predicted_price": 1482.3943584552135,
+      "predicted_return": 0.03458652176011012
     },
     "2011-05": {
-      "predicted_price": 1590.190464838151,
-      "predicted_return": 0.017502697683863453
+      "predicted_price": 1605.6379093947435,
+      "predicted_return": 0.027170028374900658
     },
     "2011-06": {
-      "predicted_price": 1548.7654574348187,
-      "predicted_return": 0.00860207360012296
+      "predicted_price": 1569.970872317866,
+      "predicted_return": 0.022201005625594267
     },
     "2011-07": {
-      "predicted_price": 1548.185595392412,
-      "predicted_return": 0.03195194243828669
+      "predicted_price": 1516.4841440991943,
+      "predicted_return": 0.011262873295854464
     },
     "2011-08": {
-      "predicted_price": 1708.9854760558915,
-      "predicted_return": 0.049961413334848194
+      "predicted_price": 1683.8423287440557,
+      "predicted_return": 0.03513979016678084
     },
     "2011-09": {
-      "predicted_price": 1800.5598115710866,
-      "predicted_return": -0.013811077147647866
+      "predicted_price": 1959.4819536873467,
+      "predicted_return": 0.07077142883769089
     },
     "2011-10": {
-      "predicted_price": 1610.0782359195389,
-      "predicted_return": -0.007500481099529095
+      "predicted_price": 1616.3622199890433,
+      "predicted_return": -0.0036051716393487344
     },
     "2011-11": {
-      "predicted_price": 1752.7096544411238,
-      "predicted_return": 0.02198314714424493
+      "predicted_price": 1708.919577675184,
+      "predicted_return": -0.003318472355007902
     },
     "2011-12": {
-      "predicted_price": 1748.2800656584259,
-      "predicted_return": 0.001305027610369278
+      "predicted_price": 1798.609330661196,
+      "predicted_return": 0.029686314802981284
     },
     "2012-01": {
-      "predicted_price": 1599.0772448056462,
-      "predicted_return": 0.021988301295577745
+      "predicted_price": 1570.9598698511063,
+      "predicted_return": 0.004248375027520139
     },
     "2012-02": {
-      "predicted_price": 1807.8742677896892,
-      "predicted_return": 0.03993466127435602
+      "predicted_price": 1780.1751681236017,
+      "predicted_return": 0.02449471239460281
     },
     "2012-03": {
-      "predicted_price": 1672.7316686860925,
-      "predicted_return": -0.014168228559521448
+      "predicted_price": 1765.083343325792,
+      "predicted_return": 0.03957166089354598
     },
     "2012-04": {
-      "predicted_price": 1693.8189686768353,
-      "predicted_return": 0.015360420394300855
+      "predicted_price": 1644.5557594360653,
+      "predicted_return": -0.014155011244715845
     },
     "2012-05": {
-      "predicted_price": 1672.9191715657053,
-      "predicted_return": 0.005045329335217915
+      "predicted_price": 1695.262802947991,
+      "predicted_return": 0.01831299676809961
     },
     "2012-06": {
-      "predicted_price": 1586.2666114864217,
-      "predicted_return": 0.01656919399381281
+      "predicted_price": 1572.3183210158345,
+      "predicted_return": 0.0077371496206205675
     },
     "2012-07": {
-      "predicted_price": 1631.182229907237,
-      "predicted_return": 0.021240796476716995
+      "predicted_price": 1628.8579398826434,
+      "predicted_return": 0.019814869005050896
     },
     "2012-08": {
-      "predicted_price": 1638.586206396136,
-      "predicted_return": 0.015118230922296498
+      "predicted_price": 1648.7402427057432,
+      "predicted_return": 0.021295937189118506
     },
     "2012-09": {
-      "predicted_price": 1742.2729400181388,
-      "predicted_return": 0.029515721525928816
+      "predicted_price": 1716.4768602055608,
+      "predicted_return": 0.014599026407824435
     },
     "2012-10": {
-      "predicted_price": 1790.0821534091929,
-      "predicted_return": 0.010209097376924554
+      "predicted_price": 1824.7927981987555,
+      "predicted_return": 0.029414028173396847
     },
     "2012-11": {
-      "predicted_price": 1741.480011333062,
-      "predicted_return": 0.012236638692265775
+      "predicted_price": 1737.6547679579405,
+      "predicted_return": 0.010037675352710735
     },
     "2012-12": {
-      "predicted_price": 1737.121048106403,
-      "predicted_return": 0.013107679939049113
+      "predicted_price": 1737.388681054034,
+      "predicted_return": 0.01326173502539087
     },
     "2013-01": {
-      "predicted_price": 1646.8190160296392,
-      "predicted_return": -0.009537084006770835
+      "predicted_price": 1682.2284359901953,
+      "predicted_return": 0.011736722336863688
     },
     "2013-02": {
-      "predicted_price": 1668.631009799907,
-      "predicted_return": 0.0030196067486616494
+      "predicted_price": 1644.7055134158518,
+      "predicted_return": -0.011422579895224017
     },
     "2013-03": {
-      "predicted_price": 1582.6718883179326,
-      "predicted_return": 0.002006146088044584
+      "predicted_price": 1582.9989747052318,
+      "predicted_return": 0.002212791947716182
     },
     "2013-04": {
-      "predicted_price": 1630.016560123941,
-      "predicted_return": 0.02046330511942726
+      "predicted_price": 1599.335072438273,
+      "predicted_return": 0.001461093909594621
     },
     "2013-05": {
-      "predicted_price": 1443.460759167109,
-      "predicted_return": -0.02276633325119093
+      "predicted_price": 1504.0451955776487,
+      "predicted_return": 0.018348406829653264
     },
     "2013-06": {
-      "predicted_price": 1305.0106412364457,
-      "predicted_return": -0.06165266713902842
+      "predicted_price": 1350.0597490411462,
+      "predicted_return": -0.027715012064658068
     },
     "2013-07": {
-      "predicted_price": 1216.8560351610693,
-      "predicted_return": -0.014314509914137422
+      "predicted_price": 1143.0629752454631,
+      "predicted_return": -0.07687354231917079
     },
     "2013-08": {
-      "predicted_price": 1325.7487919414225,
-      "predicted_return": 0.0004894975196997903
+      "predicted_price": 1300.6799993114234,
+      "predicted_return": -0.01860072418432888
     },
     "2013-09": {
-      "predicted_price": 1396.4180947404038,
-      "predicted_return": 0.0010877261842294709
+      "predicted_price": 1391.33400892457,
+      "predicted_return": -0.00255972255818574
     },
     "2013-10": {
-      "predicted_price": 1387.7121969464085,
-      "predicted_return": 0.04345546906615302
+      "predicted_price": 1324.9252648955949,
+      "predicted_return": -0.0028449666200779534
     },
     "2013-11": {
-      "predicted_price": 1313.6767721945134,
-      "predicted_return": -0.007223143160210192
+      "predicted_price": 1380.3117876979861,
+      "predicted_return": 0.04225636147726375
     },
     "2013-12": {
-      "predicted_price": 1237.5692437148202,
-      "predicted_return": -0.011113756169786998
+      "predicted_price": 1238.171052867133,
+      "predicted_return": -0.010627591150784656
     },
     "2014-01": {
-      "predicted_price": 1219.3562033607313,
-      "predicted_return": 0.010848095263291812
+      "predicted_price": 1185.9950087357665,
+      "predicted_return": -0.016892829953934336
     },
     "2014-02": {
-      "predicted_price": 1252.6894648690438,
-      "predicted_return": 0.007121602205697484
+      "predicted_price": 1256.3226079412148,
+      "predicted_return": 0.010017678833534764
     },
     "2014-03": {
-      "predicted_price": 1339.62204367415,
-      "predicted_return": 0.010069807265054558
+      "predicted_price": 1332.4097251858905,
+      "predicted_return": 0.00467141635683678
     },
     "2014-04": {
-      "predicted_price": 1310.93955018121,
-      "predicted_return": 0.020997560908139683
+      "predicted_price": 1292.1849353896494,
+      "predicted_return": 0.006588000854756834
     },
     "2014-05": {
-      "predicted_price": 1317.4374796779325,
-      "predicted_return": 0.020193978353989506
+      "predicted_price": 1314.9427009080707,
+      "predicted_return": 0.018298523027902934
     },
     "2014-06": {
-      "predicted_price": 1258.393523706617,
-      "predicted_return": 0.007332579871342957
+      "predicted_price": 1270.6838256097808,
+      "predicted_return": 0.017051854496056527
     },
     "2014-07": {
-      "predicted_price": 1353.1694874074374,
-      "predicted_return": 0.019453498736942923
+      "predicted_price": 1332.9290254523464,
+      "predicted_return": 0.004382685096185591
     },
     "2014-08": {
-      "predicted_price": 1296.5226643587719,
-      "predicted_return": 0.010484721397154628
+      "predicted_price": 1304.2739977723852,
+      "predicted_return": 0.016445476789731128
     },
     "2014-09": {
-      "predicted_price": 1248.2731225548735,
-      "predicted_return": -0.030397422178252163
+      "predicted_price": 1298.8089339093242,
+      "predicted_return": 0.00928912342756938
     },
     "2014-10": {
-      "predicted_price": 1217.8919775559734,
-      "predicted_return": 0.008238162347872653
+      "predicted_price": 1165.1836967176505,
+      "predicted_return": -0.03600456045558509
     },
     "2014-11": {
-      "predicted_price": 1168.5134617603746,
-      "predicted_return": -0.003320534376154455
+      "predicted_price": 1179.6896202381213,
+      "predicted_return": 0.006198440327035486
     },
     "2014-12": {
-      "predicted_price": 1149.024836774942,
-      "predicted_return": -0.016892836513086366
+      "predicted_price": 1161.5968683081371,
+      "predicted_return": -0.0060107820691613035
     },
     "2015-01": {
-      "predicted_price": 1206.6460297844976,
-      "predicted_return": 0.01120586097632817
+      "predicted_price": 1171.220821174017,
+      "predicted_return": -0.01859213194981732
     },
     "2015-02": {
-      "predicted_price": 1282.5653925647002,
-      "predicted_return": -0.000884247991276111
+      "predicted_price": 1304.63258208829,
+      "predicted_return": 0.016174921731816713
     },
     "2015-03": {
-      "predicted_price": 1205.73730731338,
-      "predicted_return": -0.005840482792376225
+      "predicted_price": 1210.0535817538832,
+      "predicted_return": -0.00226709483653302
     },
     "2015-04": {
-      "predicted_price": 1224.088598509124,
-      "predicted_return": 0.033551439895678166
+      "predicted_price": 1176.2225953331867,
+      "predicted_return": -0.006337012666898086
     },
     "2015-05": {
-      "predicted_price": 1179.7868277193702,
-      "predicted_return": -0.0037336734330605074
+      "predicted_price": 1220.2269200455692,
+      "predicted_return": 0.02996940037111596
     },
     "2015-06": {
-      "predicted_price": 1172.5873388540178,
-      "predicted_return": -0.014992668199865519
+      "predicted_price": 1175.9951835490242,
+      "predicted_return": -0.012090622345226894
     },
     "2015-07": {
-      "predicted_price": 1167.1100029008219,
-      "predicted_return": -0.004095753151401749
+      "predicted_price": 1148.2133932468028,
+      "predicted_return": -0.020419200039912214
     },
     "2015-08": {
-      "predicted_price": 1081.8973161492654,
-      "predicted_return": -0.012585884381284536
+      "predicted_price": 1088.3173932601114,
+      "predicted_return": -0.006669330769124144
     },
     "2015-09": {
-      "predicted_price": 1138.1444056902342,
-      "predicted_return": 0.0030309231185777436
+      "predicted_price": 1117.4419538715372,
+      "predicted_return": -0.015326195502558091
     },
     "2015-10": {
-      "predicted_price": 1130.800617213457,
-      "predicted_return": 0.014520018813540422
+      "predicted_price": 1114.1928498312266,
+      "predicted_return": -0.00027563257156885
     },
     "2015-11": {
-      "predicted_price": 1128.2272738289266,
-      "predicted_return": -0.011958347876415152
+      "predicted_price": 1152.0924935740427,
+      "predicted_return": 0.008973884063444383
     },
     "2015-12": {
-      "predicted_price": 1066.2026454029285,
-      "predicted_return": 0.001692146432797294
+      "predicted_price": 1047.4437266049965,
+      "predicted_return": -0.01605861036844099
     },
     "2016-01": {
-      "predicted_price": 1055.4310012351593,
-      "predicted_return": -0.006393013528144606
+      "predicted_price": 1060.0374784552444,
+      "predicted_return": -0.0020379644739818834
     },
     "2016-02": {
-      "predicted_price": 1155.2017127638512,
-      "predicted_return": 0.03273359707810644
+      "predicted_price": 1109.9897609150903,
+      "predicted_return": -0.007190583852029219
     },
     "2016-03": {
-      "predicted_price": 1290.9158643260014,
-      "predicted_return": 0.04169322670518395
+      "predicted_price": 1276.688426647502,
+      "predicted_return": 0.03061084664760817
     },
     "2016-04": {
-      "predicted_price": 1269.4886837216422,
-      "predicted_return": 0.029488448612026187
+      "predicted_price": 1278.270228044212,
+      "predicted_return": 0.0363820201017577
     },
     "2016-05": {
-      "predicted_price": 1295.4946652280485,
-      "predicted_return": 0.0014635738057010529
+      "predicted_price": 1325.1728750715663,
+      "predicted_return": 0.024113893398852337
     },
     "2016-06": {
-      "predicted_price": 1222.3827606786867,
-      "predicted_return": 0.005893364183313791
+      "predicted_price": 1213.380272586799,
+      "predicted_return": -0.0014985938692669053
     },
     "2016-07": {
-      "predicted_price": 1350.1767412384513,
-      "predicted_return": 0.021241059262811
+      "predicted_price": 1325.4252589031116,
+      "predicted_return": 0.0027389140060553267
     },
     "2016-08": {
-      "predicted_price": 1358.9238830662478,
-      "predicted_return": 0.005774048599528963
+      "predicted_price": 1380.3287492538275,
+      "predicted_return": 0.021402619411458934
     },
     "2016-09": {
-      "predicted_price": 1312.885814008568,
-      "predicted_return": 0.0030405360025684888
+      "predicted_price": 1307.1942742298877,
+      "predicted_return": -0.001304024880622822
     },
     "2016-10": {
-      "predicted_price": 1318.2747341417687,
-      "predicted_return": 0.0014231240265676686
+      "predicted_price": 1316.9531726955668,
+      "predicted_return": 0.0004201280021526709
     },
     "2016-11": {
-      "predicted_price": 1241.756577752951,
-      "predicted_return": -0.02594850745876806
+      "predicted_price": 1272.92070439721,
+      "predicted_return": -0.001161452318532495
     },
     "2016-12": {
-      "predicted_price": 1141.856736787445,
-      "predicted_return": -0.029803273731352612
+      "predicted_price": 1140.7342165796179,
+      "predicted_return": -0.030786822971011256
     },
     "2017-01": {
-      "predicted_price": 1189.6013156421943,
-      "predicted_return": 0.027614927996778685
+      "predicted_price": 1115.6567005302625,
+      "predicted_return": -0.03656009349654419
     },
     "2017-02": {
-      "predicted_price": 1234.6990155849535,
-      "predicted_return": 0.018472835806036314
+      "predicted_price": 1244.3359465541441,
+      "predicted_return": 0.026247618864891402
     },
     "2017-03": {
-      "predicted_price": 1259.40021347561,
-      "predicted_return": 0.0020667786190208277
+      "predicted_price": 1272.9627853445766,
+      "predicted_return": 0.01277827736666504
     },
     "2017-04": {
-      "predicted_price": 1276.0723175479427,
-      "predicted_return": 0.023126387490528966
+      "predicted_price": 1241.9695940014253,
+      "predicted_return": -0.003961969289126703
     },
     "2017-05": {
-      "predicted_price": 1269.9496314215198,
-      "predicted_return": 0.0024042677601230217
+      "predicted_price": 1291.9308741554676,
+      "predicted_return": 0.019564929327560106
     },
     "2017-06": {
-      "predicted_price": 1290.072822589868,
-      "predicted_return": 0.017731110493021177
+      "predicted_price": 1262.777140421624,
+      "predicted_return": -0.00365418266462662
     },
     "2017-07": {
-      "predicted_price": 1266.878032200274,
-      "predicted_return": 0.019108272900596388
+      "predicted_price": 1257.355948311521,
+      "predicted_return": 0.01156370363399134
     },
     "2017-08": {
-      "predicted_price": 1300.710634439463,
-      "predicted_return": 0.02499682677209735
+      "predicted_price": 1284.9760159804066,
+      "predicted_return": 0.012826123348650093
     },
     "2017-09": {
-      "predicted_price": 1337.982951599392,
-      "predicted_return": 0.015275427351300682
+      "predicted_price": 1345.7418665014727,
+      "predicted_return": 0.021057642030966238
     },
     "2017-10": {
-      "predicted_price": 1266.8037574472628,
-      "predicted_return": -0.013638954606348756
+      "predicted_price": 1296.3975645407138,
+      "predicted_return": 0.009453357273092378
     },
     "2017-11": {
-      "predicted_price": 1278.1967705053655,
-      "predicted_return": 0.006827189472547927
+      "predicted_price": 1248.1710131041236,
+      "predicted_return": -0.01694383187220774
     },
     "2017-12": {
-      "predicted_price": 1291.811155948185,
-      "predicted_return": 0.01027950120011198
+      "predicted_price": 1282.1808782082348,
+      "predicted_return": 0.002796709841688927
     },
     "2018-01": {
-      "predicted_price": 1335.0675473832239,
-      "predicted_return": 0.024542854141636032
+      "predicted_price": 1310.0628857285662,
+      "predicted_return": 0.0056361067124571
     },
     "2018-02": {
-      "predicted_price": 1322.8967631172138,
-      "predicted_return": -0.014560710836614432
+      "predicted_price": 1365.8547568780393,
+      "predicted_return": 0.017395867661914845
     },
     "2018-03": {
-      "predicted_price": 1327.107062089357,
-      "predicted_return": 0.006582551718609432
+      "predicted_price": 1287.2410189553425,
+      "predicted_return": -0.023917697176703848
     },
     "2018-04": {
-      "predicted_price": 1349.213783519594,
-      "predicted_return": 0.017807739549665642
+      "predicted_price": 1329.153843668382,
+      "predicted_return": 0.002828231327498625
     },
     "2018-05": {
-      "predicted_price": 1288.5203087082223,
-      "predicted_return": -0.02049423282169909
+      "predicted_price": 1335.0305554357908,
+      "predicted_return": 0.01496543423739344
     },
     "2018-06": {
-      "predicted_price": 1297.693735394598,
-      "predicted_return": -0.0026214212460350817
+      "predicted_price": 1272.4426289478204,
+      "predicted_return": -0.02227167740735679
     },
     "2018-07": {
-      "predicted_price": 1261.6065577503186,
-      "predicted_return": 0.007164563507163612
+      "predicted_price": 1246.14046830345,
+      "predicted_return": -0.0051702417020438336
     },
     "2018-08": {
-      "predicted_price": 1228.4493123767256,
-      "predicted_return": 0.003791880314980951
+      "predicted_price": 1227.246097994466,
+      "predicted_return": 0.0028119424338714175
     },
     "2018-09": {
-      "predicted_price": 1197.62848505679,
-      "predicted_return": -0.002228186591181699
+      "predicted_price": 1200.1041570853527,
+      "predicted_return": -0.00016317495077133523
     },
     "2018-10": {
-      "predicted_price": 1186.2369624272071,
-      "predicted_return": -0.005265863476452266
+      "predicted_price": 1182.930930963736,
+      "predicted_return": -0.008056745134598142
     },
     "2018-11": {
-      "predicted_price": 1206.058777654156,
-      "predicted_return": -0.008784441003901996
+      "predicted_price": 1204.1999448286645,
+      "predicted_return": -0.010326875578814777
     },
     "2018-12": {
-      "predicted_price": 1239.9137154864427,
-      "predicted_return": 0.01750327031190483
+      "predicted_price": 1202.5302285998985,
+      "predicted_return": -0.013110661788179608
     },
     "2019-01": {
-      "predicted_price": 1317.3360889763703,
-      "predicted_return": 0.028439053936041958
+      "predicted_price": 1299.4342450058723,
+      "predicted_return": 0.014756444479263251
     },
     "2019-02": {
-      "predicted_price": 1346.4207480555408,
-      "predicted_return": 0.017925889048834784
+      "predicted_price": 1354.5451746251167,
+      "predicted_return": 0.02394184875010582
     },
     "2019-03": {
-      "predicted_price": 1336.1414627471293,
-      "predicted_return": 0.015493119466005064
+      "predicted_price": 1335.4855272626796,
+      "predicted_return": 0.015002081233435608
     },
     "2019-04": {
-      "predicted_price": 1317.8332318880668,
-      "predicted_return": 0.017014988566866195
+      "predicted_price": 1312.1761858243997,
+      "predicted_return": 0.012713061166951511
     },
     "2019-05": {
-      "predicted_price": 1286.527618991873,
-      "predicted_return": 0.002122390932275473
+      "predicted_price": 1301.646876768214,
+      "predicted_return": 0.013805861105290616
     },
     "2019-06": {
-      "predicted_price": 1341.7592085552963,
-      "predicted_return": 0.030156859223232253
+      "predicted_price": 1300.1987258818044,
+      "predicted_return": -0.001307617073622959
     },
     "2019-07": {
-      "predicted_price": 1439.9137865966998,
-      "predicted_return": 0.019859428557667754
+      "predicted_price": 1452.2070432165128,
+      "predicted_return": 0.028360685165299177
     },
     "2019-08": {
-      "predicted_price": 1462.8760107690762,
-      "predicted_return": 0.024059478982792808
+      "predicted_price": 1452.2538116418038,
+      "predicted_return": 0.01677181305606925
     },
     "2019-09": {
-      "predicted_price": 1517.151468744674,
-      "predicted_return": -0.002007362210378761
+      "predicted_price": 1562.9106753885153,
+      "predicted_return": 0.02770799519292186
     },
     "2019-10": {
-      "predicted_price": 1490.0500223878869,
-      "predicted_return": 0.011915968943516559
+      "predicted_price": 1461.1369484527402,
+      "predicted_return": -0.007678858039838263
     },
     "2019-11": {
-      "predicted_price": 1512.8590018671432,
-      "predicted_return": 0.0004356952225801399
+      "predicted_price": 1523.0719740906902,
+      "predicted_return": 0.007163786757245812
     },
     "2019-12": {
-      "predicted_price": 1495.9243850603948,
-      "predicted_return": 0.021640226333902265
+      "predicted_price": 1455.335587481606,
+      "predicted_return": -0.005867588848829772
     },
     "2020-01": {
-      "predicted_price": 1550.2369031004641,
-      "predicted_return": 0.021541229129573975
+      "predicted_price": 1545.5740640445229,
+      "predicted_return": 0.018528872993219345
     },
     "2020-02": {
-      "predicted_price": 1603.6090456099018,
-      "predicted_return": 0.00915185503008292
+      "predicted_price": 1618.9557702581544,
+      "predicted_return": 0.018676467594275194
     },
     "2020-03": {
-      "predicted_price": 1559.1649150781482,
-      "predicted_return": -0.016749447912164796
+      "predicted_price": 1599.2959923676333,
+      "predicted_return": 0.008663712648737502
     },
     "2020-04": {
-      "predicted_price": 1613.3433757048892,
-      "predicted_return": 0.0232917697141143
+      "predicted_price": 1552.2703750027488,
+      "predicted_return": -0.015298269651659188
     },
     "2020-05": {
-      "predicted_price": 1707.2073147362055,
-      "predicted_return": 0.01226280683056222
+      "predicted_price": 1736.7319825528941,
+      "predicted_return": 0.02940909694031864
     },
     "2020-06": {
-      "predicted_price": 1791.1085132724522,
-      "predicted_return": 0.03465549902767238
+      "predicted_price": 1743.256005333639,
+      "predicted_return": 0.007575421712429423
     },
     "2020-07": {
-      "predicted_price": 1857.1387677975322,
-      "predicted_return": 0.041974304909480724
+      "predicted_price": 1832.6695087997316,
+      "predicted_return": 0.028710950352931405
     },
     "2020-08": {
-      "predicted_price": 2050.6957320921365,
-      "predicted_return": 0.037256351144576205
+      "predicted_price": 2065.4876538900908,
+      "predicted_return": 0.04444358460116476
     },
     "2020-09": {
-      "predicted_price": 1991.3809391839254,
-      "predicted_return": 0.012166293060186177
+      "predicted_price": 2038.3863659172528,
+      "predicted_return": 0.035496453453383245
     },
     "2020-10": {
-      "predicted_price": 1890.8289140728707,
-      "predicted_return": 0.0026631777490425546
+      "predicted_price": 1899.3071281062296,
+      "predicted_return": 0.0071370161971193785
     },
     "2020-11": {
-      "predicted_price": 1896.9102623430376,
-      "predicted_return": 0.009486664364695535
+      "predicted_price": 1870.215336652061,
+      "predicted_return": -0.004686142904591987
     },
     "2020-12": {
-      "predicted_price": 1850.1933588916295,
-      "predicted_return": 0.04053244088865077
+      "predicted_price": 1774.9049040373952,
+      "predicted_return": -0.0010108647577458958
     },
     "2021-01": {
-      "predicted_price": 1919.1467170115634,
-      "predicted_return": 0.011079968845762981
+      "predicted_price": 1970.1850551863402,
+      "predicted_return": 0.03732677479320319
     },
     "2021-02": {
-      "predicted_price": 1839.6188311386522,
-      "predicted_return": -0.004004308046044604
+      "predicted_price": 1857.8354174964475,
+      "predicted_return": 0.00584935478628741
     },
     "2021-03": {
-      "predicted_price": 1702.334333187032,
-      "predicted_return": -0.018084351377805584
+      "predicted_price": 1715.3955824986983,
+      "predicted_return": -0.010441083349117423
     },
     "2021-04": {
-      "predicted_price": 1729.2662189203922,
-      "predicted_return": 0.012901143214607377
+      "predicted_price": 1663.9818126769449,
+      "predicted_return": -0.025582611946928416
     },
     "2021-05": {
-      "predicted_price": 1816.4542864150512,
-      "predicted_return": 0.02658505605131673
+      "predicted_price": 1781.2659187522413,
+      "predicted_return": 0.007022951277154341
     },
     "2021-06": {
-      "predicted_price": 1918.4714992424297,
-      "predicted_return": 0.006207223766558589
+      "predicted_price": 1950.1919653085756,
+      "predicted_return": 0.02260626040103436
     },
     "2021-07": {
-      "predicted_price": 1801.6534396429702,
-      "predicted_return": 0.017781773032773944
+      "predicted_price": 1773.9280466491969,
+      "predicted_return": 0.0022732753005196603
     },
     "2021-08": {
-      "predicted_price": 1842.5119946821035,
-      "predicted_return": 0.015650631682233226
+      "predicted_price": 1853.1879468193642,
+      "predicted_return": 0.021428147174774606
     },
     "2021-09": {
-      "predicted_price": 1811.7868584451633,
-      "predicted_return": -0.0009451068283684062
+      "predicted_price": 1839.729239929735,
+      "predicted_return": 0.014359728840024816
     },
     "2021-10": {
-      "predicted_price": 1765.1179344920831,
-      "predicted_return": 0.004723534229047519
+      "predicted_price": 1741.9413958326606,
+      "predicted_return": -0.008493736355770753
     },
     "2021-11": {
-      "predicted_price": 1804.8791586153936,
-      "predicted_return": 0.01208413831867964
+      "predicted_price": 1785.1763819628243,
+      "predicted_return": 0.001107720684906987
     },
     "2021-12": {
-      "predicted_price": 1764.5069871297187,
-      "predicted_return": -0.005591013653129928
+      "predicted_price": 1795.2359166415017,
+      "predicted_return": 0.011674105573971234
     },
     "2022-01": {
-      "predicted_price": 1802.5750736818295,
-      "predicted_return": -0.014553130344952855
+      "predicted_price": 1808.17535635367,
+      "predicted_return": -0.011451123008218838
     },
     "2022-02": {
-      "predicted_price": 1779.692083461379,
-      "predicted_return": -0.009678245280823764
+      "predicted_price": 1746.9566025391675,
+      "predicted_return": -0.028243418091896587
     },
     "2022-03": {
-      "predicted_price": 1945.683183689282,
-      "predicted_return": 0.019190784596549455
+      "predicted_price": 1874.025053158292,
+      "predicted_return": -0.018333829512384235
     },
     "2022-04": {
-      "predicted_price": 1838.741029351301,
-      "predicted_return": -0.05205927017011487
+      "predicted_price": 1979.4042245353546,
+      "predicted_return": 0.021655518303774317
     },
     "2022-05": {
-      "predicted_price": 1833.3394440823765,
-      "predicted_return": -0.03402911906845624
+      "predicted_price": 1777.023470298414,
+      "predicted_return": -0.06522849886248729
     },
     "2022-06": {
-      "predicted_price": 1798.6186144134815,
-      "predicted_return": -0.02106043433480911
+      "predicted_price": 1765.855603596581,
+      "predicted_return": -0.0394440339988735
     },
     "2022-07": {
-      "predicted_price": 1794.4254471315014,
-      "predicted_return": -0.007093800633113276
+      "predicted_price": 1755.1238695143504,
+      "predicted_return": -0.029239250824685523
     },
     "2022-08": {
-      "predicted_price": 1801.6073723402128,
-      "predicted_return": 0.020188675101606143
+      "predicted_price": 1752.6282770777875,
+      "predicted_return": -0.007374042091817171
     },
     "2022-09": {
-      "predicted_price": 1588.4883702517143,
-      "predicted_return": -0.07441202529932872
+      "predicted_price": 1741.168333806071,
+      "predicted_return": 0.017361465324901803
     },
     "2022-10": {
-      "predicted_price": 1584.2138578135257,
-      "predicted_return": -0.04799356756997859
+      "predicted_price": 1532.599282321457,
+      "predicted_return": -0.0811166918160515
     },
     "2022-11": {
-      "predicted_price": 1686.9706402042032,
-      "predicted_return": 0.032270667916231455
+      "predicted_price": 1549.1169302432568,
+      "predicted_return": -0.05297868578807557
     },
     "2022-12": {
-      "predicted_price": 1826.6524656973565,
-      "predicted_return": 0.032522958018755765
+      "predicted_price": 1817.0033804809048,
+      "predicted_return": 0.02722656989654216
     },
     "2023-01": {
-      "predicted_price": 1881.881620024473,
-      "predicted_return": 0.031678939079524356
+      "predicted_price": 1874.015286180463,
+      "predicted_return": 0.02749014181359447
     },
     "2023-02": {
-      "predicted_price": 1921.367610065947,
-      "predicted_return": -0.0036015563574272793
+      "predicted_price": 1981.664234150418,
+      "predicted_return": 0.02729822822015768
     },
     "2023-03": {
-      "predicted_price": 1837.7531863189918,
-      "predicted_return": 0.005977928757108904
+      "predicted_price": 1813.8647899779642,
+      "predicted_return": -0.007105990360876393
     },
     "2023-04": {
-      "predicted_price": 2041.0313725695958,
-      "predicted_return": 0.03567555145644492
+      "predicted_price": 1976.6947622099449,
+      "predicted_return": 0.003646434408625409
     },
     "2023-05": {
-      "predicted_price": 1965.497944374176,
-      "predicted_return": -0.012137730859506876
+      "predicted_price": 2055.9754647291993,
+      "predicted_return": 0.032867063139396385
     },
     "2023-06": {
-      "predicted_price": 1964.906844185221,
-      "predicted_return": 0.0012256659836974455
+      "predicted_price": 1930.882995391758,
+      "predicted_return": -0.016241761818002968
     },
     "2023-07": {
-      "predicted_price": 1931.786381637709,
-      "predicted_return": 0.006640944141112446
+      "predicted_price": 1913.3301415962503,
+      "predicted_return": -0.002958963518858781
     },
     "2023-08": {
-      "predicted_price": 1925.3744987715106,
-      "predicted_return": -0.02052441178907541
+      "predicted_price": 1968.7099627601651,
+      "predicted_return": 0.001733581585426875
     },
     "2023-09": {
-      "predicted_price": 1901.010352206814,
-      "predicted_return": -0.020250916199695487
+      "predicted_price": 1895.747318699704,
+      "predicted_return": -0.023023301131430106
     },
     "2023-10": {
-      "predicted_price": 1778.488364430158,
-      "predicted_return": -0.03888118237022249
+      "predicted_price": 1806.7600016830852,
+      "predicted_return": -0.023109765507747158
     },
     "2023-11": {
-      "predicted_price": 2064.657497499205,
-      "predicted_return": 0.03995015455161691
+      "predicted_price": 1905.2161991924183,
+      "predicted_return": -0.04041870480091815
     },
     "2023-12": {
-      "predicted_price": 2147.7723209187634,
-      "predicted_return": 0.05344407649250953
+      "predicted_price": 2109.759802699919,
+      "predicted_return": 0.03558700473673246
     },
     "2024-01": {
-      "predicted_price": 2075.3263254175263,
-      "predicted_return": 0.00619956735253639
+      "predicted_price": 2167.349557610459,
+      "predicted_return": 0.04958617978345996
     },
     "2024-02": {
-      "predicted_price": 2027.7123912866473,
-      "predicted_return": -0.005551234812817117
+      "predicted_price": 2047.0820983917843,
+      "predicted_return": 0.003955920971290099
     },
     "2024-03": {
-      "predicted_price": 2066.3723095031155,
-      "predicted_return": 0.010885890011647213
+      "predicted_price": 2029.087166884363,
+      "predicted_return": -0.007322651905838806
     },
     "2024-04": {
-      "predicted_price": 2192.0561116247236,
-      "predicted_return": -0.018416436112895833
+      "predicted_price": 2251.2520631865523,
+      "predicted_return": 0.008230130730288492
     },
     "2024-05": {
-      "predicted_price": 2309.2548212340857,
-      "predicted_return": 0.010121318907961443
+      "predicted_price": 2243.494233104084,
+      "predicted_return": -0.018768989432735413
     },
     "2024-06": {
-      "predicted_price": 2344.318794491163,
-      "predicted_return": 0.007243102250908615
+      "predicted_price": 2345.6912135262455,
+      "predicted_return": 0.007828354338605651
     },
     "2024-07": {
-      "predicted_price": 2350.5806326301217,
-      "predicted_return": 0.010383352788479985
+      "predicted_price": 2342.617432923873,
+      "predicted_return": 0.006989842760999381
     },
     "2024-08": {
-      "predicted_price": 2524.9742447543254,
-      "predicted_return": 0.031327212585497755
+      "predicted_price": 2467.341207816989,
+      "predicted_return": 0.008237486793926892
     },
     "2024-09": {
-      "predicted_price": 2582.442899848227,
-      "predicted_return": 0.031125949910214806
+      "predicted_price": 2575.658250223432,
+      "predicted_return": 0.028495271162300995
     },
     "2024-10": {
-      "predicted_price": 2583.0453385115793,
-      "predicted_return": -0.01968638546392211
+      "predicted_price": 2710.6751017239467,
+      "predicted_return": 0.028542266814882554
     },
     "2024-11": {
-      "predicted_price": 2675.961716424987,
-      "predicted_return": -0.025034985014970534
+      "predicted_price": 2692.222400497356,
+      "predicted_return": -0.018976797199134282
     },
     "2024-12": {
-      "predicted_price": 2630.0467662704177,
-      "predicted_return": -0.007671213254362129
+      "predicted_price": 2588.744525241308,
+      "predicted_return": -0.023499822239503525
     },
     "2025-01": {
-      "predicted_price": 2604.566176660048,
-      "predicted_return": -0.007548067349566542
+      "predicted_price": 2603.934951026288,
+      "predicted_return": -0.007790450185386588
     },
     "2025-02": {
-      "predicted_price": 2892.075403491196,
-      "predicted_return": 0.03217640441860613
+      "predicted_price": 2780.409517054185,
+      "predicted_return": -0.007199747521133042
     },
     "2025-03": {
-      "predicted_price": 2936.4754863142957,
-      "predicted_return": 0.026738134679075917
+      "predicted_price": 2944.2888768106245,
+      "predicted_return": 0.029395406629270787
     },
     "2025-04": {
-      "predicted_price": 3158.3222706685706,
-      "predicted_return": 0.01099075016207087
+      "predicted_price": 3199.826421050945,
+      "predicted_return": 0.024046355471388645
     },
     "2025-05": {
-      "predicted_price": 3319.416836354784,
-      "predicted_return": 0.009479225442711648
+      "predicted_price": 3318.062333529127,
+      "predicted_return": 0.009071087711566683
     },
     "2025-06": {
-      "predicted_price": 3352.0479585773746,
-      "predicted_return": 0.018562352034892766
+      "predicted_price": 3315.6622578188417,
+      "predicted_return": 0.0076482418654391215
     },
     "2025-07": {
-      "predicted_price": 3371.28234854678,
-      "predicted_return": 0.020522597280805518
+      "predicted_price": 3357.009169744501,
+      "predicted_return": 0.016279855962521596
     },
     "2025-08": {
-      "predicted_price": 3339.692460331024,
-      "predicted_return": 0.015021555825429907
+      "predicted_price": 3352.496713662784,
+      "predicted_return": 0.01884818673001214
     },
     "2025-09": {
-      "predicted_price": 3553.5415758933805,
-      "predicted_return": 0.03015038039898845
+      "predicted_price": 3497.891852296543,
+      "predicted_return": 0.014366106306315013
     },
     "2025-10": {
-      "predicted_price": 3839.3453799173944,
-      "predicted_return": -0.004924793870563994
+      "predicted_price": 3972.058832421505,
+      "predicted_return": 0.02905788590311046
     },
     "2025-11": {
-      "predicted_price": 4021.852724249297,
-      "predicted_return": 0.004723574704475054
+      "predicted_price": 3985.383268537816,
+      "predicted_return": -0.004385613015748923
     },
     "2025-12": {
-      "predicted_price": 4246.273101453406,
-      "predicted_return": 0.006396144297452779
+      "predicted_price": 4241.627542604526,
+      "predicted_return": 0.005301513361592944
     },
     "2026-01": {
-      "predicted_price": 4380.172390618099,
-      "predicted_return": 0.014110496311584488
+      "predicted_price": 4342.447661983511,
+      "predicted_return": 0.005460580661527697
     },
     "2026-02": {
-      "predicted_price": 4985.940888285643,
-      "predicted_return": 0.025501390440390258
+      "predicted_price": 4928.6526039227265,
+      "predicted_return": 0.013944906155179262
     },
     "2026-03": {
-      "predicted_price": 5214.521023869847,
-      "predicted_return": -0.012478859337818842
+      "predicted_price": 5415.279234287328,
+      "predicted_return": 0.025298348217325614
     },
     "2026-04": {
-      "predicted_price": 4731.163266462347,
-      "predicted_return": 0.013654639012394394
+      "predicted_price": 4613.409842431074,
+      "predicted_return": -0.011549221241787639
     },
     "2026-05": {
-      "predicted_price": 4625.411666608147,
-      "predicted_return": 0.0008244105147601592
+      "predicted_price": 4685.041916417537,
+      "predicted_return": 0.01363389710621941
     },
     "2026-06": {
-      "predicted_price": 4461.016807971482,
-      "predicted_return": -0.017506234321752433
+      "predicted_price": 4544.39638133598,
+      "predicted_return": 0.0010119512030066398
     },
     "2026-07": {
-      "predicted_price": 3955.811708648576,
-      "predicted_return": -0.012931881601267164
+      "predicted_price": 3936.7345653925813,
+      "predicted_return": -0.01776610866714232
     },
     "2026-08": {
-      "predicted_price": 4122.8137313667285,
-      "predicted_return": 0.018708277833883125
+      "predicted_price": 3993.6580993683006,
+      "predicted_return": -0.0131199691674041
     },
     "2026-09": {
-      "predicted_price": 4395.549807495372,
-      "predicted_return": -0.01208673010468939
+      "predicted_price": 4534.478208519151,
+      "predicted_return": 0.019030666362491174
     },
     "2026-10": {
       "predicted_price": 4105.648785299954,
       "predicted_return": -0.012381769501838525
-    },
-    "2026-12": {
-      "predicted_price": 4129.908827977619,
-      "predicted_return": null
     }
   },
-  "quarterly_returns": {
-    "2006-03": 0.004041067437216141,
-    "2006-06": -0.003908960298226537,
-    "2006-09": 0.056756483305888575,
-    "2006-12": 0.026318366228453315,
-    "2007-03": 0.028753789856038076,
-    "2007-06": -0.025207691503818547,
-    "2007-09": 0.08462930615130262,
-    "2007-12": 0.10093850152665959,
-    "2008-03": 0.12544901644537979,
-    "2008-06": -0.04788566234953359,
-    "2008-09": -0.037434530310954006,
-    "2008-12": -0.08725424531651865,
-    "2009-03": 0.05189053812519702,
-    "2009-06": 0.036520280225321604,
-    "2009-09": 0.07357814101322145,
-    "2009-12": 0.054531758052864865,
-    "2010-03": -0.006466865485259845,
-    "2010-06": 0.026910822272401984,
-    "2010-09": 0.08429929372227554,
-    "2010-12": 0.019309874056325407,
-    "2011-03": 0.055298997608823564,
-    "2011-06": 0.05293484728902295,
-    "2011-09": 0.08505921653075212,
-    "2011-12": 0.012108018384653425,
-    "2012-03": 0.04247403355875001,
-    "2012-06": 0.041566807381592144,
-    "2012-09": 0.05583653793277324,
-    "2012-12": 0.0260430475876072,
-    "2013-03": -0.023004095536365735,
-    "2013-06": -0.10480400582898122,
-    "2013-09": -0.029794774695131254,
-    "2013-12": 0.010523593603066164,
-    "2014-03": 0.036420818634882696,
-    "2014-06": 0.051357171153927586,
-    "2014-09": 0.006328453196403724,
-    "2014-12": -0.01700589025806988,
-    "2015-03": 0.013427357975995258,
-    "2015-06": -0.0016229291852850394,
-    "2015-09": -0.018187845827766183,
-    "2015-12": 0.016953402746394973,
-    "2016-03": 0.08196381712686955,
-    "2016-06": 0.03310277005744955,
-    "2016-09": 0.03240330082138393,
-    "2016-12": -0.07127471824337725,
-    "2017-03": 0.04581857425847989,
-    "2017-06": 0.0485572597047474,
-    "2017-09": 0.06323687991749198,
-    "2017-12": -0.008797268805920494,
-    "2018-03": 0.0055711933836763775,
-    "2018-06": -0.004262313379084753,
-    "2018-09": -0.006925410845878149,
-    "2018-12": -0.005790968477748515,
-    "2019-03": 0.06152033516481845,
-    "2019-06": 0.0594000430501191,
-    "2019-09": 0.04650375139928581,
-    "2019-12": 0.020071894650615575,
-    "2020-03": 0.01334303775613356,
-    "2020-06": 0.06922368743222954,
-    "2020-09": 0.09634144900276224,
-    "2020-12": 0.03314512650408138,
-    "2021-03": -0.03223413440084209,
-    "2021-06": 0.03498326907304007,
-    "2021-09": 0.029876104203373936,
-    "2021-12": 0.011239997056900299,
-    "2022-03": 0.06507629439951462,
-    "2022-06": -0.13887944172220398,
-    "2022-09": -0.07059197802227685,
-    "2022-12": 0.005479125035516175,
-    "2023-03": 0.03201721467892646,
-    "2023-06": 0.02116699906156895,
-    "2023-09": -0.05431306611933161,
-    "2023-12": 0.07342304348317591,
-    "2024-03": 0.01783085616419175,
-    "2024-06": -0.0012813388151167449,
-    "2024-09": 0.094237399744524,
-    "2024-12": -0.05415050385283675,
-    "2025-03": 0.08340908030295371,
-    "2025-06": 0.07249664546151265,
-    "2025-09": 0.08534388690451303,
-    "2025-12": 0.008352790311011882,
-    "2026-03": 0.11165935339467374,
-    "2026-06": 0.013008461703944332,
-    "2026-09": -0.00649021631508389
+  "quarterly_series": {
+    "2007-01": {
+      "predicted_price": 607.8561912350598,
+      "predicted_return": -0.015902672295372452
+    },
+    "2007-02": {
+      "predicted_price": 678.2490712324332,
+      "predicted_return": 0.04562388582708676
+    },
+    "2007-03": {
+      "predicted_price": 677.5645829851821,
+      "predicted_return": 0.06220628662707853
+    },
+    "2007-04": {
+      "predicted_price": 690.8520725388948,
+      "predicted_return": 0.05604236238579376
+    },
+    "2007-05": {
+      "predicted_price": 695.010920723252,
+      "predicted_return": 0.03754576993497999
+    },
+    "2007-06": {
+      "predicted_price": 690.9339797842573,
+      "predicted_return": 0.04006337691330311
+    },
+    "2007-07": {
+      "predicted_price": 713.8405114064626,
+      "predicted_return": 0.05092247953003731
+    },
+    "2007-08": {
+      "predicted_price": 662.7814220465407,
+      "predicted_return": 0.003448131695897444
+    },
+    "2007-09": {
+      "predicted_price": 640.076601275574,
+      "predicted_return": -0.014768930162882221
+    },
+    "2007-10": {
+      "predicted_price": 642.6597263150139,
+      "predicted_return": -0.03311846752949141
+    },
+    "2007-11": {
+      "predicted_price": 702.0442536195669,
+      "predicted_return": 0.04165693465605341
+    },
+    "2007-12": {
+      "predicted_price": 810.8530546645313,
+      "predicted_return": 0.08658359154850383
+    },
+    "2008-01": {
+      "predicted_price": 908.961755768191,
+      "predicted_return": 0.13195034968257113
+    },
+    "2008-02": {
+      "predicted_price": 927.6352805846681,
+      "predicted_return": 0.16848475315805067
+    },
+    "2008-03": {
+      "predicted_price": 951.3608660325435,
+      "predicted_return": 0.13177995902640194
+    },
+    "2008-04": {
+      "predicted_price": 1083.6010508119716,
+      "predicted_return": 0.15717084530586634
+    },
+    "2008-05": {
+      "predicted_price": 1104.4101129354433,
+      "predicted_return": 0.12545001559150865
+    },
+    "2008-06": {
+      "predicted_price": 1077.9146783062602,
+      "predicted_return": 0.161785185141803
+    },
+    "2008-07": {
+      "predicted_price": 897.0763550878174,
+      "predicted_return": 0.021950072203935064
+    },
+    "2008-08": {
+      "predicted_price": 858.9752003607206,
+      "predicted_return": -0.03154107430680998
+    },
+    "2008-09": {
+      "predicted_price": 876.9285104160086,
+      "predicted_return": -0.05380060348261384
+    },
+    "2008-10": {
+      "predicted_price": 922.744886233475,
+      "predicted_return": 0.009412825358495316
+    },
+    "2008-11": {
+      "predicted_price": 836.7579152944145,
+      "predicted_return": 0.006664359830741151
+    },
+    "2008-12": {
+      "predicted_price": 858.2232605541087,
+      "predicted_return": -0.01477770077738011
+    },
+    "2009-01": {
+      "predicted_price": 572.1274434281611,
+      "predicted_return": -0.23625800870203922
+    },
+    "2009-02": {
+      "predicted_price": 714.8740957970607,
+      "predicted_return": -0.13475589920868822
+    },
+    "2009-03": {
+      "predicted_price": 895.0416191573999,
+      "predicted_return": 0.01467816303872993
+    },
+    "2009-04": {
+      "predicted_price": 1158.873551764319,
+      "predicted_return": 0.22238754391770238
+    },
+    "2009-05": {
+      "predicted_price": 1148.7043988040332,
+      "predicted_return": 0.19796016362254928
+    },
+    "2009-06": {
+      "predicted_price": 1015.3092105306135,
+      "predicted_return": 0.09944475946458023
+    },
+    "2009-07": {
+      "predicted_price": 956.4592244985238,
+      "predicted_return": 0.0740412152114027
+    },
+    "2009-08": {
+      "predicted_price": 1007.4785365263656,
+      "predicted_return": 0.028470078139934463
+    },
+    "2009-09": {
+      "predicted_price": 897.1632629995452,
+      "predicted_return": -0.032284117452630545
+    },
+    "2009-10": {
+      "predicted_price": 944.5972162476883,
+      "predicted_return": -0.009905061007668942
+    },
+    "2009-11": {
+      "predicted_price": 940.1201685533615,
+      "predicted_return": -0.011716639396661899
+    },
+    "2009-12": {
+      "predicted_price": 1093.8222817159467,
+      "predicted_return": 0.08230548831697558
+    },
+    "2010-01": {
+      "predicted_price": 1129.391165540513,
+      "predicted_return": 0.07766181055007819
+    },
+    "2010-02": {
+      "predicted_price": 1304.0317751223674,
+      "predicted_return": 0.10062458817977367
+    },
+    "2010-03": {
+      "predicted_price": 1179.634236348404,
+      "predicted_return": 0.07298993724311367
+    },
+    "2010-04": {
+      "predicted_price": 1144.1707297739076,
+      "predicted_return": 0.05651610016602976
+    },
+    "2010-05": {
+      "predicted_price": 1125.9705288924524,
+      "predicted_return": 0.008177903074092496
+    },
+    "2010-06": {
+      "predicted_price": 1109.9851001426766,
+      "predicted_return": -0.0025327696878325034
+    },
+    "2010-07": {
+      "predicted_price": 1204.1141953735944,
+      "predicted_return": 0.021841217774842492
+    },
+    "2010-08": {
+      "predicted_price": 1285.010237349221,
+      "predicted_return": 0.055199901580205143
+    },
+    "2010-09": {
+      "predicted_price": 1354.2872553486293,
+      "predicted_return": 0.08647180955861329
+    },
+    "2010-10": {
+      "predicted_price": 1264.3868688187474,
+      "predicted_return": 0.06788714010812615
+    },
+    "2010-11": {
+      "predicted_price": 1331.990615540315,
+      "predicted_return": 0.06569331155369841
+    },
+    "2010-12": {
+      "predicted_price": 1389.3767543258537,
+      "predicted_return": 0.060279565696161885
+    },
+    "2011-01": {
+      "predicted_price": 1502.8198527673405,
+      "predicted_return": 0.1011093273027029
+    },
+    "2011-02": {
+      "predicted_price": 1517.5784085299877,
+      "predicted_return": 0.09054972165694605
+    },
+    "2011-03": {
+      "predicted_price": 1471.051589278666,
+      "predicted_return": 0.037012211025295644
+    },
+    "2011-04": {
+      "predicted_price": 1248.159122317573,
+      "predicted_return": -0.0654621574697049
+    },
+    "2011-05": {
+      "predicted_price": 1370.1364895041079,
+      "predicted_return": -0.029530044017572393
+    },
+    "2011-06": {
+      "predicted_price": 1561.4387117487086,
+      "predicted_return": 0.08653557883168585
+    },
+    "2011-07": {
+      "predicted_price": 1676.7145235852938,
+      "predicted_return": 0.07048513734950415
+    },
+    "2011-08": {
+      "predicted_price": 1717.0126780602525,
+      "predicted_return": 0.11172990483339898
+    },
+    "2011-09": {
+      "predicted_price": 1595.6972927671743,
+      "predicted_return": 0.06217909564580357
+    },
+    "2011-10": {
+      "predicted_price": 1742.8141626827312,
+      "predicted_return": 0.06956264936596505
+    },
+    "2011-11": {
+      "predicted_price": 2092.3401342918764,
+      "predicted_return": 0.1363744209546221
+    },
+    "2011-12": {
+      "predicted_price": 1841.5860409562977,
+      "predicted_return": 0.12684392645702192
+    },
+    "2012-01": {
+      "predicted_price": 1848.0577951204805,
+      "predicted_return": 0.07495542988378406
+    },
+    "2012-02": {
+      "predicted_price": 1810.394565273079,
+      "predicted_return": 0.0362173559671297
+    },
+    "2012-03": {
+      "predicted_price": 1626.9582493024543,
+      "predicted_return": 0.03927372716806772
+    },
+    "2012-04": {
+      "predicted_price": 1847.8069208719073,
+      "predicted_return": 0.06178243158766212
+    },
+    "2012-05": {
+      "predicted_price": 1833.4524799411956,
+      "predicted_return": 0.07757454212595483
+    },
+    "2012-06": {
+      "predicted_price": 1751.5630821610769,
+      "predicted_return": 0.048883275148548636
+    },
+    "2012-07": {
+      "predicted_price": 1752.9636287065912,
+      "predicted_return": 0.05178307966272627
+    },
+    "2012-08": {
+      "predicted_price": 1580.5627514672099,
+      "predicted_return": 0.012966937267365815
+    },
+    "2012-09": {
+      "predicted_price": 1691.420467181212,
+      "predicted_return": 0.057504439161924284
+    },
+    "2012-10": {
+      "predicted_price": 1715.5794090422519,
+      "predicted_return": 0.06103530155046386
+    },
+    "2012-11": {
+      "predicted_price": 1779.9895371742964,
+      "predicted_return": 0.050932659678553566
+    },
+    "2012-12": {
+      "predicted_price": 1858.5124412453933,
+      "predicted_return": 0.04772398779106695
+    },
+    "2013-01": {
+      "predicted_price": 1800.0067956516186,
+      "predicted_return": 0.045291746036146385
+    },
+    "2013-02": {
+      "predicted_price": 1802.7160131166504,
+      "predicted_return": 0.05017293091720401
+    },
+    "2013-03": {
+      "predicted_price": 1706.7080876349578,
+      "predicted_return": 0.026183778072550047
+    },
+    "2013-04": {
+      "predicted_price": 1688.8563971547158,
+      "predicted_return": 0.015067682917515937
+    },
+    "2013-05": {
+      "predicted_price": 1567.3752487600227,
+      "predicted_return": -0.007705937020215048
+    },
+    "2013-06": {
+      "predicted_price": 1566.2044305005263,
+      "predicted_return": -0.019471737080489146
+    },
+    "2013-07": {
+      "predicted_price": 1528.69529792939,
+      "predicted_return": 0.034604756660287235
+    },
+    "2013-08": {
+      "predicted_price": 1368.9832183533515,
+      "predicted_return": -0.013795574178232864
+    },
+    "2013-09": {
+      "predicted_price": 1096.0774671445931,
+      "predicted_return": -0.118847154337553
+    },
+    "2013-10": {
+      "predicted_price": 1124.7700052148423,
+      "predicted_return": -0.16390935334176543
+    },
+    "2013-11": {
+      "predicted_price": 1251.4523577007365,
+      "predicted_return": -0.10851796510859313
+    },
+    "2013-12": {
+      "predicted_price": 1307.836543450442,
+      "predicted_return": -0.015826742170124752
+    },
+    "2014-01": {
+      "predicted_price": 1354.3831430597202,
+      "predicted_return": 0.023293060414544466
+    },
+    "2014-02": {
+      "predicted_price": 1278.9642683396753,
+      "predicted_return": 0.02178766043877403
+    },
+    "2014-03": {
+      "predicted_price": 1201.076636965123,
+      "predicted_return": -0.004256570010934643
+    },
+    "2014-04": {
+      "predicted_price": 1210.1871002779803,
+      "predicted_return": -0.02739623370382041
+    },
+    "2014-05": {
+      "predicted_price": 1298.5317023088671,
+      "predicted_return": -0.021083543567909882
+    },
+    "2014-06": {
+      "predicted_price": 1372.3053779620689,
+      "predicted_return": 0.06674555011754277
+    },
+    "2014-07": {
+      "predicted_price": 1343.6552998028785,
+      "predicted_return": 0.03989916764655141
+    },
+    "2014-08": {
+      "predicted_price": 1301.7440468427847,
+      "predicted_return": 0.04120159342814842
+    },
+    "2014-09": {
+      "predicted_price": 1406.4734976237667,
+      "predicted_return": 0.058089395524798436
+    },
+    "2014-10": {
+      "predicted_price": 1394.3143113091066,
+      "predicted_return": 0.08320167568607788
+    },
+    "2014-11": {
+      "predicted_price": 1377.8293053826535,
+      "predicted_return": 0.068350777260765
+    },
+    "2014-12": {
+      "predicted_price": 1218.2606712656693,
+      "predicted_return": 0.008540847577953987
+    },
+    "2015-01": {
+      "predicted_price": 1149.5480792499156,
+      "predicted_return": -0.0196840392794718
+    },
+    "2015-02": {
+      "predicted_price": 1126.5465124464863,
+      "predicted_return": -0.036649681756001536
+    },
+    "2015-03": {
+      "predicted_price": 1175.1870549094176,
+      "predicted_return": -0.015211443065030299
+    },
+    "2015-04": {
+      "predicted_price": 1297.0377681415407,
+      "predicted_return": 0.010336491417278153
+    },
+    "2015-05": {
+      "predicted_price": 1229.6586735141905,
+      "predicted_return": 0.013804893759795947
+    },
+    "2015-06": {
+      "predicted_price": 1209.0560216340812,
+      "predicted_return": 0.02119478174773152
+    },
+    "2015-07": {
+      "predicted_price": 1222.0667000302562,
+      "predicted_return": 0.03147600082043556
+    },
+    "2015-08": {
+      "predicted_price": 1197.5581197219249,
+      "predicted_return": 0.006079207148040385
+    },
+    "2015-09": {
+      "predicted_price": 1163.423041465749,
+      "predicted_return": -0.007259805701441406
+    },
+    "2015-10": {
+      "predicted_price": 1056.2282054184661,
+      "predicted_return": -0.036597892853767376
+    },
+    "2015-11": {
+      "predicted_price": 1082.2805495405391,
+      "predicted_return": -0.04729786406956488
+    },
+    "2015-12": {
+      "predicted_price": 1095.5114033717211,
+      "predicted_return": -0.017184584559575243
+    },
+    "2016-01": {
+      "predicted_price": 1134.6825627468643,
+      "predicted_return": -0.006253033131750879
+    },
+    "2016-02": {
+      "predicted_price": 1070.463395520106,
+      "predicted_return": 0.005680374525706536
+    },
+    "2016-03": {
+      "predicted_price": 1059.5176695471548,
+      "predicted_return": -0.002528453168272788
+    },
+    "2016-04": {
+      "predicted_price": 1094.6870466325856,
+      "predicted_return": -0.021072854475686957
+    },
+    "2016-05": {
+      "predicted_price": 1274.4679363399698,
+      "predicted_return": 0.02887007458010619
+    },
+    "2016-06": {
+      "predicted_price": 1324.3047350502077,
+      "predicted_return": 0.07176183391013173
+    },
+    "2016-07": {
+      "predicted_price": 1427.8098753185327,
+      "predicted_return": 0.09871268523940474
+    },
+    "2016-08": {
+      "predicted_price": 1294.9038272370972,
+      "predicted_return": 0.06352775541253873
+    },
+    "2016-09": {
+      "predicted_price": 1358.3763567364226,
+      "predicted_return": 0.027295687139886827
+    },
+    "2016-10": {
+      "predicted_price": 1397.3997576913032,
+      "predicted_return": 0.03369411825275345
+    },
+    "2016-11": {
+      "predicted_price": 1344.9382771070625,
+      "predicted_return": 0.027161031558539408
+    },
+    "2016-12": {
+      "predicted_price": 1351.2995056445945,
+      "predicted_return": 0.026165988137886675
+    },
+    "2017-01": {
+      "predicted_price": 1268.1894528687599,
+      "predicted_return": -0.004885223979567338
+    },
+    "2017-02": {
+      "predicted_price": 1135.686212321944,
+      "predicted_return": -0.035221867102526255
+    },
+    "2017-03": {
+      "predicted_price": 1074.5004673175347,
+      "predicted_return": -0.07414742210323713
+    },
+    "2017-04": {
+      "predicted_price": 1161.9387775362686,
+      "predicted_return": -0.042264422598694534
+    },
+    "2017-05": {
+      "predicted_price": 1264.7401909700184,
+      "predicted_return": 0.006297910493911568
+    },
+    "2017-06": {
+      "predicted_price": 1294.5353129521093,
+      "predicted_return": 0.037491328038385965
+    },
+    "2017-07": {
+      "predicted_price": 1312.289855469471,
+      "predicted_return": 0.0352006209202794
+    },
+    "2017-08": {
+      "predicted_price": 1282.9627564489863,
+      "predicted_return": 0.01220449881617608
+    },
+    "2017-09": {
+      "predicted_price": 1286.9689613518808,
+      "predicted_return": 0.03484245250013429
+    },
+    "2017-10": {
+      "predicted_price": 1293.398129133972,
+      "predicted_return": 0.01935903334031195
+    },
+    "2017-11": {
+      "predicted_price": 1392.830907616146,
+      "predicted_return": 0.055450507650342915
+    },
+    "2017-12": {
+      "predicted_price": 1347.380082995262,
+      "predicted_return": 0.0480260712518542
+    },
+    "2018-01": {
+      "predicted_price": 1286.191691171594,
+      "predicted_return": 0.013062552553507727
+    },
+    "2018-02": {
+      "predicted_price": 1270.700858902384,
+      "predicted_return": -0.00619712369383546
+    },
+    "2018-03": {
+      "predicted_price": 1287.6942396312145,
+      "predicted_return": -0.011585825811735336
+    },
+    "2018-04": {
+      "predicted_price": 1375.4725142963016,
+      "predicted_return": 0.024412758335003625
+    },
+    "2018-05": {
+      "predicted_price": 1301.356958351198,
+      "predicted_return": -0.013011345984429028
+    },
+    "2018-06": {
+      "predicted_price": 1316.5680385803303,
+      "predicted_return": -0.0066859206401126935
+    },
+    "2018-07": {
+      "predicted_price": 1309.0822793527043,
+      "predicted_return": -0.0046624037190510885
+    },
+    "2018-08": {
+      "predicted_price": 1303.6074513551819,
+      "predicted_return": 0.0019253234204429787
+    },
+    "2018-09": {
+      "predicted_price": 1240.4835640141685,
+      "predicted_return": -0.009720116531981293
+    },
+    "2018-10": {
+      "predicted_price": 1194.8467403229415,
+      "predicted_return": -0.023942845663444297
+    },
+    "2018-11": {
+      "predicted_price": 1199.7361474643687,
+      "predicted_return": -0.0004698700447496665
+    },
+    "2018-12": {
+      "predicted_price": 1181.922486353216,
+      "predicted_return": -0.008909605328182663
+    },
+    "2019-01": {
+      "predicted_price": 1189.9141964323114,
+      "predicted_return": -0.022261075125828866
+    },
+    "2019-02": {
+      "predicted_price": 1173.0966365920003,
+      "predicted_return": -0.03789157218446071
+    },
+    "2019-03": {
+      "predicted_price": 1267.318309491723,
+      "predicted_return": -0.01026942847398805
+    },
+    "2019-04": {
+      "predicted_price": 1358.9944295191008,
+      "predicted_return": 0.027221151454512697
+    },
+    "2019-05": {
+      "predicted_price": 1396.6950884716912,
+      "predicted_return": 0.05981595946718645
+    },
+    "2019-06": {
+      "predicted_price": 1370.8316194001295,
+      "predicted_return": 0.056443668821942156
+    },
+    "2019-07": {
+      "predicted_price": 1343.8822352025843,
+      "predicted_return": 0.04573818574920638
+    },
+    "2019-08": {
+      "predicted_price": 1342.0963382018094,
+      "predicted_return": 0.030408087087335167
+    },
+    "2019-09": {
+      "predicted_price": 1480.717438990987,
+      "predicted_return": 0.047802913575767804
+    },
+    "2019-10": {
+      "predicted_price": 1500.309829560813,
+      "predicted_return": 0.049326750342813704
+    },
+    "2019-11": {
+      "predicted_price": 1655.2389951866023,
+      "predicted_return": 0.08510350122113186
+    },
+    "2019-12": {
+      "predicted_price": 1535.2941899642642,
+      "predicted_return": 0.041828294852862116
+    },
+    "2020-01": {
+      "predicted_price": 1560.484861767928,
+      "predicted_return": 0.03143103765395086
+    },
+    "2020-02": {
+      "predicted_price": 1445.6464909496867,
+      "predicted_return": -0.01254748710263953
+    },
+    "2020-03": {
+      "predicted_price": 1543.8629382777128,
+      "predicted_return": 0.0174211462841167
+    },
+    "2020-04": {
+      "predicted_price": 1653.8394746988167,
+      "predicted_return": 0.03999465155514263
+    },
+    "2020-05": {
+      "predicted_price": 1664.769716082614,
+      "predicted_return": 0.04878699021152689
+    },
+    "2020-06": {
+      "predicted_price": 1598.6869517128948,
+      "predicted_return": 0.014165750207077162
+    },
+    "2020-07": {
+      "predicted_price": 1732.8092717772001,
+      "predicted_return": 0.027147868633982768
+    },
+    "2020-08": {
+      "predicted_price": 1775.5970906926461,
+      "predicted_return": 0.025957545176521254
+    },
+    "2020-09": {
+      "predicted_price": 1911.782675204239,
+      "predicted_return": 0.07097344303376095
+    },
+    "2020-10": {
+      "predicted_price": 2154.636430797688,
+      "predicted_return": 0.0866992337787808
+    },
+    "2020-11": {
+      "predicted_price": 2214.7515988338428,
+      "predicted_return": 0.11847820791228805
+    },
+    "2020-12": {
+      "predicted_price": 2073.230042031086,
+      "predicted_return": 0.09475566383646533
+    },
+    "2021-01": {
+      "predicted_price": 1953.1796888925633,
+      "predicted_return": 0.03871893383228086
+    },
+    "2021-02": {
+      "predicted_price": 1769.4687885913092,
+      "predicted_return": -0.004078328958775705
+    },
+    "2021-03": {
+      "predicted_price": 1952.376002654784,
+      "predicted_return": 0.02824639356433669
+    },
+    "2021-04": {
+      "predicted_price": 1925.2791119200274,
+      "predicted_return": 0.04150824921735476
+    },
+    "2021-05": {
+      "predicted_price": 1788.6212583412578,
+      "predicted_return": 0.03136027860539869
+    },
+    "2021-06": {
+      "predicted_price": 1644.879211151324,
+      "predicted_return": -0.03712907075472853
+    },
+    "2021-07": {
+      "predicted_price": 1708.9298680945774,
+      "predicted_return": -0.0344339840780007
+    },
+    "2021-08": {
+      "predicted_price": 1911.0180914909358,
+      "predicted_return": 0.0023145811642072862
+    },
+    "2021-09": {
+      "predicted_price": 1823.9775469680226,
+      "predicted_return": 0.030096533985499184
+    },
+    "2021-10": {
+      "predicted_price": 1897.2530696166139,
+      "predicted_return": 0.04492786384822111
+    },
+    "2021-11": {
+      "predicted_price": 1891.6257140969706,
+      "predicted_return": 0.042177945788672844
+    },
+    "2021-12": {
+      "predicted_price": 1807.1185621843238,
+      "predicted_return": 0.02823964984420034
+    },
+    "2022-01": {
+      "predicted_price": 1791.783981944469,
+      "predicted_return": 0.004802258407072005
+    },
+    "2022-02": {
+      "predicted_price": 1780.8688537482908,
+      "predicted_return": 0.003639027681482384
+    },
+    "2022-03": {
+      "predicted_price": 1837.244870373813,
+      "predicted_return": 0.0044977270010524255
+    },
+    "2022-04": {
+      "predicted_price": 1759.1672291985544,
+      "predicted_return": -0.021278075957446373
+    },
+    "2022-05": {
+      "predicted_price": 1883.8156121933837,
+      "predicted_return": -0.013123081074834439
+    },
+    "2022-06": {
+      "predicted_price": 2063.5217552758427,
+      "predicted_return": 0.06327372863088501
+    },
+    "2022-07": {
+      "predicted_price": 1846.1001141808254,
+      "predicted_return": -0.027092888124922762
+    },
+    "2022-08": {
+      "predicted_price": 1709.2850112834972,
+      "predicted_return": -0.07200420714914825
+    },
+    "2022-09": {
+      "predicted_price": 1582.8525335608738,
+      "predicted_return": -0.13255006592235022
+    },
+    "2022-10": {
+      "predicted_price": 1643.4615011014712,
+      "predicted_return": -0.07168588705848569
+    },
+    "2022-11": {
+      "predicted_price": 1705.7842321436756,
+      "predicted_return": -0.003169913598277299
+    },
+    "2022-12": {
+      "predicted_price": 1556.1688287623292,
+      "predicted_return": -0.06585494144934345
+    },
+    "2023-01": {
+      "predicted_price": 1453.051829789416,
+      "predicted_return": -0.11699767710954916
+    },
+    "2023-02": {
+      "predicted_price": 1579.620941938229,
+      "predicted_return": -0.11277717189941697
+    },
+    "2023-03": {
+      "predicted_price": 1831.200462077307,
+      "predicted_return": 0.00437854304264515
+    },
+    "2023-04": {
+      "predicted_price": 2112.860863211578,
+      "predicted_return": 0.0914041027392615
+    },
+    "2023-05": {
+      "predicted_price": 1943.0429699724568,
+      "predicted_return": 0.0616894830935225
+    },
+    "2023-06": {
+      "predicted_price": 2027.601296690723,
+      "predicted_return": 0.029073763707015005
+    },
+    "2023-07": {
+      "predicted_price": 2064.5186505720026,
+      "predicted_return": 0.03701374935974729
+    },
+    "2023-08": {
+      "predicted_price": 2016.5388635836027,
+      "predicted_return": 0.02716343726241487
+    },
+    "2023-09": {
+      "predicted_price": 1957.45758838924,
+      "predicted_return": 0.019842265410149156
+    },
+    "2023-10": {
+      "predicted_price": 1931.4897925343255,
+      "predicted_return": -0.017353287048580003
+    },
+    "2023-11": {
+      "predicted_price": 1888.2468775669647,
+      "predicted_return": -0.026987604756963608
+    },
+    "2023-12": {
+      "predicted_price": 1759.7901243283388,
+      "predicted_return": -0.04945039800619724
+    },
+    "2024-01": {
+      "predicted_price": 1895.492574360789,
+      "predicted_return": -0.04553545887265299
+    },
+    "2024-02": {
+      "predicted_price": 2034.0918509233873,
+      "predicted_return": -0.0009376443020468889
+    },
+    "2024-03": {
+      "predicted_price": 2223.5815766085766,
+      "predicted_return": 0.07520037944695517
+    },
+    "2024-04": {
+      "predicted_price": 2325.315449718744,
+      "predicted_return": 0.13139621554205383
+    },
+    "2024-05": {
+      "predicted_price": 2203.304662307397,
+      "predicted_return": 0.07504968020085953
+    },
+    "2024-06": {
+      "predicted_price": 2280.237132661181,
+      "predicted_return": 0.021023039871321147
+    },
+    "2024-07": {
+      "predicted_price": 2313.9485344163036,
+      "predicted_return": 0.012151822190557132
+    },
+    "2024-08": {
+      "predicted_price": 2355.851585135334,
+      "predicted_return": 0.012150504688537803
+    },
+    "2024-09": {
+      "predicted_price": 2335.1259416778526,
+      "predicted_return": 0.0037868035812174405
+    },
+    "2024-10": {
+      "predicted_price": 2503.4309639573676,
+      "predicted_return": 0.022758526604217805
+    },
+    "2024-11": {
+      "predicted_price": 2693.7288006489016,
+      "predicted_return": 0.07331654357018666
+    },
+    "2024-12": {
+      "predicted_price": 2884.321327943761,
+      "predicted_return": 0.09063417859244918
+    },
+    "2025-01": {
+      "predicted_price": 2914.683019070317,
+      "predicted_return": 0.060417251665978014
+    },
+    "2025-02": {
+      "predicted_price": 2651.9040510774516,
+      "predicted_return": 0.0006050506962517882
+    },
+    "2025-03": {
+      "predicted_price": 2539.7854113555486,
+      "predicted_return": -0.03273460007183579
+    },
+    "2025-04": {
+      "predicted_price": 2702.620746071192,
+      "predicted_return": -0.03557602373732224
+    },
+    "2025-05": {
+      "predicted_price": 2970.0397104451886,
+      "predicted_return": 0.038103409905314384
+    },
+    "2025-06": {
+      "predicted_price": 3447.13132037698,
+      "predicted_return": 0.0984921743727868
+    },
+    "2025-07": {
+      "predicted_price": 3606.3092159432413,
+      "predicted_return": 0.09237498114825074
+    },
+    "2025-08": {
+      "predicted_price": 3571.079728706377,
+      "predicted_return": 0.08185885714598823
+    },
+    "2025-09": {
+      "predicted_price": 3663.547496856311,
+      "predicted_return": 0.10366134585773268
+    },
+    "2025-10": {
+      "predicted_price": 3500.5126982280876,
+      "predicted_return": 0.06205227379692176
+    },
+    "2025-11": {
+      "predicted_price": 3724.600955486256,
+      "predicted_return": 0.07716536724771365
+    },
+    "2025-12": {
+      "predicted_price": 4205.1878223725935,
+      "predicted_return": 0.08609228690757298
+    },
+    "2026-01": {
+      "predicted_price": 4336.155400087007,
+      "predicted_return": 0.0799690045642389
+    },
+    "2026-02": {
+      "predicted_price": 4370.79720031506,
+      "predicted_return": 0.03529988155445545
+    },
+    "2026-03": {
+      "predicted_price": 4420.984872509933,
+      "predicted_return": 0.02338490721248676
+    },
+    "2026-04": {
+      "predicted_price": 5210.430145751697,
+      "predicted_return": 0.06954167486956268
+    },
+    "2026-05": {
+      "predicted_price": 5596.687271549298,
+      "predicted_return": 0.058248766331168766
+    },
+    "2026-06": {
+      "predicted_price": 5544.092062202347,
+      "predicted_return": 0.17221640051840392
+    },
+    "2026-07": {
+      "predicted_price": 5142.302879670012,
+      "predicted_return": 0.10676004471041034
+    },
+    "2026-08": {
+      "predicted_price": 4759.3091958502355,
+      "predicted_return": 0.04721957256971383
+    },
+    "2026-09": {
+      "predicted_price": 4104.855394761465,
+      "predicted_return": 0.024052817842075545
+    },
+    "2026-10": {
+      "predicted_price": 3998.881513122542,
+      "predicted_return": -0.011812896634479694
+    },
+    "2026-12": {
+      "predicted_price": 4166.304724249872,
+      "predicted_return": 0.0022839381928865116
+    }
   },
   "forecasts": {
     "next_month": {
@@ -1109,25 +1976,30 @@
     "three_months": {
       "month": "2026-12",
       "label": "Quarterly",
-      "predictor_quarter": "2026-03",
-      "forecast_quarter": "2026-04",
-      "quarter_end_month": "2026-09",
+      "predictor_window": [
+        "2026-07",
+        "2026-08",
+        "2026-09"
+      ],
+      "window_end_month": "2026-09",
+      "base_month": "2026-09",
       "base_price": 4156.8,
       "dxy_return": -0.007187661533426077,
       "real_yield_change": 0.3999999999999999,
       "gpr": 146.2,
       "gpr_month": "2026-09",
-      "predicted_return": -0.00649021631508389,
-      "predicted_price": 4129.908827977619,
+      "predicted_return": 0.0022839381928865116,
+      "predicted_price": 4166.304724249872,
       "actual_price": null,
       "breakdown": [
-        "Q3 2026 DXYReturn_q = sum of monthly log returns (2026-07: ln(120.6000 / 120.0800) [2026-06 → 2026-07] = 0.00432110 + 2026-08: ln(118.8500 / 120.6000) [2026-07 → 2026-08] = -0.01461709 + 2026-09: ln(119.2200 / 118.8500) [2026-08 → 2026-09] = 0.00310833) = -0.00718766.",
-        "Q3 2026 Δy_q = sum of monthly real-yield changes (2026-07: 2.4000% − 2.2000% [2026-06 → 2026-07] = 0.20000000 + 2026-08: 2.4000% − 2.4000% [2026-07 → 2026-08] = 0.00000000 + 2026-09: 2.6000% − 2.4000% [2026-08 → 2026-09] = 0.20000000) = 0.40000000 percentage points.",
-        "GPR_q = latest GPR observation in 2026-09 = 146.2000.",
-        "X_q = quarter-end XAU/USD in 2026-09 = 4156.80 USD/oz.",
-        "Predicted log return = −0.0160 − 0.6328 × (-0.00718766) − 0.1274 × (0.40000000) + 0.000382 × (146.2000) = -0.00649022."
+        "Forecast target month: 2026-12; quarterly features from the three-month window 2026-07 to 2026-09.",
+        "X_{t-1} = last XAU/USD value before the forecast month, from 2026-09 = 4156.80 USD/oz.",
+        "Window DXYReturn = sum of monthly log returns (2026-07: ln(120.6000 / 120.0800) [2026-06 → 2026-07] = 0.00432110 + 2026-08: ln(118.8500 / 120.6000) [2026-07 → 2026-08] = -0.01461709 + 2026-09: ln(119.2200 / 118.8500) [2026-08 → 2026-09] = 0.00310833) = -0.00718766.",
+        "Window Δy = sum of monthly real-yield changes (2026-07: 2.4000% − 2.2000% [2026-06 → 2026-07] = 0.20000000 + 2026-08: 2.4000% − 2.4000% [2026-07 → 2026-08] = 0.00000000 + 2026-09: 2.6000% − 2.4000% [2026-08 → 2026-09] = 0.20000000) = 0.40000000 percentage points.",
+        "GPR = latest GPR observation in 2026-09 = 146.2000.",
+        "Predicted log return = −0.0177 − 0.5665 × (-0.00718766) − 0.1122 × (0.40000000) + 0.000416 × (146.2000) = 0.00228394."
       ],
-      "equation": "\\[\\widehat{X}_{q+1}=4156.80\\exp\\left(-0.0160-0.6328\\left(-0.00718766\\right)-0.1274\\left(0.40000000\\right)+0.000382\\left(146.20000000\\right)\\right)\\approx 4129.91\\]"
+      "equation": "\\[\\widehat{X}_{q+1}=4156.80\\exp\\left(-0.0177-0.5665\\left(-0.00718766\\right)-0.1122\\left(0.40000000\\right)+0.000416\\left(146.20000000\\right)\\right)\\approx 4166.30\\]"
     }
   }
 }
