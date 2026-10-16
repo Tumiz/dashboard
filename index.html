@@ -35,6 +35,7 @@ body{
 .formula-card h3{font-size:11px;font-weight:600;margin-bottom:4px;color:#a8b2d1}
 .formula-card .formula{font-size:12px;line-height:1.6;color:#dfe7ff;font-weight:600;overflow-x:auto;padding:2px 0}
 .formula-card .formula-note{margin-top:6px;font-size:11px;color:#a8b2d1}
+.formula-card .formula-stats{margin-top:4px;font-size:10px;color:#9ca3af}
 .formula-card .equation-status{margin-top:6px;font-size:10px;color:#ef4444}
 .notes-card{background:#16161b;border:1px solid #2d2d35;border-radius:10px;padding:12px 14px;margin:12px 0 16px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .notes-card h2{font-size:12px;font-weight:600;margin-bottom:8px;color:#f3f4f6}
@@ -180,6 +181,7 @@ td.down{color:#ef4444}
     <div class="equation-section">
       <h3>Monthly model</h3>
       <div class="formula" id="monthlyModelEquation"></div>
+      <div class="formula-stats" id="monthlyModelStats"></div>
       <div class="formula-note">Next-month forecast with the latest input values:</div>
       <div class="formula" id="monthlyForecastEquation"></div>
       <details class="equation-breakdown">
@@ -190,6 +192,7 @@ td.down{color:#ef4444}
     <div class="equation-section">
       <h3>Quarterly model</h3>
       <div class="formula" id="quarterlyModelEquation"></div>
+      <div class="formula-stats" id="quarterlyModelStats"></div>
       <div class="formula-note">Next-quarter forecast with the latest three-month window input values:</div>
       <div class="formula" id="quarterlyForecastEquation"></div>
       <details class="equation-breakdown">
@@ -319,42 +322,15 @@ function render(rows,predictions){
     if(entry.predicted_price!=null) predictedPriceByMonth[month]=entry.predicted_price;
     if(entry.predicted_return!=null) predReturnByMonth[month]=entry.predicted_return;
   });
-  const logReturn=(current,previous)=>current!=null&&previous!=null&&current>0&&previous>0?Math.log(current/previous):null;
-  const actualReturnByMonth={};
-  let previousActual=null;
-  rows.forEach(r=>{
-    const actual=num(r.xau_usd);
-    if(actual!=null&&previousActual!=null){
-      actualReturnByMonth[r.month]=logReturn(actual,previousActual);
-    }
-    if(actual!=null) previousActual=actual;
-  });
+  const actualReturns=predictions.actual_returns||{};
+  const actualReturnByMonth=actualReturns.monthly||{};
+  const actualQuarterReturnByMonth=actualReturns.quarterly||{};
   const monthlyForecast=predictions.forecasts?.next_month||null;
   const predOnLabels=labels.map(m=>predictedPriceByMonth[m]??null);
   const actualReturnOnLabels=labels.map(m=>actualReturnByMonth[m]??null);
+  const quarterActualOnLabels=labels.map(m=>actualQuarterReturnByMonth[m]??null);
   const predReturnOnLabels=labels.map(m=>predReturnByMonth[m]??null);
 
-  const quarterKey=(month)=>{
-    if(!month) return null;
-    const year=month.slice(0,4);
-    const mon=Number(month.slice(5,7));
-    const q=Math.floor((mon-1)/3)+1;
-    return `${year}-${String(q).padStart(2,'0')}`;
-  };
-  const quarterActualAgg={};
-  rows.forEach(r=>{
-    const q=quarterKey(r.month);
-    if(!q) return;
-    const actualVal=actualReturnByMonth[r.month]??null;
-    if(actualVal!=null && Number.isFinite(actualVal)) quarterActualAgg[q]=(quarterActualAgg[q]||0)+actualVal;
-  });
-  const quarterActualOnLabels=labels.map(m=>{
-    if(!m) return null;
-    const q=quarterKey(m);
-    const mNum=Number(m.slice(5,7));
-    if(mNum%3!==0) return null;
-    return q && quarterActualAgg[q]!=null ? quarterActualAgg[q] : null;
-  });
   const quarterlySeries=predictions.quarterly_series||{};
   const quarterPredOnLabels=labels.map(m=>{
     const entry=quarterlySeries[m];
@@ -384,6 +360,14 @@ function render(rows,predictions){
   const quarterlyModelEquation=document.getElementById('quarterlyModelEquation');
   if(monthlyModelEquation) monthlyModelEquation.textContent=predictions.models?.monthly?.equation||'';
   if(quarterlyModelEquation) quarterlyModelEquation.textContent=predictions.models?.quarterly?.equation||'';
+  const modelStats=(model)=>{
+    if(!model||model.r2==null||!Number.isFinite(model.r2)) return '';
+    return `R\u00b2 = ${model.r2.toFixed(4)}${model.n!=null?` \u00b7 n = ${model.n}`:''}`;
+  };
+  const monthlyModelStats=document.getElementById('monthlyModelStats');
+  const quarterlyModelStats=document.getElementById('quarterlyModelStats');
+  if(monthlyModelStats) monthlyModelStats.textContent=modelStats(predictions.models?.monthly);
+  if(quarterlyModelStats) quarterlyModelStats.textContent=modelStats(predictions.models?.quarterly);
 
   const forecastNote=document.getElementById('nextMonthForecast');
   if(forecastNote){
@@ -1108,9 +1092,9 @@ function render(rows,predictions){
         pointBackgroundColor:'#10b981',
         pointBorderColor:'#fff',
         pointBorderWidth:2,
-        pointRadius:3,
-        pointHoverRadius:4,
-        pointHitRadius:6,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
         yAxisID:'y26'
       },{
         label:'XAU Return (Predicted, Quarterly)',
@@ -1124,9 +1108,9 @@ function render(rows,predictions){
         pointBackgroundColor:'#f97316',
         pointBorderColor:'#fff',
         pointBorderWidth:2,
-        pointRadius:3,
-        pointHoverRadius:4,
-        pointHitRadius:6,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
         yAxisID:'y26'
       },{
         label:'XAU/USD (Predicted)',

@@ -228,6 +228,17 @@ def _quarterly_equation(xau, params, dxy, ryc, gpr, price):
     )
 
 
+def _actual_returns(f):
+    """Trailing actual XAU/USD log returns: 1-month (monthly) and 3-month (quarterly)."""
+    gold = f["gold"]
+    monthly = np.log(gold / gold.shift(1)).dropna()
+    quarterly = np.log(gold / gold.shift(3)).dropna()
+    return {
+        "monthly": {m: float(v) for m, v in monthly.items()},
+        "quarterly": {m: float(v) for m, v in quarterly.items()},
+    }
+
+
 def _monthly_series(f):
     """Walk-forward monthly predictions: refit on data before each month, like the headline forecast."""
     series = {}
@@ -571,6 +582,7 @@ def build_dashboard_predictions(target=None):
         "models": model,
         "monthly_series": monthly_series,
         "quarterly_series": quarterly_series,
+        "actual_returns": _actual_returns(f),
         "forecasts": {
             "next_month": forecast_next,
             "three_months": forecast_three,

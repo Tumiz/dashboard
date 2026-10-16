@@ -4,7 +4,7 @@ This is a development guide that code agents should follow.
    - a monthly forecast for the target month T, and
    - a quarterly forecast for month T + 2 (the quarterly horizon ends two months past T).
 
-2. xau_predictor.py owns all forecast computation and writes the results to predictions.json. index.html only reads and renders that JSON; it must not compute forecasts or hardcode model coefficients. The model equations shown on the dashboard are stored in predictions.json (models.monthly.equation and models.quarterly.equation); the HTML contains no coefficients.
+2. xau_predictor.py owns all forecast computation and writes the results to predictions.json. index.html only reads and renders that JSON; it must not compute forecasts or hardcode model coefficients. The model equations shown on the dashboard are stored in predictions.json (models.monthly.equation and models.quarterly.equation); the HTML contains no coefficients. The actual return series shown on the dashboard are also computed by xau_predictor.py and stored in predictions.json as actual_returns.monthly (trailing one-month log returns) and actual_returns.quarterly (trailing three-month log returns); the HTML does not compute them.
 
 3. Significant events related to gold prices are stored in xau_events.js. Only breaking news, not documents or conclusion articles.
 
