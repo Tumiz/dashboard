@@ -396,13 +396,31 @@ window.XAU_EVENTS = [
   },
   {
     month: '2026-02',
-    title: 'Renewed geopolitical tensions and market volatility',
-    urls: [{ title: 'Renewed geopolitical tensions and market volatility', url: 'https://news.un.org/en/story/2026/02/1160461' }]
+    title: 'National IC Fund plans to sell up to 3% of National Silicon Industry stake',
+    urls: [
+      { title: '沪硅产业：国家大基金拟减持公司不超3%股份', url: 'https://www.stcn.com/article/detail/3633610.html' },
+      { title: '上海硅产业集团股份有限公司股东减持股份计划公告', url: 'https://paper.cnstock.com/html/2026-02/07/content_2179016.htm#1' },
+    ]
   },
   {
     month: '2026-03',
     title: 'U.S. and Israel launch strikes on Iran, escalating regional conflict',
     urls: [{ title: '2026 Iran war | Oil, Explained, United States, Israel, Strait of Hormuz, Map, & Conflict', url: 'https://www.britannica.com/event/2026-Iran-war' }]
+  },
+  {
+    month: '2026-04',
+    title: 'Shareholder above 5% plans stake reduction in Yantai Darbond Technology',
+    urls: [{ title: '烟台德邦科技股份有限公司持股5%以上股东减持股份计划公告', url: 'https://paper.cnstock.com/html/2026-04/18/content_2201439.htm' }]
+  },
+  {
+    month: '2026-05',
+    title: 'National IC Fund trims holdings in multiple semiconductor stocks',
+    urls: [{ title: '大基金，减持多只半导体股', url: 'https://www.cnstock.com/commonDetail/721883' }]
+  },
+  {
+    month: '2026-06',
+    title: 'Corning highlights glass bridge for CPO and glass-core packaging',
+    urls: [{ title: 'Corning Highlights Glass Bridge for CPO and Glass-Core Packaging', url: 'https://www.thelec.net/news/articleView.html?idxno=11620' }]
   },
   {
     month: '2026-07',
@@ -411,8 +429,13 @@ window.XAU_EVENTS = [
   },
   {
     month: '2026-08',
-    title: 'Market volatility amid shifting policy expectations',
-    urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm' }]
+    title: 'U.S. national debt passes $40 trillion; Treasury doubles bond buybacks',
+    urls: [{ title: 'U.S. government debt passes $40 trillion, more than doubling in a decade', url: 'https://www.cnbc.com/2026/08/19/us-government-debt-passes-40-trillion-mark-for-the-first-time.html' }]
+  },
+  {
+    month: '2026-08',
+    title: 'Warsh inflation warning at Jackson Hole lifts rate-hike bets',
+    urls: [{ title: 'Fed Chairman Warsh expresses concern about inflation, advocates for \'quieter\' central bank', url: 'https://www.cnbc.com/2026/08/28/kevin-warsh-jackson-hole-federal-reserve-inflation.html' }]
   },
   {
     month: '2026-09',
