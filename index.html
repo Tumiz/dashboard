@@ -12,6 +12,8 @@ window.MathJax = {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script src="xau_events.js"></script>
@@ -82,15 +84,11 @@ body{
 .hover-values:empty{visibility:hidden}
 .hover-values .hover-month{color:#fff;font-weight:600;margin-right:10px}
 .hover-values .hover-value{margin-right:10px}
-.range-group{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:nowrap}
-.range-group label{font-size:10px;color:#9ca3af;white-space:nowrap}
-.range-group .range-label{font-size:10px;color:#d1d5db;min-width:48px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.dual-range{position:relative;width:80px;height:18px;flex-shrink:0}
-.dual-range .dr-track{position:absolute;top:50%;left:0;right:0;height:4px;background:#3f3f46;border-radius:2px;transform:translateY(-50%)}
-.dual-range .dr-fill{position:absolute;top:50%;height:4px;background:#6366f1;border-radius:2px;transform:translateY(-50%)}
-.dual-range input[type=range]{position:absolute;top:0;left:0;width:100%;height:100%;-webkit-appearance:none;appearance:none;background:transparent;pointer-events:none;margin:0;padding:0}
-.dual-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #16161b;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
-.dual-range input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#6366f1;border:2px solid #16161b;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;pointer-events:auto}
+.zoom-group{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:nowrap}
+.zoom-hint{font-size:10px;color:#9ca3af;white-space:nowrap}
+.zoom-reset{font-size:10px;line-height:1.4;padding:1px 8px;border:1px solid #6366f1;border-radius:4px;background:transparent;color:#a5b4fc;cursor:pointer;white-space:nowrap}
+.zoom-reset[hidden]{display:none}
+.zoom-reset:hover{background:rgba(99,102,241,.16)}
 .table-card{background:#16161b;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .table-card h2{font-size:13px;font-weight:600;margin-bottom:8px;color:#f3f4f6}
 .flow-cap{font-size:11px;color:#71717a;margin-top:4px}
@@ -133,7 +131,6 @@ td.down{color:#ef4444}
   .chart-card{padding:20px;margin-bottom:20px}
   .chart-card h2{font-size:15px}
   .chart-wrapper{height:320px}
-  .dual-range{width:140px}
   .table-card{padding:20px}
   .table-card h2{font-size:15px}
   table{font-size:13px}
@@ -146,12 +143,7 @@ td.down{color:#ef4444}
 @media(max-width:480px){
   .chart-controls{flex-wrap:wrap;gap:4px}
   .chart-controls>label:not(.corr-show){display:none}
-  .range-group{width:100%;margin-left:0}
-  .range-group label{display:none}
-  .range-group .range-label{font-size:9px;min-width:30px}
-  .dual-range{flex:1;height:28px}
-  .dual-range input[type=range]::-webkit-slider-thumb{width:20px;height:20px}
-  .dual-range input[type=range]::-moz-range-thumb{width:20px;height:20px}
+  .zoom-group{width:100%;margin-left:0;justify-content:space-between}
   #corrS2{max-width:none;flex:1;min-width:0}
   .corr-dd{flex:1;min-width:0}
   .corr-dd-btn{max-width:none;width:100%}
@@ -554,16 +546,9 @@ function render(rows,predictions){
     <div class="chart-card">
       <h2>Gold &amp; Macro Index</h2>
       <div class="chart-controls">
-        <div class="range-group">
-          <label>Range:</label>
-          <span class="range-label" id="rangeStartLabel"></span>
-          <div class="dual-range" id="dualRange">
-            <div class="dr-track"></div>
-            <div class="dr-fill" id="rangeFill"></div>
-            <input type="range" id="rangeStart" min="0" max="1" value="0" step="1">
-            <input type="range" id="rangeEnd" min="0" max="1" value="1" step="1">
-          </div>
-          <span class="range-label" id="rangeEndLabel"></span>
+        <div class="zoom-group" id="zoomGroup">
+          <span class="zoom-hint">Drag on chart to zoom</span>
+          <button type="button" class="zoom-reset" id="zoomReset" hidden>Reset zoom</button>
         </div>
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
@@ -1215,6 +1200,20 @@ function render(rows,predictions){
       },
       plugins:{
         legend:{display:false},
+        zoom:{
+          pan:{enabled:true,mode:'x',modifierKey:'shift'},
+          zoom:{
+            wheel:{
+              enabled:true,
+              speed:0.1,
+              modifierKey:null
+            },
+            pinch:{enabled:true},
+            drag:{enabled:true,modifierKey:null,backgroundColor:'rgba(99,102,241,0.15)',borderColor:'rgba(99,102,241,0.9)',borderWidth:1},
+            mode:'x'
+          },
+          limits:{x:{min:'original',max:'original'}}
+        },
         tooltip:{
           enabled:false,
           callbacks:{
@@ -1403,42 +1402,33 @@ function render(rows,predictions){
     }
   });
 
-  const rangeStart=document.getElementById('rangeStart');
-  const rangeEnd=document.getElementById('rangeEnd');
-  const rangeFill=document.getElementById('rangeFill');
-  const rangeStartLabel=document.getElementById('rangeStartLabel');
-  const rangeEndLabel=document.getElementById('rangeEndLabel');
+  const zoomReset=document.getElementById('zoomReset');
   const lastIdx=labels.length-1;
   const firstBtcIdx=btcOnLabels.findIndex(v=>v!=null);
   const defaultStart=firstBtcIdx>=0?firstBtcIdx:0;
   const nextQuarterEndIdx=labels.indexOf(nextQuarterEndMonth);
   const defaultEnd=nextQuarterEndIdx>=0?nextQuarterEndIdx:lastIdx;
-  rangeStart.max=lastIdx;rangeStart.value=defaultStart;
-  rangeEnd.max=lastIdx;rangeEnd.value=defaultEnd;
-  rangeStartLabel.textContent=labels[defaultStart];
-  rangeEndLabel.textContent=labels[defaultEnd];
-  function updateRange(active){
-    const s=parseInt(rangeStart.value),e=parseInt(rangeEnd.value);
-    const lo=Math.min(s,e),hi=Math.max(s,e);
-    const pct=v=>v/lastIdx*100;
-    rangeFill.style.left=pct(lo)+'%';
-    rangeFill.style.width=(pct(hi)-pct(lo))+'%';
-    chart.options.scales.x.min=lo;
-    chart.options.scales.x.max=hi;
-    chart.update('none');
-    rangeStartLabel.textContent=labels[s];
-    rangeEndLabel.textContent=labels[e];
-    if(active==='start') rangeStart.style.zIndex=2;
-    else rangeStart.style.zIndex='';
+  chart.options.scales.x.min=defaultStart;
+  chart.options.scales.x.max=defaultEnd;
+  function updateZoomReset(){
+    const z=chart.getZoomLevel?.()??1;
+    zoomReset.hidden=z<=1.0001;
   }
-  rangeStart.addEventListener('input',()=>updateRange('start'));
-  rangeEnd.addEventListener('input',()=>updateRange('end'));
+  chart.options.plugins.zoom.zoom.onZoom=updateZoomReset;
+  chart.options.plugins.zoom.zoom.onZoomComplete=updateZoomReset;
+  zoomReset.addEventListener('click',()=>{
+    chart.resetZoom();
+    chart.options.scales.x.min=defaultStart;
+    chart.options.scales.x.max=defaultEnd;
+    chart.update('none');
+    updateZoomReset();
+  });
   xauRelease.addEventListener('click',()=>setPin(null,false));
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'&&pinnedXauMonth!=null) setPin(null,false);
   });
   renderXauEvents(null);
-  updateRange('end');
+  chart.update('none');
 
   const corrDD=document.getElementById('corrDD');
   const corrDDToggle=document.getElementById('corrDDToggle');
