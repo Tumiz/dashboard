@@ -422,6 +422,7 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("oil", fetch_oil, (), {}),
         ("au9999", fetch_au9999, (), {}),
         ("fed_rates", fetch_fed_rates, (), {}),
+        ("china_lpr", fetch_china_lpr, (), {}),
         ("nasdaq", fetch_nasdaq, (), {}),
         ("usd_cny", fetch_usd_cny, (), {}),
         ("twexb", fetch_twexb, (), {}),
@@ -471,6 +472,16 @@ def fetch_zijin():
     update_dashboard(df[["month", "close"]].rename(columns={"close": "zijin_close"}).round(2))
 
 
+def fetch_china_lpr():
+    df = ak.macro_china_lpr()[["TRADE_DATE", "LPR1Y"]].dropna()
+    df["date"] = pd.to_datetime(df["TRADE_DATE"])
+    df = df.drop(columns=["TRADE_DATE"])
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    last = df.sort_values("date").groupby("month", as_index=False).tail(1)
+    last = last.rename(columns={"LPR1Y": "china_lpr_1y_pct"})
+    update_dashboard(last[["month", "china_lpr_1y_pct"]].round(2))
+
+
 def list_gold_symbols():
     syms = ak.spot_symbol_table_sge()
     print(syms.to_string(index=False))
@@ -502,6 +513,7 @@ if __name__ == "__main__":
     parser.add_argument("--gold-production", action="store_true", help="Fetch annual global mine gold production (tonnes), spread monthly")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
+    parser.add_argument("--china-lpr", action="store_true", help="Fetch monthly China 1-year Loan Prime Rate (LPR)")
     parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
     parser.add_argument("--twexb", action="store_true", help="Fetch monthly Broad Trade-Weighted USD Index (FRED DTWEXBGS)")
     parser.add_argument("--zijin", action="store_true", help="Fetch monthly Zijin Mining (601899.SH) stock price")
@@ -535,6 +547,8 @@ if __name__ == "__main__":
         fetch_nasdaq()
     elif args.fed_rates:
         fetch_fed_rates()
+    elif args.china_lpr:
+        fetch_china_lpr()
     elif args.cb_demand:
         fetch_cb_demand()
     elif args.central_bank_reserves:

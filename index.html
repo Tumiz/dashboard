@@ -313,6 +313,7 @@ function render(rows,predictions){
   const hsiOnLabels=col('hsi_close');
   const centralBankUsdReservesOnLabels=col('central_bank_usd_reserves');
   const centralBankUsdShareOnLabels=col('central_bank_usd_share_pct');
+  const chinaLprOnLabels=col('china_lpr_1y_pct');
   const monthlySeries=predictions.monthly_series||{};
   const predictedPriceByMonth={};
   const predReturnByMonth={};
@@ -508,6 +509,7 @@ function render(rows,predictions){
     'Central Bank USD Share (%)':centralBankUsdShareOnLabels,
     'Gold Mine Production (t)':goldProdOnLabels,
     'Fed Funds Rate (%)':fedOnLabels,
+    'China LPR 1Y (%)':chinaLprOnLabels,
     'NASDAQ':nasdaqOnLabels,
     'Tencent (0700.HK)':tencentOnLabels,
     'USD/CNY':usdCnyOnLabels,
@@ -784,6 +786,21 @@ function render(rows,predictions){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y8'
+      },{
+        label:'China LPR 1Y (%)',
+        data:chinaLprOnLabels,
+        hidden:true,
+        borderColor:'#dc2626',
+        backgroundColor:'rgba(220,38,38,0.1)',
+        fill:false,
+        tension:.3,
+        pointBackgroundColor:'#dc2626',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y30'
       },{
         label:'AUX/XAG',
         data:auxXagOnLabels,
@@ -1210,6 +1227,7 @@ function render(rows,predictions){
               else if(ctx.dataset.yAxisID==='y24') v=v.toFixed(1)+'t';
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y8') v=v.toFixed(2)+'%';
+              else if(ctx.dataset.yAxisID==='y30') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y7'||ctx.dataset.yAxisID==='y5'||ctx.dataset.yAxisID==='y29') v='$'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y10') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
@@ -1342,6 +1360,10 @@ function render(rows,predictions){
         y29:{
           position:'right',title:{display:true,text:'Crude Oil WTI ($/bbl)'},
           grid:{display:false},display:false,offset:true,grace:'10%'
+        },
+        y30:{
+          position:'right',title:{display:true,text:'China LPR 1Y (%)'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }
