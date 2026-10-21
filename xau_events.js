@@ -418,6 +418,19 @@ window.XAU_EVENTS = [
     urls: [{ title: '大基金，减持多只半导体股', url: 'https://www.cnstock.com/commonDetail/721883' }]
   },
   {
+    month: '2026-05',
+    title: 'Fed minutes show officials saw a rate hike ahead if inflation stays elevated',
+    urls: [{ title: 'Fed officials see rate hike ahead if inflation stays elevated, minutes show', url: 'https://www.cnbc.com/amp/2026/05/20/fed-officials-see-rate-hike-ahead-if-inflation-stays-elevated-minutes-show.html#1' }]
+  },
+  {
+    month: '2026-05',
+    title: 'Hot April CPI and wholesale inflation spike lift Treasury yields',
+    urls: [
+      { title: 'Wholesale inflation jumps 6% in April on annual basis, biggest increase since 2022', url: 'https://www.cnbc.com/video/2026/05/13/wholesale-inflation-jumps-6-percent-in-april-on-annual-basis-biggest-increase-since-2022.html?__source=linkedin*newsmod*HP*video*&par=linkedin' },
+      { title: '10-year Treasury yield hits new high for the year after very hot producer prices reading', url: 'https://www.cnbc.com/2026/05/13/treasury-yields-fall-as-investors-digest-hotter-than-expected-cpi-data.html#1' },
+    ]
+  },
+  {
     month: '2026-06',
     title: 'Corning highlights glass bridge for CPO and glass-core packaging',
     urls: [{ title: 'Corning Highlights Glass Bridge for CPO and Glass-Core Packaging', url: 'https://www.thelec.net/news/articleView.html?idxno=11620' }]
