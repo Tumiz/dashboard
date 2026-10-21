@@ -6,6 +6,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2001-09',
+    date: '2001-09-17',
     title: 'Fed emergency easing after September 11',
     urls: [{ title: 'FRB: Press Release -- FOMC statement and Board discount rate action -- September 17, 2001', url: 'https://www.federalreserve.gov/boarddocs/press/general/2001/20010917/default.htm' }]
   },
@@ -36,21 +37,25 @@ window.XAU_EVENTS = [
   },
   {
     month: '2007-09',
+    date: '2007-09-18',
     title: 'Fed cuts rates amid credit-market disruption',
     urls: [{ title: 'FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20070918a.htm' }]
   },
   {
     month: '2007-10',
+    date: '2007-10-31',
     title: 'Global stock selloff amid credit market concerns',
     urls: [{ title: 'FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20071031a.htm' }]
   },
   {
     month: '2008-01',
+    date: '2008-01-22',
     title: 'Global stock markets experience sharp selloff',
     urls: [{ title: 'FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20080122b.htm' }]
   },
   {
     month: '2008-03',
+    date: '2008-03-16',
     title: 'Bear Stearns collapses and is acquired by JPMorgan Chase',
     urls: [{ title: 'Federal Reserve announces two initiatives designed to bolster market liquidity and promote orderly market functioning', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20080316a.htm' }]
   },
@@ -66,21 +71,25 @@ window.XAU_EVENTS = [
   },
   {
     month: '2008-10',
+    date: '2008-10-08',
     title: 'Coordinated central-bank rate cuts',
     urls: [{ title: 'FOMC statement: Federal Reserve and other central banks announce reductions in policy interest rates', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20081008a.htm' }]
   },
   {
     month: '2008-11',
+    date: '2008-11-25',
     title: 'Fed announces large-scale mortgage-security purchases',
     urls: [{ title: 'Federal Reserve announces it will initiate a program to purchase the direct obligations of housing-related government-sponsored enterprises and mortgage-backed securities backed by Fannie Mae, Freddie Mac, and Ginnie Mae', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20081125b.htm' }]
   },
   {
     month: '2009-04',
+    date: '2009-04-02',
     title: 'G20 London Summit recovery commitments',
     urls: [{ title: '2009 G20 London Summit Global Plan for Recovery and Reform', url: 'https://www.g20.utoronto.ca/2009/2009communique0402.html' }]
   },
   {
     month: '2009-05',
+    date: '2009-04-09',
     title: 'Early signs of global economic stabilization',
     urls: [{ title: 'Early signs of global economic stabilization', url: 'https://www.imf.org/en/News/Articles/2015/09/28/04/53/soint050409a' }]
   },
@@ -91,6 +100,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2010-05',
+    date: '2010-05-10',
     title: 'Euro-area sovereign-debt crisis measures',
     urls: [{ title: 'ECB decides on measures to address severe tensions in financial markets', url: 'https://www.ecb.europa.eu/press/pr/date/2010/html/pr100510.en.html' }]
   },
@@ -106,11 +116,13 @@ window.XAU_EVENTS = [
   },
   {
     month: '2011-04',
+    date: '2011-04-28',
     title: 'Eurozone debt crisis escalates amid sovereign funding concerns',
     urls: [{ title: 'Eurozone debt crisis escalates amid sovereign funding concerns', url: 'https://www.ecb.europa.eu/press/pr/date/2011/html/pr110428.en.html' }]
   },
   {
     month: '2011-07',
+    date: '2011-07-21',
     title: 'Eurozone sovereign debt crisis intensifies',
     urls: [{ title: 'Eurozone sovereign debt crisis intensifies', url: 'https://www.ecb.europa.eu/press/pr/date/2011/html/pr110721.en.html' }]
   },
@@ -121,41 +133,49 @@ window.XAU_EVENTS = [
   },
   {
     month: '2011-09',
+    date: '2011-09-28',
     title: 'Eurozone sovereign debt crisis intensifies',
     urls: [{ title: 'Interview with Corriere della Sera', url: 'https://www.ecb.europa.eu/press/key/date/2011/html/sp110928.en.html' }]
   },
   {
     month: '2011-12',
+    date: '2011-12-08',
     title: 'ECB announces three-year refinancing operations',
     urls: [{ title: 'ECB announces measures to support bank lending and money market activity', url: 'https://www.ecb.europa.eu/press/pr/date/2011/html/pr111208_1.en.html' }]
   },
   {
     month: '2012-01',
+    date: '2012-01-30',
     title: 'S&P downgrades European sovereign debt ratings',
     urls: [{ title: 'S&P downgrades European sovereign debt ratings', url: 'https://www.spglobal.com/ratings/en/research/articles/120130-sovereign-ratings-on-15-members-of-the-eurozone-lowered-to-aa-8235285' }]
   },
   {
     month: '2012-05',
+    date: '2012-05-10',
     title: 'Greek political uncertainty and eurozone debt concerns',
     urls: [{ title: 'Managing financial crises: the role of the ECB', url: 'https://www.ecb.europa.eu/press/key/date/2012/html/sp120510.en.html' }]
   },
   {
     month: '2012-07',
+    date: '2012-07-26',
     title: 'Draghi delivers "whatever it takes" pledge',
     urls: [{ title: 'Verbatim of the remarks made by Mario Draghi', url: 'https://www.ecb.europa.eu/press/key/date/2012/html/sp120726.en.html' }]
   },
   {
     month: '2012-09',
+    date: '2012-09-06',
     title: 'ECB launches Outright Monetary Transactions framework guidance and Fed QE3 considerations',
     urls: [{ title: 'Technical features of Outright Monetary Transactions', url: 'https://www.ecb.europa.eu/press/pr/date/2012/html/pr120906_1.en.html' }]
   },
   {
     month: '2013-05',
+    date: '2013-05-22',
     title: 'Bernanke discusses possible tapering',
     urls: [{ title: 'Testimony by Chairman Bernanke on the economic outlook', url: 'https://www.federalreserve.gov/newsevents/testimony/bernanke20130522a.htm' }]
   },
   {
     month: '2013-06',
+    date: '2013-06-19',
     title: 'Federal Reserve signals potential tapering timeline',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20130619a.htm' }]
   },
@@ -171,16 +191,19 @@ window.XAU_EVENTS = [
   },
   {
     month: '2014-10',
+    date: '2014-10-31',
     title: 'Bank of Japan expands quantitative easing',
     urls: [{ title: 'Expansion of the Quantitative and Qualitative Monetary Easing', url: 'https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2014/k141031a.pdf' }]
   },
   {
     month: '2015-01',
+    date: '2015-01-15',
     title: 'Swiss National Bank removes the franc exchange-rate floor',
     urls: [{ title: 'Swiss National Bank discontinues minimum exchange rate and lowers interest rate to -0.75%', url: 'https://www.snb.ch/en/publications/communication/press-releases/2015/pre_20150115' }]
   },
   {
     month: '2015-12',
+    date: '2015-12-16',
     title: 'Fed begins post-crisis rate increases',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20151216a.htm' }]
   },
@@ -196,6 +219,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2016-11',
+    date: '2016-11-04',
     title: 'U.S. presidential election results drive market volatility',
     urls: [{ title: 'U.S. presidential election results drive market volatility', url: 'https://www.federalreserve.gov/newsevents/speech/yellen20161104a.htm' }]
   },
@@ -226,6 +250,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2018-12',
+    date: '2018-12-19',
     title: 'Fed raises its policy-rate target',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20181219a.htm' }]
   },
@@ -236,16 +261,19 @@ window.XAU_EVENTS = [
   },
   {
     month: '2019-06',
+    date: '2019-06-19',
     title: 'Federal Reserve signals potential policy easing',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20190619a.htm' }]
   },
   {
     month: '2019-07',
+    date: '2019-07-31',
     title: 'Fed begins rate-cutting cycle',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20190731a.htm' }]
   },
   {
     month: '2019-10',
+    date: '2019-10-11',
     title: 'Fed announces Treasury-bill purchases and repo operations',
     urls: [{ title: 'Statement Regarding Monetary Policy Implementation', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20191011a.htm' }]
   },
@@ -261,11 +289,13 @@ window.XAU_EVENTS = [
   },
   {
     month: '2020-03',
+    date: '2020-03-15',
     title: 'Fed cuts rates to near zero and launches asset purchases',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315a.htm' }]
   },
   {
     month: '2020-03',
+    date: '2020-03-19',
     title: 'Fed establishes additional central-bank dollar swap lines',
     urls: [{ title: 'Federal bank regulatory agencies issue interim final rule for Money Market Liquidity Facility', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20200319a.htm' }]
   },
@@ -281,6 +311,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2021-12',
+    date: '2021-12-10',
     title: 'U.S. November CPI reported at 6.8% year over year',
     urls: [{ title: 'U.S. November CPI reported at 6.8% year over year', url: 'https://www.bls.gov/news.release/archives/cpi_12102021.htm' }]
   },
@@ -291,6 +322,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2022-03',
+    date: '2022-03-16',
     title: 'Fed raises rates as the Ukraine war adds inflation uncertainty',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm' }]
   },
@@ -311,16 +343,19 @@ window.XAU_EVENTS = [
   },
   {
     month: '2023-10',
+    date: '2023-10-07',
     title: 'Hamas-led attacks and ensuing Israel-Gaza war',
     urls: [{ title: 'Hamas-led attacks and ensuing Israel-Gaza war', url: 'https://www.un.org/sg/en/content/sg/statement/2023-10-07/secretary-generals-statement-the-middle-east' }]
   },
   {
     month: '2024-03',
+    date: '2024-03-19',
     title: 'Bank of Japan ends negative interest rates',
     urls: [{ title: 'Changes in the Monetary Policy Framework', url: 'https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2024/k240319a.pdf' }]
   },
   {
     month: '2024-09',
+    date: '2024-09-18',
     title: 'Fed lowers rates by 50 basis points',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm' }]
   },
@@ -331,6 +366,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2025-01',
+    date: '2025-01-29',
     title: 'Markets adjust to evolving policy and geopolitical expectations',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20250129a.htm' }]
   },
@@ -341,6 +377,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2025-03',
+    date: '2025-03-26',
     title: 'Trade policy uncertainty and market volatility',
     urls: [{ title: 'Trade policy uncertainty and market volatility', url: 'https://www.whitehouse.gov/briefing-room/statements-releases/2025/03/26/fact-sheet-president-donald-j-trump-adjusts-tariffs-on-all-countries/' }]
   },
@@ -371,6 +408,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2025-09',
+    date: '2025-09-16',
     title: 'Monetary policy expectations shift amid evolving economic data',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20250916a.htm' }]
   },
@@ -381,6 +419,7 @@ window.XAU_EVENTS = [
   },
   {
     month: '2025-11',
+    date: '2025-11-05',
     title: 'Market repricing amid evolving macroeconomic expectations',
     urls: [{ title: 'Market repricing amid evolving macroeconomic expectations', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20251105a.htm' }]
   },
@@ -391,11 +430,13 @@ window.XAU_EVENTS = [
   },
   {
     month: '2026-01',
+    date: '2026-01-28',
     title: 'Fed holds rates amid conflict and energy uncertainty',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260128a.htm' }]
   },
   {
     month: '2026-02',
+    date: '2026-02-07',
     title: 'National IC Fund plans to sell up to 3% of National Silicon Industry stake',
     urls: [
       { title: '沪硅产业：国家大基金拟减持公司不超3%股份', url: 'https://www.stcn.com/article/detail/3633610.html' },
@@ -409,21 +450,25 @@ window.XAU_EVENTS = [
   },
   {
     month: '2026-04',
+    date: '2026-04-18',
     title: 'Shareholder above 5% plans stake reduction in Yantai Darbond Technology',
     urls: [{ title: '烟台德邦科技股份有限公司持股5%以上股东减持股份计划公告', url: 'https://paper.cnstock.com/html/2026-04/18/content_2201439.htm' }]
   },
   {
     month: '2026-05',
+    date: '2026-05-28',
     title: 'National IC Fund trims holdings in multiple semiconductor stocks',
     urls: [{ title: '大基金，减持多只半导体股', url: 'https://www.cnstock.com/commonDetail/721883' }]
   },
   {
     month: '2026-05',
+    date: '2026-05-20',
     title: 'Fed minutes show officials saw a rate hike ahead if inflation stays elevated',
     urls: [{ title: 'Fed officials see rate hike ahead if inflation stays elevated, minutes show', url: 'https://www.cnbc.com/amp/2026/05/20/fed-officials-see-rate-hike-ahead-if-inflation-stays-elevated-minutes-show.html#1' }]
   },
   {
     month: '2026-05',
+    date: '2026-05-13',
     title: 'Hot April CPI and wholesale inflation spike lift Treasury yields',
     urls: [
       { title: 'Wholesale inflation jumps 6% in April on annual basis, biggest increase since 2022', url: 'https://www.cnbc.com/video/2026/05/13/wholesale-inflation-jumps-6-percent-in-april-on-annual-basis-biggest-increase-since-2022.html?__source=linkedin*newsmod*HP*video*&par=linkedin' },
@@ -432,26 +477,56 @@ window.XAU_EVENTS = [
   },
   {
     month: '2026-06',
+    date: '2026-06-24',
     title: 'Corning highlights glass bridge for CPO and glass-core packaging',
     urls: [{ title: 'Corning Highlights Glass Bridge for CPO and Glass-Core Packaging', url: 'https://www.thelec.net/news/articleView.html?idxno=11620' }]
   },
   {
     month: '2026-07',
+    date: '2026-07-29',
     title: 'Fed holds rates amid conflict and energy uncertainty',
-    urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm' }]
+    urls: [
+      { title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm' },
+      { title: "Analysis: Fed Chairman Warsh's credibility in question after leaving interest rates unchanged", url: 'https://www.cnbc.com/2026/07/29/kevin-warsh-fed-treasury-yields-inflation-credibility-interest-rates.html#1' },
+    ]
   },
   {
     month: '2026-08',
+    date: '2026-08-07',
+    title: 'U.S. economy unexpectedly loses 23,000 jobs in July',
+    urls: [
+      { title: 'U.S. economy unexpectedly lost 23,000 jobs in July ', url: 'https://www.cnbc.com/amp/2026/08/07/jobs-report-july-2026.html#1' },
+      { title: 'Here are three key takeaways from the disappointing July jobs report', url: 'https://www.cnbc.com/2026/08/07/here-are-three-key-takeaways-from-the-disappointing-july-jobs-report.html#1' },
+      { title: 'Treasury yields drop after surprise jobs loss in July', url: 'https://www.cnbc.com/2026/08/07/treasury-yields-steady-ahead-of-key-nonfarm-payrolls-jobless-data.html#1' },
+    ]
+  },
+  {
+    month: '2026-08',
+    date: '2026-08-19',
     title: 'U.S. national debt passes $40 trillion; Treasury doubles bond buybacks',
     urls: [{ title: 'U.S. government debt passes $40 trillion, more than doubling in a decade', url: 'https://www.cnbc.com/2026/08/19/us-government-debt-passes-40-trillion-mark-for-the-first-time.html' }]
   },
   {
     month: '2026-08',
+    date: '2026-08-20',
+    title: 'Treasury doubles long-dated bond buybacks to rein in yields; Moderna and Merck surge on cancer vaccine',
+    urls: [{ title: 'CNBC Daily Open: Treasury attempts to rein in bond yields as U.S. debt swells past $40 trillion', url: 'https://www.cnbc.com/2026/08/20/cnbc-daily-open-treasury-us-debt-moderna-cancer.html#1' }]
+  },
+  {
+    month: '2026-08',
+    date: '2026-08-28',
     title: 'Warsh inflation warning at Jackson Hole lifts rate-hike bets',
     urls: [{ title: 'Fed Chairman Warsh expresses concern about inflation, advocates for \'quieter\' central bank', url: 'https://www.cnbc.com/2026/08/28/kevin-warsh-jackson-hole-federal-reserve-inflation.html' }]
   },
   {
     month: '2026-09',
+    date: '2026-09-04',
+    title: 'U.S. payrolls rose 162,000 in August, far more than expected; unemployment rate held at 4.1%',
+    urls: [{ title: 'U.S. payrolls rose 162,000 in August, much more than expected; unemployment rate at 4.1%', url: 'https://www.cnbc.com/2026/09/04/jobs-report-august-2026.html#1' }]
+  },
+  {
+    month: '2026-09',
+    date: '2026-09-16',
     title: 'Fed raises its policy-rate target',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm' }]
   },

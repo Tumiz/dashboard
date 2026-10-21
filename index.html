@@ -113,6 +113,7 @@ body{
 .xau-event-month ul{padding-left:15px}
 .xau-event-month li{padding:2px 0;color:#d1d5db;font-size:10px;line-height:1.45}
 .xau-event-month li strong{color:#f3f4f6}
+.xau-event-date{display:block;color:#fbbf24;font-size:9px;letter-spacing:.3px;margin-bottom:1px}
 .xau-event-sources{display:block;margin-top:2px;color:#9ca3af;font-size:9px}
 .xau-event-sources a{color:#93c5fd;text-decoration:none;margin-right:6px}
 .xau-event-sources a:hover{text-decoration:underline}
@@ -207,6 +208,14 @@ function parseCSV(text){
 
 function fmt(n){return '¥'+Number(n).toFixed(2)}
 function pct(n){return Number(n).toFixed(2)+'%'}
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function fmtEventDate(date){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if(!m) return date;
+  const [,y,mo,d]=m;
+  const name=MONTH_NAMES[Number(mo)-1]||mo;
+  return Number(d)===0?`${name} ${Number(y)}`:`${name} ${Number(d)}, ${Number(y)}`;
+}
 
 let currentXauEventMonth;
 function renderXauEvents(month,force){
@@ -232,6 +241,12 @@ function renderXauEvents(month,force){
   const items=document.createElement('ul');
   for(const event of monthEvents){
     const li=document.createElement('li');
+    if(event.date){
+      const when=document.createElement('span');
+      when.className='xau-event-date';
+      when.textContent=fmtEventDate(event.date);
+      li.append(when);
+    }
     const title=document.createElement('strong');
     title.textContent=event.title;
     li.append(title);
