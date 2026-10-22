@@ -198,6 +198,16 @@ def fetch_oil():
     update_dashboard(df[["month", "close"]].rename(columns={"close": "oil_usd"}).round(1))
 
 
+def fetch_brent():
+    df = ak.futures_foreign_hist(symbol="OIL")
+    df = df[["date", "close"]].rename(columns={"close": "brent_usd"})
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.rename(columns={"brent_usd": "close"})
+    df = last_trading_day_close(df)
+    df["month"] = df["month"].astype(str)
+    update_dashboard(df[["month", "close"]].rename(columns={"close": "brent_usd"}).round(1))
+
+
 def fetch_au9999():
     df = ak.spot_hist_sge("Au99.99")
     df["date"] = pd.to_datetime(df["date"])
@@ -420,6 +430,7 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("xag", fetch_xag, (), {}),
         ("copper", fetch_copper, (), {}),
         ("oil", fetch_oil, (), {}),
+        ("brent", fetch_brent, (), {}),
         ("au9999", fetch_au9999, (), {}),
         ("fed_rates", fetch_fed_rates, (), {}),
         ("china_lpr", fetch_china_lpr, (), {}),
@@ -503,6 +514,7 @@ if __name__ == "__main__":
     parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
     parser.add_argument("--copper", action="store_true", help="Fetch monthly COMEX copper (HG) price")
     parser.add_argument("--oil", action="store_true", help="Fetch monthly NYMEX WTI crude oil (CL) price, USD/bbl")
+    parser.add_argument("--brent", action="store_true", help="Fetch monthly ICE Brent crude oil (OIL) price, USD/bbl")
     parser.add_argument("--au9999", action="store_true", help="Fetch monthly SGE Au99.99 gold price (CNY/g)")
     parser.add_argument("--cb-demand", action="store_true", help="Fetch quarterly central-bank gold demand (tonnes)")
     parser.add_argument(
@@ -565,6 +577,8 @@ if __name__ == "__main__":
         fetch_copper()
     elif args.oil:
         fetch_oil()
+    elif args.brent:
+        fetch_brent()
     elif args.au9999:
         fetch_au9999()
     elif args.gpr:

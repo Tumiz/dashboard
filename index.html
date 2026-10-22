@@ -310,6 +310,7 @@ function render(rows,predictions){
   const zijinOnLabels=col('zijin_close');
   const copperOnLabels=col('copper_close');
   const oilOnLabels=col('oil_usd');
+  const brentOnLabels=col('brent_usd');
   const tencentOnLabels=col('tencent_close');
   const cac40OnLabels=col('cac40_close');
   const daxOnLabels=col('dax_close');
@@ -409,7 +410,7 @@ function render(rows,predictions){
     else if(axis==='y6'||axis==='y24') formatted=value.toFixed(1)+'t';
     else if(axis==='y27') formatted='$'+value.toFixed(1)+'bn';
     else if(axis==='y28'||axis==='y2'||axis==='y8'||axis==='y26') formatted=(axis==='y26'?(value*100).toFixed(2):value.toFixed(2))+'%';
-    else if(axis==='y7'||axis==='y5'||axis==='y29') formatted='$'+value.toFixed(2);
+    else if(axis==='y7'||axis==='y5'||axis==='y29'||axis==='y31') formatted='$'+value.toFixed(2);
     else if(axis==='y13') formatted='¥'+value.toFixed(2);
     else if(axis==='y14') formatted='HK$'+value.toFixed(2);
     else formatted=value.toFixed(1);
@@ -524,6 +525,7 @@ function render(rows,predictions){
     'Zijin Mining (601899)':zijinOnLabels,
     'Copper (COMEX)':copperOnLabels,
     'Crude Oil WTI':oilOnLabels,
+    'Brent Crude':brentOnLabels,
     'CAC 40':cac40OnLabels,
     'DAX':daxOnLabels,
     'S&P 500':sp500OnLabels,
@@ -1028,6 +1030,23 @@ function render(rows,predictions){
         pointHitRadius:0,
         yAxisID:'y29'
       },{
+        label:'Brent Crude',
+        data:brentOnLabels,
+        hidden:true,
+        borderColor:'#fb923c',
+        backgroundColor:'rgba(251,146,60,0.1)',
+        fill:false,
+        borderWidth:2.5,
+        borderDash:[5,3],
+        tension:.3,
+        pointBackgroundColor:'#fb923c',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y31'
+      },{
         label:'Gold Mine Production (t)',
         data:goldProdOnLabels,
         hidden:true,
@@ -1242,7 +1261,7 @@ function render(rows,predictions){
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y8') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y30') v=v.toFixed(2)+'%';
-              else if(ctx.dataset.yAxisID==='y7'||ctx.dataset.yAxisID==='y5'||ctx.dataset.yAxisID==='y29') v='$'+v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y7'||ctx.dataset.yAxisID==='y5'||ctx.dataset.yAxisID==='y29'||ctx.dataset.yAxisID==='y31') v='$'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y10') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
@@ -1378,6 +1397,10 @@ function render(rows,predictions){
         y30:{
           position:'right',title:{display:true,text:'China LPR 1Y (%)'},
           grid:{display:false},display:false,offset:true
+        },
+        y31:{
+          position:'right',title:{display:true,text:'Brent Crude ($/bbl)'},
+          grid:{display:false},display:false,offset:true,grace:'10%'
         }
       }
     }
