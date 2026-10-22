@@ -1485,9 +1485,37 @@ function render(rows,predictions){
       ds.hidden=!show;
       chart.getDatasetMeta(idx).hidden=!show;
     });
-    Object.keys(chart.options.scales).forEach(axisKey=>{
+    const scaleKeys=Object.keys(chart.options.scales);
+    scaleKeys.forEach(axisKey=>{
       const anyVisible=chart.data.datasets.some(ds => !ds.hidden && ds.yAxisID===axisKey);
       chart.options.scales[axisKey].display=axisKey==='x'||anyVisible;
+    });
+    const rightKeys=scaleKeys.filter(k=>k!=='x'&&k!=='y'&&chart.options.scales[k].display);
+    const nRight=rightKeys.length;
+    const crowded=nRight>1;
+    const tight=nRight>2;
+    const dense=nRight>4;
+    rightKeys.forEach(axisKey=>{
+      const scale=chart.options.scales[axisKey];
+      const ds=chart.data.datasets.find(d=>d.yAxisID===axisKey&&!d.hidden);
+      if(!scale.ticks) scale.ticks={};
+      scale.title.display=!crowded;
+      scale.ticks.autoSkip=true;
+      scale.ticks.maxTicksLimit=dense?2:tight?3:11;
+      scale.ticks.font={size:dense?8:tight?9:11};
+      scale.ticks.padding=dense?1:tight?2:3;
+      if(tight){
+        scale.ticks.callback=v=>{
+          const a=Math.abs(v);
+          if(a>=1e9) return (v/1e9).toFixed(1)+'B';
+          if(a>=1e6) return (v/1e6).toFixed(1)+'M';
+          if(a>=1000) return (v/1000).toFixed(a>=10000?0:1)+'k';
+          return Number.isInteger(v)?v:Number(v.toFixed(2));
+        };
+      }else{
+        scale.ticks.callback=undefined;
+      }
+      scale.border={display:true,color:crowded&&ds?ds.borderColor:'rgba(255,255,255,0.15)'};
     });
     updatePanDropdown(checked);
     updateDDLabel(checked);
