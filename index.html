@@ -296,6 +296,8 @@ function render(rows,predictions){
   const col=key=>labels.map(m=>{const r=M[m];return r&&r[key]!==''?num(r[key]):null});
   const usdOnLabels=col('usd_index');
   const cpiOnLabels=col('cpi_yoy_pct');
+  const pceOnLabels=col('pce_yoy_pct');
+  const corePceOnLabels=col('core_pce_yoy_pct');
   const realOnLabels=col('real_yield_pct');
   const gprOnLabels=col('gpr');
   const btcOnLabels=col('btc_usd');
@@ -507,6 +509,8 @@ function render(rows,predictions){
     'Au99.99 (¥/g)':gprices,
     'USD Index':usdOnLabels,
     'US CPI YoY (%)':cpiOnLabels,
+    'US PCE YoY (%)':pceOnLabels,
+    'US Core PCE YoY (%)':corePceOnLabels,
     'Real 10Y Yield (%)':realOnLabels,
     'GPR':gprOnLabels,
     'BTC/USD':btcOnLabels,
@@ -564,7 +568,7 @@ function render(rows,predictions){
       <h2>Gold &amp; Macro Index</h2>
       <div class="chart-controls">
         <div class="zoom-group" id="zoomGroup">
-          <span class="zoom-hint">Drag on chart to zoom</span>
+          <span class="zoom-hint">Drag to pan &middot; Shift-drag to zoom</span>
           <button type="button" class="zoom-reset" id="zoomReset" hidden>Reset zoom</button>
         </div>
         <div class="corr-dd" id="corrDD">
@@ -662,6 +666,36 @@ function render(rows,predictions){
         fill:false,
         tension:0,
         pointBackgroundColor:'#ef4444',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y2'
+      },{
+        label:'US PCE YoY (%)',
+        data:pceOnLabels,
+        hidden:true,
+        borderColor:'#f97316',
+        backgroundColor:'rgba(249,115,22,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#f97316',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y2'
+      },{
+        label:'US Core PCE YoY (%)',
+        data:corePceOnLabels,
+        hidden:true,
+        borderColor:'#eab308',
+        backgroundColor:'rgba(234,179,8,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#eab308',
         pointBorderColor:'#fff',
         pointBorderWidth:1.5,
         pointRadius:0,
@@ -1235,7 +1269,7 @@ function render(rows,predictions){
       plugins:{
         legend:{display:false},
         zoom:{
-          pan:{enabled:true,mode:'x',modifierKey:'shift'},
+          pan:{enabled:true,mode:'x',modifierKey:null},
           zoom:{
             wheel:{
               enabled:true,
@@ -1243,7 +1277,7 @@ function render(rows,predictions){
               modifierKey:null
             },
             pinch:{enabled:true},
-            drag:{enabled:true,modifierKey:null,backgroundColor:'rgba(99,102,241,0.15)',borderColor:'rgba(99,102,241,0.9)',borderWidth:1},
+            drag:{enabled:true,modifierKey:'shift',backgroundColor:'rgba(99,102,241,0.15)',borderColor:'rgba(99,102,241,0.9)',borderWidth:1},
             mode:'x'
           },
           limits:{x:{min:'original',max:'original'}}
@@ -1286,7 +1320,7 @@ function render(rows,predictions){
           grid:{display:false},display:false
         },
         y2:{
-          position:'right',title:{display:true,text:window.innerWidth<480?'CPI / Real Yld':'CPI & Real Yield (%)'},
+          position:'right',title:{display:true,text:window.innerWidth<480?'Infl / Real Yld':'Inflation & Real Yield (%)'},
           grid:{display:false},display:false,offset:true
         },
         y3:{
@@ -1449,11 +1483,12 @@ function render(rows,predictions){
   chart.options.scales.x.min=defaultStart;
   chart.options.scales.x.max=defaultEnd;
   function updateZoomReset(){
-    const z=chart.getZoomLevel?.()??1;
-    zoomReset.hidden=z<=1.0001;
+    zoomReset.hidden=!chart.isZoomedOrPanned?.();
   }
   chart.options.plugins.zoom.zoom.onZoom=updateZoomReset;
   chart.options.plugins.zoom.zoom.onZoomComplete=updateZoomReset;
+  chart.options.plugins.zoom.pan.onPan=updateZoomReset;
+  chart.options.plugins.zoom.pan.onPanComplete=updateZoomReset;
   zoomReset.addEventListener('click',()=>{
     chart.resetZoom();
     chart.options.scales.x.min=defaultStart;

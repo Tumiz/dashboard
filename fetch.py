@@ -118,6 +118,22 @@ def fetch_us_cpi():
     update_dashboard(df[["month", "cpi_yoy_pct"]].round(1))
 
 
+def fetch_us_pce():
+    url = (
+        "https://fred.stlouisfed.org/graph/fredgraph.csv"
+        "?id=PCEPI,PCEPILFE&cosd=1959-01-01&coed=9999-12-31"
+    )
+    df = pd.read_csv(io.BytesIO(http_get(url)))
+    df.columns = ["date", "pce_index", "core_pce_index"]
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").apply(pd.to_numeric, errors="coerce").sort_index()
+    df["pce_yoy_pct"] = df["pce_index"].pct_change(12, fill_method=None) * 100
+    df["core_pce_yoy_pct"] = df["core_pce_index"].pct_change(12, fill_method=None) * 100
+    df = df.dropna(subset=["pce_yoy_pct", "core_pce_yoy_pct"]).reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    update_dashboard(df[["month", "pce_yoy_pct", "core_pce_yoy_pct"]].round(1))
+
+
 def fetch_us_real_yield():
     url = (
         "https://fred.stlouisfed.org/graph/fredgraph.csv"
@@ -423,6 +439,7 @@ def update_all(timeout: int = TASK_TIMEOUT):
     tasks = [
         ("usd_index", fetch_usd_index, (), {"months": True}),
         ("us_cpi", fetch_us_cpi, (), {}),
+        ("us_pce", fetch_us_pce, (), {}),
         ("real_yield", fetch_us_real_yield, (), {}),
         ("gpr", fetch_gpr, (), {}),
         ("btc", fetch_btc, (), {}),
@@ -507,6 +524,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", default="", help="Output CSV file (daily gold/USD index only)")
     parser.add_argument("-u", "--usd-index", action="store_true", help="Fetch USD index instead of gold")
     parser.add_argument("--us-cpi", action="store_true", help="Fetch monthly US CPI YoY")
+    parser.add_argument("--us-pce", action="store_true", help="Fetch monthly US PCE and core PCE YoY")
     parser.add_argument("--real-yield", action="store_true", help="Fetch monthly US real 10-year yield (TIPS)")
     parser.add_argument("--gpr", action="store_true", help="Fetch monthly Geopolitical Risk Index")
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
@@ -585,6 +603,8 @@ if __name__ == "__main__":
         fetch_gpr()
     elif args.us_cpi:
         fetch_us_cpi()
+    elif args.us_pce:
+        fetch_us_pce()
     elif args.real_yield:
         fetch_us_real_yield()
     elif args.usd_index:
