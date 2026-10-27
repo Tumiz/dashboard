@@ -300,6 +300,9 @@ function render(rows,predictions){
   const corePceOnLabels=col('core_pce_yoy_pct');
   const realOnLabels=col('real_yield_pct');
   const gprOnLabels=col('gpr');
+  const gvzOnLabels=col('gvz');
+  const cftcMmOnLabels=col('cftc_mm_net');
+  const goldEtfFlowOnLabels=col('gold_etf_flow_t');
   const btcOnLabels=col('btc_usd');
   const auxOnLabels=col('xau_usd');
   const xagOnLabels=col('xag_usd');
@@ -473,6 +476,9 @@ function render(rows,predictions){
     else if(axis==='y7'||axis==='y5'||axis==='y29'||axis==='y31') formatted='$'+value.toFixed(2);
     else if(axis==='y13') formatted='¥'+value.toFixed(2);
     else if(axis==='y14') formatted='HK$'+value.toFixed(2);
+    else if(axis==='y32') formatted=value.toFixed(2);
+    else if(axis==='y33') formatted=value.toLocaleString('en-US',{maximumFractionDigits:0})+' contracts';
+    else if(axis==='y34') formatted=value.toFixed(1)+'t';
     else formatted=value.toFixed(1);
     return `<span class="hover-value" style="color:${dataset.borderColor}">${esc(dataset.label)}: ${formatted}</span>`;
   }
@@ -571,6 +577,9 @@ function render(rows,predictions){
     'US Core PCE YoY (%)':corePceOnLabels,
     'Real 10Y Yield (%)':realOnLabels,
     'GPR':gprOnLabels,
+    'GVZ (Gold Implied Vol)':gvzOnLabels,
+    'CFTC Managed Money Net (contracts)':cftcMmOnLabels,
+    'Gold ETF Flows (t)':goldEtfFlowOnLabels,
     'BTC/USD':btcOnLabels,
     'XAU/USD (Actual)':auxOnLabels,
     'XAG/USD':xagOnLabels,
@@ -640,7 +649,7 @@ function render(rows,predictions){
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
           <div class="corr-dd-panel" id="corrDDPanel">
-            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'||s==='XAU/USD (Forecast Low, Monthly)'||s==='XAU/USD (Forecast High, Monthly)'||s==='XAU/USD (Forecast Low, Quarterly)'||s==='XAU/USD (Forecast High, Quarterly)'||s==='XAU/USD (90% Interval Lower, Monthly)'||s==='XAU/USD (90% Interval Upper, Monthly)'||s==='XAU/USD (90% Interval Lower, Quarterly)'||s==='XAU/USD (90% Interval Upper, Quarterly)'?' checked':''}>${s}</label>`).join('')}</div>
+            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'?' checked':''}>${s}</label>`).join('')}</div>
             <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
           </div>
         </div>
@@ -723,6 +732,51 @@ function render(rows,predictions){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y3'
+      },{
+        label:'GVZ (Gold Implied Vol)',
+        data:gvzOnLabels,
+        hidden:true,
+        borderColor:'#fbbf24',
+        backgroundColor:'rgba(251,191,36,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#fbbf24',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y32'
+      },{
+        label:'CFTC Managed Money Net (contracts)',
+        data:cftcMmOnLabels,
+        hidden:true,
+        borderColor:'#2dd4bf',
+        backgroundColor:'rgba(45,212,191,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#2dd4bf',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y33'
+      },{
+        label:'Gold ETF Flows (t)',
+        data:goldEtfFlowOnLabels,
+        hidden:true,
+        borderColor:'#f472b6',
+        backgroundColor:'rgba(244,114,182,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#f472b6',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y34'
       },{
         label:'US CPI YoY (%)',
         data:cpiOnLabels,
@@ -1483,6 +1537,9 @@ function render(rows,predictions){
               else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y14') v='HK$'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y26') v=(v===null?'N/A':(v*100).toFixed(2)+'%');
+              else if(ctx.dataset.yAxisID==='y32') v=v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y33') v=v.toLocaleString('en-US',{maximumFractionDigits:0})+' contracts';
+              else if(ctx.dataset.yAxisID==='y34') v=v.toFixed(1)+'t';
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -1617,6 +1674,18 @@ function render(rows,predictions){
         y31:{
           position:'right',title:{display:true,text:'Brent Crude ($/bbl)'},
           grid:{display:false},display:false,offset:true,grace:'10%'
+        },
+        y32:{
+          position:'right',title:{display:true,text:'GVZ'},
+          grid:{display:false},display:false,offset:true
+        },
+        y33:{
+          position:'right',title:{display:true,text:'CFTC MM Net (contracts)'},
+          grid:{display:false},display:false,offset:true
+        },
+        y34:{
+          position:'right',title:{display:true,text:'Gold ETF Flow (t)'},
+          grid:{display:false},display:false,offset:true
         }
       }
     }

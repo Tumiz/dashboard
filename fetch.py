@@ -7,7 +7,8 @@ import json
 import multiprocessing
 import os
 import xml.etree.ElementTree as ET
-from concurrent.futures import ProcessPoolExecutor
+import zipfile
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures import TimeoutError as TaskTimeoutError
 
 import akshare as ak
@@ -156,6 +157,96 @@ def fetch_gpr():
     df = df.dropna(subset=["gpr"]).reset_index(drop=True)
     df["month"] = df["date"].dt.strftime("%Y-%m")
     update_dashboard(df[["month", "gpr"]].round(1))
+
+
+def fetch_gvz():
+    """Fetch the CBOE Gold ETF Volatility Index (GVZ) and average it monthly."""
+    url = "https://cdn.cboe.com/api/global/us_indices/daily_prices/GVZ_History.csv"
+    df = pd.read_csv(io.BytesIO(http_get(url)))
+    df.columns = ["date", "gvz"]
+    df["date"] = pd.to_datetime(df["date"], format="%m/%d/%Y")
+    df["gvz"] = pd.to_numeric(df["gvz"], errors="coerce")
+    df = df.dropna(subset=["gvz"]).set_index("date").resample("ME").mean(numeric_only=True)
+    df = df.dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    update_dashboard(df[["month", "gvz"]].round(2))
+
+
+def fetch_cftc_managed_money():
+    """Fetch CFTC disaggregated COT gold managed-money net positioning."""
+    current_year = pd.Timestamp.today().year
+    years = range(2010, current_year + 1)
+    date_columns = ("Report_Date_as_YYYY-MM-DD", "Report_Date_as_MM_DD_YYYY")
+    value_columns = [
+        "CFTC_Contract_Market_Code",
+        "M_Money_Positions_Long_All",
+        "M_Money_Positions_Short_All",
+    ]
+
+    def download(year):
+        url = f"https://www.cftc.gov/files/dea/history/fut_disagg_txt_{year}.zip"
+        return year, http_get(url, timeout=120)
+
+    frames = []
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(download, year): year for year in years}
+        for future, year in futures.items():
+            try:
+                _, content = future.result()
+                archive = zipfile.ZipFile(io.BytesIO(content))
+                name = next(n for n in archive.namelist() if n.lower().endswith(".txt"))
+                header = pd.read_csv(archive.open(name), nrows=0, dtype=str)
+                date_column = next(c for c in date_columns if c in header.columns)
+                df = pd.read_csv(
+                    archive.open(name),
+                    usecols=value_columns + [date_column],
+                    dtype=str,
+                    low_memory=False,
+                )
+            except Exception as exc:
+                print(f"[cftc] skipping {year}: {exc}", flush=True)
+                continue
+            gold = df[df["CFTC_Contract_Market_Code"].str.strip() == "088691"].copy()
+            if gold.empty:
+                continue
+            gold["date"] = pd.to_datetime(gold[date_column], errors="coerce")
+            gold = gold.dropna(subset=["date"])
+            gold["cftc_mm_net"] = (
+                pd.to_numeric(gold["M_Money_Positions_Long_All"], errors="coerce")
+                - pd.to_numeric(gold["M_Money_Positions_Short_All"], errors="coerce")
+            )
+            gold = gold.dropna(subset=["cftc_mm_net"]).sort_values("date")
+            frames.append(gold)
+
+    if not frames:
+        raise ValueError("CFTC disaggregated COT files returned no gold observations")
+    combined = pd.concat(frames, ignore_index=True).sort_values("date")
+    monthly = combined.groupby(combined["date"].dt.to_period("M"), sort=True).tail(1).copy()
+    monthly["month"] = monthly["date"].dt.strftime("%Y-%m")
+    update_dashboard(monthly[["month", "cftc_mm_net"]].round(0))
+
+
+def fetch_gold_etf_flows():
+    """Fetch World Gold Council monthly global gold ETF flows (tonnes)."""
+    url = "https://fsapi.gold.org/api/v11/charts/etfv2/revised/flows-chart2"
+    data = json.loads(http_get(url, timeout=60))
+    series = data["chartData"]["data"]["Monthly"]["series"]["tonnes"]
+    totals = {}
+    for region in series:
+        if region.get("name") == "Gold Price (rhs)":
+            continue
+        for timestamp, value in region.get("data", []):
+            if value is None:
+                continue
+            month = pd.to_datetime(timestamp, unit="ms", utc=True).strftime("%Y-%m")
+            totals[month] = totals.get(month, 0.0) + float(value)
+    if not totals:
+        raise ValueError("World Gold Council ETF flow response contained no observations")
+    rows = [
+        {"month": month, "gold_etf_flow_t": round(value, 1)}
+        for month, value in sorted(totals.items())
+    ]
+    update_dashboard(pd.DataFrame(rows))
 
 
 def fetch_btc():
@@ -452,6 +543,9 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("us_pce", fetch_us_pce, (), {}),
         ("real_yield", fetch_us_real_yield, (), {}),
         ("gpr", fetch_gpr, (), {}),
+        ("gvz", fetch_gvz, (), {}),
+        ("cftc_managed_money", fetch_cftc_managed_money, (), {}),
+        ("gold_etf_flows", fetch_gold_etf_flows, (), {}),
         ("btc", fetch_btc, (), {}),
         ("xau", fetch_xau, (), {}),
         ("xag", fetch_xag, (), {}),
@@ -537,6 +631,9 @@ if __name__ == "__main__":
     parser.add_argument("--us-pce", action="store_true", help="Fetch monthly US PCE and core PCE YoY")
     parser.add_argument("--real-yield", action="store_true", help="Fetch monthly US real 10-year yield (TIPS)")
     parser.add_argument("--gpr", action="store_true", help="Fetch monthly Geopolitical Risk Index")
+    parser.add_argument("--gvz", action="store_true", help="Fetch monthly CBOE Gold ETF Volatility Index (GVZ)")
+    parser.add_argument("--cftc-managed-money", action="store_true", help="Fetch CFTC gold managed-money net positioning")
+    parser.add_argument("--gold-etf-flows", action="store_true", help="Fetch monthly global gold ETF flows (tonnes)")
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
     parser.add_argument("--xau", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
     parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
@@ -611,6 +708,12 @@ if __name__ == "__main__":
         fetch_au9999()
     elif args.gpr:
         fetch_gpr()
+    elif args.gvz:
+        fetch_gvz()
+    elif args.cftc_managed_money:
+        fetch_cftc_managed_money()
+    elif args.gold_etf_flows:
+        fetch_gold_etf_flows()
     elif args.us_cpi:
         fetch_us_cpi()
     elif args.us_pce:
