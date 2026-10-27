@@ -568,8 +568,8 @@ function render(rows,predictions){
       <h2>Gold &amp; Macro Index</h2>
       <div class="chart-controls">
         <div class="zoom-group" id="zoomGroup">
-          <span class="zoom-hint">Drag to pan &middot; Shift-drag to zoom</span>
-          <button type="button" class="zoom-reset" id="zoomReset" hidden>Reset zoom</button>
+          <span class="zoom-hint">Drag right for earlier data &middot; Shift-drag to zoom</span>
+          <button type="button" class="zoom-reset" id="zoomReset" hidden>Reset view</button>
         </div>
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
@@ -1280,7 +1280,7 @@ function render(rows,predictions){
             drag:{enabled:true,modifierKey:'shift',backgroundColor:'rgba(99,102,241,0.15)',borderColor:'rgba(99,102,241,0.9)',borderWidth:1},
             mode:'x'
           },
-          limits:{x:{min:'original',max:'original'}}
+          limits:{x:{min:0,max:labels.length-1}}
         },
         tooltip:{
           enabled:false,
