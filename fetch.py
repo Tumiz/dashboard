@@ -172,6 +172,19 @@ def fetch_gvz():
     update_dashboard(df[["month", "gvz"]].round(2))
 
 
+def fetch_vix():
+    """Fetch the CBOE Volatility Index (VIX) and average it monthly."""
+    url = "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv"
+    df = pd.read_csv(io.BytesIO(http_get(url)))
+    df = df[["DATE", "CLOSE"]].rename(columns={"DATE": "date", "CLOSE": "vix"})
+    df["date"] = pd.to_datetime(df["date"], format="%m/%d/%Y")
+    df["vix"] = pd.to_numeric(df["vix"], errors="coerce")
+    df = df.dropna(subset=["vix"]).set_index("date").resample("ME").mean(numeric_only=True)
+    df = df.dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    update_dashboard(df[["month", "vix"]].round(2))
+
+
 def fetch_cftc_managed_money():
     """Fetch CFTC disaggregated COT gold managed-money net positioning."""
     current_year = pd.Timestamp.today().year
@@ -544,6 +557,7 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("real_yield", fetch_us_real_yield, (), {}),
         ("gpr", fetch_gpr, (), {}),
         ("gvz", fetch_gvz, (), {}),
+        ("vix", fetch_vix, (), {}),
         ("cftc_managed_money", fetch_cftc_managed_money, (), {}),
         ("gold_etf_flows", fetch_gold_etf_flows, (), {}),
         ("btc", fetch_btc, (), {}),
@@ -632,6 +646,7 @@ if __name__ == "__main__":
     parser.add_argument("--real-yield", action="store_true", help="Fetch monthly US real 10-year yield (TIPS)")
     parser.add_argument("--gpr", action="store_true", help="Fetch monthly Geopolitical Risk Index")
     parser.add_argument("--gvz", action="store_true", help="Fetch monthly CBOE Gold ETF Volatility Index (GVZ)")
+    parser.add_argument("--vix", action="store_true", help="Fetch monthly CBOE Volatility Index (VIX)")
     parser.add_argument("--cftc-managed-money", action="store_true", help="Fetch CFTC gold managed-money net positioning")
     parser.add_argument("--gold-etf-flows", action="store_true", help="Fetch monthly global gold ETF flows (tonnes)")
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
@@ -710,6 +725,8 @@ if __name__ == "__main__":
         fetch_gpr()
     elif args.gvz:
         fetch_gvz()
+    elif args.vix:
+        fetch_vix()
     elif args.cftc_managed_money:
         fetch_cftc_managed_money()
     elif args.gold_etf_flows:

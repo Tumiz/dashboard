@@ -301,6 +301,7 @@ function render(rows,predictions){
   const realOnLabels=col('real_yield_pct');
   const gprOnLabels=col('gpr');
   const gvzOnLabels=col('gvz');
+  const vixOnLabels=col('vix');
   const cftcMmOnLabels=col('cftc_mm_net');
   const goldEtfFlowOnLabels=col('gold_etf_flow_t');
   const btcOnLabels=col('btc_usd');
@@ -476,7 +477,7 @@ function render(rows,predictions){
     else if(axis==='y7'||axis==='y5'||axis==='y29'||axis==='y31') formatted='$'+value.toFixed(2);
     else if(axis==='y13') formatted='¥'+value.toFixed(2);
     else if(axis==='y14') formatted='HK$'+value.toFixed(2);
-    else if(axis==='y32') formatted=value.toFixed(2);
+    else if(axis==='y32'||axis==='y35') formatted=value.toFixed(2);
     else if(axis==='y33') formatted=value.toLocaleString('en-US',{maximumFractionDigits:0})+' contracts';
     else if(axis==='y34') formatted=value.toFixed(1)+'t';
     else formatted=value.toFixed(1);
@@ -578,6 +579,7 @@ function render(rows,predictions){
     'Real 10Y Yield (%)':realOnLabels,
     'GPR':gprOnLabels,
     'GVZ (Gold Implied Vol)':gvzOnLabels,
+    'VIX':vixOnLabels,
     'CFTC Managed Money Net (contracts)':cftcMmOnLabels,
     'Gold ETF Flows (t)':goldEtfFlowOnLabels,
     'BTC/USD':btcOnLabels,
@@ -747,6 +749,21 @@ function render(rows,predictions){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y32'
+      },{
+        label:'VIX',
+        data:vixOnLabels,
+        hidden:true,
+        borderColor:'#f87171',
+        backgroundColor:'rgba(248,113,113,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#f87171',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y35'
       },{
         label:'CFTC Managed Money Net (contracts)',
         data:cftcMmOnLabels,
@@ -1537,7 +1554,7 @@ function render(rows,predictions){
               else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y14') v='HK$'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y26') v=(v===null?'N/A':(v*100).toFixed(2)+'%');
-              else if(ctx.dataset.yAxisID==='y32') v=v.toFixed(2);
+              else if(ctx.dataset.yAxisID==='y32'||ctx.dataset.yAxisID==='y35') v=v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y33') v=v.toLocaleString('en-US',{maximumFractionDigits:0})+' contracts';
               else if(ctx.dataset.yAxisID==='y34') v=v.toFixed(1)+'t';
               else v=v.toFixed(1);
@@ -1685,6 +1702,10 @@ function render(rows,predictions){
         },
         y34:{
           position:'right',title:{display:true,text:'Gold ETF Flow (t)'},
+          grid:{display:false},display:false,offset:true
+        },
+        y35:{
+          position:'right',title:{display:true,text:'VIX'},
           grid:{display:false},display:false,offset:true
         }
       }
