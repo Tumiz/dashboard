@@ -325,30 +325,54 @@ function render(rows,predictions){
   const centralBankUsdShareOnLabels=col('central_bank_usd_share_pct');
   const chinaLprOnLabels=col('china_lpr_1y_pct');
   const monthlySeries=predictions.monthly_series||{};
-  const predictedPriceByMonth={};
-  const predReturnByMonth={};
+  const predictedLowPriceByMonth={};
+  const predictedHighPriceByMonth={};
+  const predLowReturnByMonth={};
+  const predHighReturnByMonth={};
+  const monthlyIntervalByMonth={};
   Object.entries(monthlySeries).forEach(([month,entry])=>{
     if(entry==null) return;
-    if(entry.predicted_price!=null) predictedPriceByMonth[month]=entry.predicted_price;
-    if(entry.predicted_return!=null) predReturnByMonth[month]=entry.predicted_return;
+    if(entry.predicted_low_price!=null) predictedLowPriceByMonth[month]=entry.predicted_low_price;
+    if(entry.predicted_high_price!=null) predictedHighPriceByMonth[month]=entry.predicted_high_price;
+    if(entry.predicted_low_return!=null) predLowReturnByMonth[month]=entry.predicted_low_return;
+    if(entry.predicted_high_return!=null) predHighReturnByMonth[month]=entry.predicted_high_return;
+    if(entry.prediction_interval!=null) monthlyIntervalByMonth[month]=entry.prediction_interval;
   });
   const actualReturns=predictions.actual_returns||{};
   const actualReturnByMonth=actualReturns.monthly||{};
   const actualQuarterReturnByMonth=actualReturns.quarterly||{};
   const monthlyForecast=predictions.forecasts?.next_month||null;
-  const predOnLabels=labels.map(m=>predictedPriceByMonth[m]??null);
+  const predLowOnLabels=labels.map(m=>predictedLowPriceByMonth[m]??null);
+  const predHighOnLabels=labels.map(m=>predictedHighPriceByMonth[m]??null);
   const actualReturnOnLabels=labels.map(m=>actualReturnByMonth[m]??null);
   const quarterActualOnLabels=labels.map(m=>actualQuarterReturnByMonth[m]??null);
-  const predReturnOnLabels=labels.map(m=>predReturnByMonth[m]??null);
+  const predLowReturnOnLabels=labels.map(m=>predLowReturnByMonth[m]??null);
+  const predHighReturnOnLabels=labels.map(m=>predHighReturnByMonth[m]??null);
+  const monthlyIntervalLowerOnLabels=labels.map(m=>monthlyIntervalByMonth[m]?.lower??null);
+  const monthlyIntervalUpperOnLabels=labels.map(m=>monthlyIntervalByMonth[m]?.upper??null);
 
   const quarterlySeries=predictions.quarterly_series||{};
-  const quarterPredOnLabels=labels.map(m=>{
-    const entry=quarterlySeries[m];
-    return entry&&entry.predicted_return!=null?entry.predicted_return:null;
+  const quarterlyIntervalByMonth={};
+  Object.entries(quarterlySeries).forEach(([month,entry])=>{
+    if(entry?.prediction_interval!=null) quarterlyIntervalByMonth[month]=entry.prediction_interval;
   });
-  const quarterlyPredPriceOnLabels=labels.map(m=>{
+  const quarterlyIntervalLowerOnLabels=labels.map(m=>quarterlyIntervalByMonth[m]?.lower??null);
+  const quarterlyIntervalUpperOnLabels=labels.map(m=>quarterlyIntervalByMonth[m]?.upper??null);
+  const quarterPredLowReturnOnLabels=labels.map(m=>{
     const entry=quarterlySeries[m];
-    return entry&&entry.predicted_price!=null?entry.predicted_price:null;
+    return entry&&entry.predicted_low_return!=null?entry.predicted_low_return:null;
+  });
+  const quarterPredHighReturnOnLabels=labels.map(m=>{
+    const entry=quarterlySeries[m];
+    return entry&&entry.predicted_high_return!=null?entry.predicted_high_return:null;
+  });
+  const quarterlyPredLowPriceOnLabels=labels.map(m=>{
+    const entry=quarterlySeries[m];
+    return entry&&entry.predicted_low_price!=null?entry.predicted_low_price:null;
+  });
+  const quarterlyPredHighPriceOnLabels=labels.map(m=>{
+    const entry=quarterlySeries[m];
+    return entry&&entry.predicted_high_price!=null?entry.predicted_high_price:null;
   });
 
   const monthlyEquation=document.getElementById('monthlyForecastEquation');
@@ -371,8 +395,13 @@ function render(rows,predictions){
   if(monthlyModelEquation) monthlyModelEquation.textContent=predictions.models?.monthly?.equation||'';
   if(quarterlyModelEquation) quarterlyModelEquation.textContent=predictions.models?.quarterly?.equation||'';
   const modelStats=(model)=>{
-    if(!model||model.r2==null||!Number.isFinite(model.r2)) return '';
-    return `R\u00b2 = ${model.r2.toFixed(4)}${model.n!=null?` \u00b7 n = ${model.n}`:''}`;
+    if(!model) return '';
+    const describe=(bound,label)=>{
+      const result=model[bound];
+      if(!result||result.r2==null||!Number.isFinite(result.r2)) return '';
+      return `${label} R\u00b2 = ${result.r2.toFixed(4)}${result.n!=null?` \u00b7 n = ${result.n}`:''}`;
+    };
+    return [describe('low','Low'),describe('high','High')].filter(Boolean).join(' \u00b7 ');
   };
   const monthlyModelStats=document.getElementById('monthlyModelStats');
   const quarterlyModelStats=document.getElementById('quarterlyModelStats');
@@ -383,12 +412,41 @@ function render(rows,predictions){
   if(forecastNote){
     let html='';
     const addForecastLine=forecast=>{
-      if(!forecast||forecast.predicted_price==null||forecast.predicted_return==null) return;
-      const cls=forecast.predicted_return>=0?'up':'down';
-      html+=`<div style="margin:2px 0"><span class="forecast-label">${forecast.label} (${forecast.month}) predicted:</span> XAU return <span class="${cls}">${(forecast.predicted_return*100).toFixed(2)}%</span> &middot; XAU price <span class="${cls}">$${forecast.predicted_price.toFixed(0)}</span></div>`;
+      if(!forecast||forecast.predicted_low_price==null||forecast.predicted_high_price==null) return;
+      html+=`<div style="margin:2px 0"><span class="forecast-label">${forecast.label} (${forecast.month}) forecast range:</span> XAU/USD $${forecast.predicted_low_price.toFixed(0)}–$${forecast.predicted_high_price.toFixed(0)} per oz</div>`;
+      const interval=forecast.prediction_interval;
+      if(interval){
+        const coverage=(interval.coverage*100).toFixed(0);
+        html+=`<div style="margin:2px 0"><span class="forecast-label">${coverage}% prediction interval for the full-period range:</span> $${interval.lower.toFixed(0)}–$${interval.upper.toFixed(0)} per oz <span class="forecast-label">(calibrated from ${interval.calibration_samples} prior periods)</span></div>`;
+      }else{
+        html+=`<div style="margin:2px 0" class="forecast-label">Prediction interval unavailable: fewer than ${predictions.prediction_interval_calibration?.minimum_calibration_samples||20} prior periods for calibration.</div>`;
+      }
     };
     addForecastLine(predictions.forecasts?.next_month);
     addForecastLine(predictions.forecasts?.three_months);
+    const calibration=predictions.prediction_interval_calibration;
+    if(calibration){
+      const backtestLine=(label,result)=>{
+        if(!result||result.backtest_coverage==null) return '';
+        return `<div style="margin:2px 0" class="forecast-label">${label} historical backtest: ${(result.backtest_coverage*100).toFixed(1)}% range coverage across ${result.backtest_months} periods (nominal ${(result.coverage*100).toFixed(0)}%).</div>`;
+      };
+      html+=backtestLine('Monthly',calibration.monthly);
+      html+=backtestLine('Quarterly',calibration.quarterly);
+      const baseline=calibration.historical_range_baseline;
+      const baselineLine=(label,result,modelResult)=>{
+        if(!result||result.backtest_coverage==null) return '';
+        const lowError=(result.boundary_mae_low_log_return*100).toFixed(2);
+        const highError=(result.boundary_mae_high_log_return*100).toFixed(2);
+        const modelLowError=(modelResult?.boundary_mae_low_log_return*100).toFixed(2);
+        const modelHighError=(modelResult?.boundary_mae_high_log_return*100).toFixed(2);
+        const modelCoverage=modelResult?.backtest_coverage;
+        const comparison=modelCoverage==null?'':`; regression low/high MAE ${modelLowError}%/${modelHighError}%, coverage ${(modelCoverage*100).toFixed(1)}%`;
+        return `<div style="margin:2px 0" class="forecast-label">${label} historical baseline (${result.lookback_periods}-period mean): low/high MAE ${lowError}%/${highError}%, coverage ${(result.backtest_coverage*100).toFixed(1)}%${comparison}.</div>`;
+      };
+      html+=baselineLine('Monthly',baseline?.monthly,calibration.monthly);
+      html+=baselineLine('Quarterly',baseline?.quarterly,calibration.quarterly);
+      html+='<div style="margin:2px 0" class="forecast-label">Coverage is measured by past-only walk-forward backtests; a nominal 90% interval is not a guarantee.</div>';
+    }
     forecastNote.innerHTML=html;
   }
 
@@ -539,12 +597,20 @@ function render(rows,predictions){
     'Hang Seng Index':hsiOnLabels,
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
-    'XAU/USD (Predicted)':predOnLabels,
-    'XAU/USD (Predicted, Quarterly)':quarterlyPredPriceOnLabels,
+    'XAU/USD (Forecast Low, Monthly)':predLowOnLabels,
+    'XAU/USD (Forecast High, Monthly)':predHighOnLabels,
+    'XAU/USD (Forecast Low, Quarterly)':quarterlyPredLowPriceOnLabels,
+    'XAU/USD (Forecast High, Quarterly)':quarterlyPredHighPriceOnLabels,
+    'XAU/USD (90% Interval Lower, Monthly)':monthlyIntervalLowerOnLabels,
+    'XAU/USD (90% Interval Upper, Monthly)':monthlyIntervalUpperOnLabels,
+    'XAU/USD (90% Interval Lower, Quarterly)':quarterlyIntervalLowerOnLabels,
+    'XAU/USD (90% Interval Upper, Quarterly)':quarterlyIntervalUpperOnLabels,
     'XAU Return (Actual)':actualReturnOnLabels,
-    'XAU Return (Predicted)':predReturnOnLabels,
+    'XAU Return (Forecast Low, Monthly)':predLowReturnOnLabels,
+    'XAU Return (Forecast High, Monthly)':predHighReturnOnLabels,
     'XAU Return (Actual, Quarterly)':quarterActualOnLabels,
-    'XAU Return (Predicted, Quarterly)':quarterPredOnLabels,
+    'XAU Return (Forecast Low, Quarterly)':quarterPredLowReturnOnLabels,
+    'XAU Return (Forecast High, Quarterly)':quarterPredHighReturnOnLabels,
   };
 
   const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -574,7 +640,7 @@ function render(rows,predictions){
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
           <div class="corr-dd-panel" id="corrDDPanel">
-            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'||s==='XAU/USD (Predicted)'||s==='XAU/USD (Predicted, Quarterly)'?' checked':''}>${s}</label>`).join('')}</div>
+            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'||s==='XAU/USD (Forecast Low, Monthly)'||s==='XAU/USD (Forecast High, Monthly)'||s==='XAU/USD (Forecast Low, Quarterly)'||s==='XAU/USD (Forecast High, Quarterly)'||s==='XAU/USD (90% Interval Lower, Monthly)'||s==='XAU/USD (90% Interval Upper, Monthly)'||s==='XAU/USD (90% Interval Lower, Quarterly)'||s==='XAU/USD (90% Interval Upper, Quarterly)'?' checked':''}>${s}</label>`).join('')}</div>
             <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
           </div>
         </div>
@@ -1126,8 +1192,24 @@ function render(rows,predictions){
         pointHitRadius:0,
         yAxisID:'y26'
       },{
-        label:'XAU Return (Predicted)',
-        data:predReturnOnLabels,
+        label:'XAU Return (Forecast Low, Monthly)',
+        data:predLowReturnOnLabels,
+        borderColor:'#f43f5e',
+        backgroundColor:'rgba(244,63,94,0.08)',
+        borderDash:[5,4],
+        spanGaps:true,
+        fill:'+1',
+        tension:0,
+        pointBackgroundColor:'#f43f5e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y26'
+      },{
+        label:'XAU Return (Forecast High, Monthly)',
+        data:predHighReturnOnLabels,
         borderColor:'#f43f5e',
         backgroundColor:'rgba(244,63,94,0.08)',
         borderDash:[5,4],
@@ -1157,8 +1239,24 @@ function render(rows,predictions){
         pointHitRadius:0,
         yAxisID:'y26'
       },{
-        label:'XAU Return (Predicted, Quarterly)',
-        data:quarterPredOnLabels,
+        label:'XAU Return (Forecast Low, Quarterly)',
+        data:quarterPredLowReturnOnLabels,
+        borderColor:'#f97316',
+        backgroundColor:'rgba(249,115,22,0.08)',
+        borderDash:[6,4],
+        spanGaps:true,
+        fill:'+1',
+        tension:0,
+        pointBackgroundColor:'#f97316',
+        pointBorderColor:'#fff',
+        pointBorderWidth:2,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y26'
+      },{
+        label:'XAU Return (Forecast High, Quarterly)',
+        data:quarterPredHighReturnOnLabels,
         borderColor:'#f97316',
         backgroundColor:'rgba(249,115,22,0.08)',
         borderDash:[6,4],
@@ -1173,8 +1271,24 @@ function render(rows,predictions){
         pointHitRadius:0,
         yAxisID:'y26'
       },{
-        label:'XAU/USD (Predicted)',
-        data:predOnLabels,
+        label:'XAU/USD (Forecast Low, Monthly)',
+        data:predLowOnLabels,
+        borderColor:'#f43f5e',
+        backgroundColor:'rgba(244,63,94,0.05)',
+        borderDash:[5,4],
+        spanGaps:true,
+        fill:'+1',
+        tension:0,
+        pointBackgroundColor:'#f43f5e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
+      },{
+        label:'XAU/USD (Forecast High, Monthly)',
+        data:predHighOnLabels,
         borderColor:'#f43f5e',
         backgroundColor:'rgba(244,63,94,0.05)',
         borderDash:[5,4],
@@ -1189,8 +1303,76 @@ function render(rows,predictions){
         pointHitRadius:0,
         yAxisID:'y5'
       },{
-        label:'XAU/USD (Predicted, Quarterly)',
-        data:quarterlyPredPriceOnLabels,
+        label:'XAU/USD (Forecast Low, Quarterly)',
+        data:quarterlyPredLowPriceOnLabels,
+        borderColor:'#8b5cf6',
+        backgroundColor:'rgba(139,92,246,0.05)',
+        borderDash:[2,3],
+        spanGaps:true,
+        fill:'+1',
+        tension:0,
+        pointBackgroundColor:'#8b5cf6',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
+      },{
+        label:'XAU/USD (90% Interval Lower, Monthly)',
+        data:monthlyIntervalLowerOnLabels,
+        borderColor:'#fb7185',
+        backgroundColor:'rgba(251,113,133,0.12)',
+        borderDash:[3,3],
+        spanGaps:true,
+        fill:'+1',
+        tension:0,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
+      },{
+        label:'XAU/USD (90% Interval Upper, Monthly)',
+        data:monthlyIntervalUpperOnLabels,
+        borderColor:'#fb7185',
+        backgroundColor:'rgba(251,113,133,0.12)',
+        borderDash:[3,3],
+        spanGaps:true,
+        fill:false,
+        tension:0,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
+      },{
+        label:'XAU/USD (90% Interval Lower, Quarterly)',
+        data:quarterlyIntervalLowerOnLabels,
+        borderColor:'#c4b5fd',
+        backgroundColor:'rgba(196,181,253,0.12)',
+        borderDash:[2,4],
+        spanGaps:true,
+        fill:'+1',
+        tension:0,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
+      },{
+        label:'XAU/USD (90% Interval Upper, Quarterly)',
+        data:quarterlyIntervalUpperOnLabels,
+        borderColor:'#c4b5fd',
+        backgroundColor:'rgba(196,181,253,0.12)',
+        borderDash:[2,4],
+        spanGaps:true,
+        fill:false,
+        tension:0,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
+      },{
+        label:'XAU/USD (Forecast High, Quarterly)',
+        data:quarterlyPredHighPriceOnLabels,
         borderColor:'#8b5cf6',
         backgroundColor:'rgba(139,92,246,0.05)',
         borderDash:[2,3],

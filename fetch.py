@@ -177,12 +177,22 @@ def fetch_btc():
 
 def fetch_xau():
     df = ak.futures_foreign_hist(symbol="XAU")
-    df = df[["date", "close"]].rename(columns={"close": "xau_usd"})
+    df = df[["date", "high", "low", "close"]].copy()
     df["date"] = pd.to_datetime(df["date"])
-    df = df.rename(columns={"xau_usd": "close"})
-    df = last_trading_day_close(df)
+    df = df.sort_values("date").dropna(subset=["close"]).copy()
+    df["month"] = df["date"].dt.to_period("M")
+    df = (
+        df.groupby("month", sort=True, as_index=False)
+        .agg(
+            xau_usd=("close", "last"),
+            xau_usd_high=("high", "max"),
+            xau_usd_low=("low", "min"),
+        )
+    )
     df["month"] = df["month"].astype(str)
-    update_dashboard(df[["month", "close"]].rename(columns={"close": "xau_usd"}).round(1))
+    update_dashboard(
+        df[["month", "xau_usd", "xau_usd_high", "xau_usd_low"]].round(1)
+    )
 
 
 def fetch_copper():
