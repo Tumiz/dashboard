@@ -263,11 +263,13 @@ function render(rows,predictions){
   const [fy,fm]=goldMonths[0].split('-').map(Number);
   const preLabels=[];
   for(let y=2000;y<=fy;y++){const endM=y===fy?fm-1:12;for(let m=1;m<=endM;m++)preLabels.push(y+'-'+String(m).padStart(2,'0'))}
-  const labels=[...preLabels,...goldMonths,...extMonths];
+  const labels=[...preLabels,...goldMonths];
   const today=new Date();
   const nextQuarterEnd=new Date(today.getFullYear(),(Math.floor(today.getMonth()/3)+2)*3,0);
   const nextQuarterEndMonth=nextQuarterEnd.getFullYear()+'-'+String(nextQuarterEnd.getMonth()+1).padStart(2,'0');
-  while(labels.at(-1)<nextQuarterEndMonth){
+  const lastExtMonth=extMonths.at(-1);
+  const lastLabelMonth=[nextQuarterEndMonth,lastExtMonth].filter(Boolean).sort().at(-1);
+  while(labels.at(-1)<lastLabelMonth){
     let [year,month]=labels.at(-1).split('-').map(Number);
     if(++month>12){year++;month=1}
     labels.push(year+'-'+String(month).padStart(2,'0'));
@@ -290,6 +292,8 @@ function render(rows,predictions){
   const cbOnLabels=col('cb_demand');
   const goldProdOnLabels=col('gold_mine_production_t');
   const fedOnLabels=col('fed_rate_pct');
+  const fedMarket3mOnLabels=col('fed_rate_market_implied_3m_pct');
+  const fedClevelandOnLabels=col('fed_rate_cleveland_pct');
   const nasdaqOnLabels=col('nasdaq_close');
   const usdCnyOnLabels=col('usd_cny');
   const twexbOnLabels=col('twexb');
@@ -570,6 +574,8 @@ function render(rows,predictions){
     'Central Bank USD Share (%)':centralBankUsdShareOnLabels,
     'Gold Mine Production (t)':goldProdOnLabels,
     'Fed Funds Rate (%)':fedOnLabels,
+    'Fed Funds Rate (~3M Ahead, CME)':fedMarket3mOnLabels,
+    'Fed Funds Rate (Cleveland Fed)':fedClevelandOnLabels,
     'China LPR 1Y (%)':chinaLprOnLabels,
     'NASDAQ':nasdaqOnLabels,
     'Tencent (0700.HK)':tencentOnLabels,
@@ -933,6 +939,39 @@ function render(rows,predictions){
         fill:false,
         tension:0,
         pointBackgroundColor:'#6366f1',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y8'
+      },{
+        label:'Fed Funds Rate (~3M Ahead, CME)',
+        data:fedMarket3mOnLabels,
+        hidden:true,
+        borderColor:'#2dd4bf',
+        backgroundColor:'rgba(45,212,191,0.1)',
+        borderDash:[3,3],
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#2dd4bf',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y8'
+      },{
+        label:'Fed Funds Rate (Cleveland Fed)',
+        data:fedClevelandOnLabels,
+        hidden:true,
+        borderColor:'#f59e0b',
+        backgroundColor:'rgba(245,158,11,0.1)',
+        borderDash:[2,3],
+        fill:false,
+        tension:0,
+        spanGaps:true,
+        pointBackgroundColor:'#f59e0b',
         pointBorderColor:'#fff',
         pointBorderWidth:1.5,
         pointRadius:0,
@@ -1731,7 +1770,13 @@ function render(rows,predictions){
   const firstBtcIdx=btcOnLabels.findIndex(v=>v!=null);
   const defaultStart=firstBtcIdx>=0?firstBtcIdx:0;
   const nextQuarterEndIdx=labels.indexOf(nextQuarterEndMonth);
-  const defaultEnd=nextQuarterEndIdx>=0?nextQuarterEndIdx:lastIdx;
+  const lastActualIdx=labels.indexOf(lastActualMonth);
+  const firstFutureIdx=arr=>{
+    for(let i=lastActualIdx+1;i<arr.length;i++) if(arr[i]!=null) return i;
+    return -1;
+  };
+  const firstFedForecastIdx=firstFutureIdx(fedClevelandOnLabels);
+  const defaultEnd=Math.max(nextQuarterEndIdx>=0?nextQuarterEndIdx:lastIdx,firstFedForecastIdx);
   chart.options.scales.x.min=defaultStart;
   chart.options.scales.x.max=defaultEnd;
   function updateZoomReset(){

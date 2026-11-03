@@ -6,6 +6,7 @@ import io
 import json
 import multiprocessing
 import os
+import re
 import xml.etree.ElementTree as ET
 import zipfile
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -346,7 +347,7 @@ def fetch_au9999():
     update_dashboard(df[["month", "close"]].rename(columns={"close": "au9999_close"}).round(1))
 
 
-def fetch_fed_rates():
+def _fed_rate_history() -> pd.DataFrame:
     url = (
         "https://fred.stlouisfed.org/graph/fredgraph.csv"
         "?id=FEDFUNDS&cosd=1954-07-01&coed=9999-12-31"
@@ -356,7 +357,160 @@ def fetch_fed_rates():
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
-    update_dashboard(df[["month", "fed_rate_pct"]].round(1))
+    return df[["month", "fed_rate_pct"]].round(1)
+
+
+def fetch_fed_rates():
+    update_dashboard(_fed_rate_history())
+
+
+def fetch_fed_rate_market_implied():
+    """Fetch point-in-time three-month market-implied rates from the Atlanta Fed MPT."""
+    url = (
+        "https://www.atlantafed.org/-/media/Project/Atlanta/FRBA/Documents/"
+        "research-and-data/data/market-probability-tracker/mpt_histdata.xlsx"
+    )
+    data = http_get(url, timeout=120)
+    df = pd.read_excel(
+        io.BytesIO(data),
+        sheet_name="DATA",
+        usecols=["date", "reference_start", "field", "value"],
+    )
+    df["date"] = pd.to_datetime(df["date"])
+    df["reference_start"] = pd.to_datetime(df["reference_start"])
+    daily_history = _fed_rate_market_implied_daily_history(df, horizon_months=3)
+    if daily_history.empty:
+        raise ValueError("No point-in-time three-month market-implied Fed rates found")
+    daily_history.to_csv("fed_rate_market_implied_daily.csv", index=False)
+    print(f"Saved {len(daily_history)} daily observations to fed_rate_market_implied_daily.csv")
+
+    monthly_history = (
+        daily_history.assign(
+            month=daily_history["quote_date"].dt.strftime("%Y-%m")
+        )
+        .groupby("month", sort=True)
+        .tail(1)
+        .rename(columns={"expected_rate_pct": "fed_rate_market_implied_3m_pct"})
+    )
+    update_dashboard(
+        monthly_history[["month", "fed_rate_market_implied_3m_pct"]].round(2)
+    )
+
+
+def _fed_rate_market_implied_daily_history(
+    df: pd.DataFrame, horizon_months: int
+) -> pd.DataFrame:
+    """Build daily point-in-time expectations for the rate at a fixed forward horizon."""
+    if horizon_months <= 0:
+        raise ValueError("horizon_months must be positive")
+    rates = df.loc[
+        (df["field"] == "Rate: mean") & df["value"].notna(),
+        ["date", "reference_start", "value"],
+    ].copy()
+    rates["date"] = pd.to_datetime(rates["date"])
+    rates["reference_start"] = pd.to_datetime(rates["reference_start"])
+
+    observations = []
+    for quote_date, snapshot in rates.groupby("date", sort=True):
+        future_rates = snapshot[snapshot["reference_start"] > quote_date]
+        if future_rates.empty:
+            continue
+
+        target_date = quote_date + pd.DateOffset(months=horizon_months)
+        closest = (
+            future_rates.assign(
+                distance=(future_rates["reference_start"] - target_date).abs()
+            )
+            .sort_values(["distance", "reference_start"])
+            .iloc[0]
+        )
+        observations.append({
+            "quote_date": quote_date,
+            "reference_date": closest["reference_start"],
+            "expected_rate_pct": float(closest["value"]) / 100,
+        })
+
+    return pd.DataFrame(
+        observations,
+        columns=["quote_date", "reference_date", "expected_rate_pct"],
+    )
+
+
+def _cleveland_quarter_values(text: str):
+    """Return (YYYY.Q, value) pairs from the Cleveland Fed policy rules spreadsheet."""
+    link = re.search(r'href="([^"]*policy_rules_spreadsheet\.xlsx[^"]*)"', text)
+    if not link:
+        return []
+    url = link.group(1).replace("&amp;", "&")
+    if url.startswith("/"):
+        url = "https://www.clevelandfed.org" + url
+    book = pd.read_excel(
+        io.BytesIO(http_get(url, timeout=120)),
+        sheet_name="Policy Rule Funds Rates",
+        header=None,
+    )
+    header_rows = book.index[book.eq("Date (YYYY.Q format)").any(axis=1)]
+    median_rows = book.index[book[1].astype(str).str.strip() == "Median"]
+    if not len(header_rows) or not len(median_rows):
+        return []
+    header = book.iloc[header_rows[0]]
+    median = book.iloc[median_rows[0]]
+    values = []
+    for column in book.columns:
+        quarter = str(header[column]).strip()
+        if not re.fullmatch(r"\d{4}\.[1-4]", quarter):
+            continue
+        value = pd.to_numeric(median[column], errors="coerce")
+        if pd.notna(value):
+            values.append((quarter, float(value)))
+    return values
+
+
+def fetch_fed_rate_cleveland():
+    """Fetch historical effective rates and the latest Cleveland Fed policy-rule projections.
+
+    The historical rate is the realized monthly federal funds rate from FRED.
+    Cleveland's current workbook supplies rule-based projections, not archived
+    historical forecast vintages.
+    """
+    historical_rates = _fed_rate_history()
+    url = "https://www.clevelandfed.org/indicators-and-data/simple-monetary-policy-rules"
+    text = http_get(url, timeout=60).decode("utf-8", "ignore")
+    quarters = _cleveland_quarter_values(text)
+    if not quarters:
+        tables = pd.read_html(io.StringIO(text))
+        if not tables:
+            raise ValueError("No Cleveland Fed policy rule data found")
+        table = tables[0].copy()
+        if isinstance(table.columns, pd.MultiIndex):
+            table.columns = [
+                str(level[-1]) if str(level[-1]) != "nan" else str(level[0])
+                for level in table.columns
+            ]
+        else:
+            table.columns = [str(column) for column in table.columns]
+        summary = table[
+            (table.iloc[:, 0].astype(str).str.strip() == "Summary")
+            & (table.iloc[:, 1].astype(str).str.strip() == "Median")
+        ]
+        if summary.empty:
+            raise ValueError("Median summary row not found")
+        row = summary.iloc[0]
+        quarters = [
+            (str(column).strip(), float(row[column]))
+            for column in table.columns[2:]
+            if re.fullmatch(r"\d{4}\.[1-4]", str(column).strip())
+        ]
+    rows = []
+    for quarter, value in quarters:
+        year, quarter_number = quarter.split(".")
+        target = f"{int(year):04d}-{int(quarter_number) * 3:02d}"
+        rows.append({"month": target, "fed_rate_cleveland_pct": value})
+    if not rows:
+        raise ValueError("No Cleveland Fed rate projections found")
+    forecasts = pd.DataFrame(rows).round(2)
+    combined = historical_rates.merge(forecasts, on="month", how="outer")
+    update_dashboard(combined.sort_values("month"))
 
 
 def fetch_nasdaq():
@@ -567,7 +721,8 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("oil", fetch_oil, (), {}),
         ("brent", fetch_brent, (), {}),
         ("au9999", fetch_au9999, (), {}),
-        ("fed_rates", fetch_fed_rates, (), {}),
+        ("fed_rate_market_implied", fetch_fed_rate_market_implied, (), {}),
+        ("fed_rates_and_cleveland", fetch_fed_rate_cleveland, (), {}),
         ("china_lpr", fetch_china_lpr, (), {}),
         ("nasdaq", fetch_nasdaq, (), {}),
         ("usd_cny", fetch_usd_cny, (), {}),
@@ -665,6 +820,16 @@ if __name__ == "__main__":
     parser.add_argument("--gold-production", action="store_true", help="Fetch annual global mine gold production (tonnes), spread monthly")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
+    parser.add_argument(
+        "--fed-market-implied",
+        action="store_true",
+        help="Fetch CME-derived market-implied Fed rate path (Atlanta Fed MPT)",
+    )
+    parser.add_argument(
+        "--fed-cleveland",
+        action="store_true",
+        help="Fetch historical Fed Funds rates and current Cleveland Fed policy rule projections",
+    )
     parser.add_argument("--china-lpr", action="store_true", help="Fetch monthly China 1-year Loan Prime Rate (LPR)")
     parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
     parser.add_argument("--twexb", action="store_true", help="Fetch monthly Broad Trade-Weighted USD Index (FRED DTWEXBGS)")
@@ -699,6 +864,10 @@ if __name__ == "__main__":
         fetch_nasdaq()
     elif args.fed_rates:
         fetch_fed_rates()
+    elif args.fed_market_implied:
+        fetch_fed_rate_market_implied()
+    elif args.fed_cleveland:
+        fetch_fed_rate_cleveland()
     elif args.china_lpr:
         fetch_china_lpr()
     elif args.cb_demand:
