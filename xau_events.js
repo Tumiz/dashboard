@@ -477,6 +477,15 @@ window.XAU_EVENTS = [
   },
   {
     month: '2026-06',
+    date: '2026-06-17',
+    title: 'Fed holds rates but strikes hawkish tone under Warsh',
+    urls: [
+      { title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260617a.htm' },
+      { title: 'Gold hits over seven-month low as dollar firms, rate hike bets rise', url: 'https://www.cnbc.com/2026/06/24/gold-slips-to-two-week-low-as-fed-rate-hike-bets-buoy-dollar.html' },
+    ]
+  },
+  {
+    month: '2026-06',
     date: '2026-06-24',
     title: 'Corning highlights glass bridge for CPO and glass-core packaging',
     urls: [{ title: 'Corning Highlights Glass Bridge for CPO and Glass-Core Packaging', url: 'https://www.thelec.net/news/articleView.html?idxno=11620' }]
