@@ -7,6 +7,7 @@ window.XAU_EVENTS = [
   {
     month: '2001-09',
     date: '2001-09-17',
+    fomc: true,
     title: 'Fed emergency easing after September 11',
     urls: [{ title: 'FRB: Press Release -- FOMC statement and Board discount rate action -- September 17, 2001', url: 'https://www.federalreserve.gov/boarddocs/press/general/2001/20010917/default.htm' }]
   },
@@ -38,18 +39,21 @@ window.XAU_EVENTS = [
   {
     month: '2007-09',
     date: '2007-09-18',
+    fomc: true,
     title: 'Fed cuts rates amid credit-market disruption',
     urls: [{ title: 'FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20070918a.htm' }]
   },
   {
     month: '2007-10',
     date: '2007-10-31',
+    fomc: true,
     title: 'Global stock selloff amid credit market concerns',
     urls: [{ title: 'FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20071031a.htm' }]
   },
   {
     month: '2008-01',
     date: '2008-01-22',
+    fomc: true,
     title: 'Global stock markets experience sharp selloff',
     urls: [{ title: 'FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20080122b.htm' }]
   },
@@ -72,6 +76,7 @@ window.XAU_EVENTS = [
   {
     month: '2008-10',
     date: '2008-10-08',
+    fomc: true,
     title: 'Coordinated central-bank rate cuts',
     urls: [{ title: 'FOMC statement: Federal Reserve and other central banks announce reductions in policy interest rates', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20081008a.htm' }]
   },
@@ -176,6 +181,7 @@ window.XAU_EVENTS = [
   {
     month: '2013-06',
     date: '2013-06-19',
+    fomc: true,
     title: 'Federal Reserve signals potential tapering timeline',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20130619a.htm' }]
   },
@@ -204,6 +210,7 @@ window.XAU_EVENTS = [
   {
     month: '2015-12',
     date: '2015-12-16',
+    fomc: true,
     title: 'Fed begins post-crisis rate increases',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20151216a.htm' }]
   },
@@ -251,6 +258,7 @@ window.XAU_EVENTS = [
   {
     month: '2018-12',
     date: '2018-12-19',
+    fomc: true,
     title: 'Fed raises its policy-rate target',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20181219a.htm' }]
   },
@@ -262,12 +270,14 @@ window.XAU_EVENTS = [
   {
     month: '2019-06',
     date: '2019-06-19',
+    fomc: true,
     title: 'Federal Reserve signals potential policy easing',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20190619a.htm' }]
   },
   {
     month: '2019-07',
     date: '2019-07-31',
+    fomc: true,
     title: 'Fed begins rate-cutting cycle',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20190731a.htm' }]
   },
@@ -290,6 +300,7 @@ window.XAU_EVENTS = [
   {
     month: '2020-03',
     date: '2020-03-15',
+    fomc: true,
     title: 'Fed cuts rates to near zero and launches asset purchases',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315a.htm' }]
   },
@@ -323,6 +334,7 @@ window.XAU_EVENTS = [
   {
     month: '2022-03',
     date: '2022-03-16',
+    fomc: true,
     title: 'Fed raises rates as the Ukraine war adds inflation uncertainty',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20220316a.htm' }]
   },
@@ -356,6 +368,7 @@ window.XAU_EVENTS = [
   {
     month: '2024-09',
     date: '2024-09-18',
+    fomc: true,
     title: 'Fed lowers rates by 50 basis points',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm' }]
   },
@@ -367,6 +380,7 @@ window.XAU_EVENTS = [
   {
     month: '2025-01',
     date: '2025-01-29',
+    fomc: true,
     title: 'Markets adjust to evolving policy and geopolitical expectations',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20250129a.htm' }]
   },
@@ -409,6 +423,7 @@ window.XAU_EVENTS = [
   {
     month: '2025-09',
     date: '2025-09-16',
+    fomc: true,
     title: 'Monetary policy expectations shift amid evolving economic data',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20250916a.htm' }]
   },
@@ -431,6 +446,7 @@ window.XAU_EVENTS = [
   {
     month: '2026-01',
     date: '2026-01-28',
+    fomc: true,
     title: 'Fed holds rates amid conflict and energy uncertainty',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260128a.htm' }]
   },
@@ -478,6 +494,7 @@ window.XAU_EVENTS = [
   {
     month: '2026-06',
     date: '2026-06-17',
+    fomc: true,
     title: 'Fed holds rates but strikes hawkish tone under Warsh',
     urls: [
       { title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260617a.htm' },
@@ -493,6 +510,7 @@ window.XAU_EVENTS = [
   {
     month: '2026-07',
     date: '2026-07-29',
+    fomc: true,
     title: 'Fed holds rates amid conflict and energy uncertainty',
     urls: [
       { title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm' },
@@ -536,6 +554,7 @@ window.XAU_EVENTS = [
   {
     month: '2026-09',
     date: '2026-09-16',
+    fomc: true,
     title: 'Fed raises its policy-rate target',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm' }]
   },

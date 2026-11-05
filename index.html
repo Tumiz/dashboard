@@ -292,6 +292,7 @@ function render(rows,predictions){
   const cbOnLabels=col('cb_demand');
   const goldProdOnLabels=col('gold_mine_production_t');
   const fedOnLabels=col('fed_rate_pct');
+  const fomcMonths=new Set((window.XAU_EVENTS||[]).filter(event=>event.fomc&&event.date).map(event=>event.date.slice(0,7)));
   const fedMarket3mOnLabels=col('fed_rate_market_implied_3m_pct');
   const fedClevelandOnLabels=col('fed_rate_cleveland_pct');
   const nasdaqOnLabels=col('nasdaq_close');
@@ -938,12 +939,12 @@ function render(rows,predictions){
         backgroundColor:'rgba(99,102,241,0.1)',
         fill:false,
         tension:0,
-        pointBackgroundColor:'#6366f1',
+        pointBackgroundColor:'#fbbf24',
         pointBorderColor:'#fff',
         pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
+        pointRadius:ctx=>fomcMonths.has(labels[ctx.dataIndex])?4:0,
+        pointHoverRadius:ctx=>fomcMonths.has(labels[ctx.dataIndex])?5:0,
+        pointHitRadius:ctx=>fomcMonths.has(labels[ctx.dataIndex])?8:0,
         yAxisID:'y8'
       },{
         label:'Fed Funds Rate (~3M Ahead, CME)',
