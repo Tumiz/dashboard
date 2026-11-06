@@ -558,4 +558,22 @@ window.XAU_EVENTS = [
     title: 'Fed raises its policy-rate target',
     urls: [{ title: 'Federal Reserve issues FOMC statement', url: 'https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm' }]
   },
+  {
+    month: '2026-10',
+    date: '2026-10-02',
+    title: 'U.S. payrolls rose just 29,000 in September; unemployment rate climbed to 4.2%',
+    urls: [{ title: 'Labor market faltered in September as jobs increased by just 29,000, unemployment rate rose to 4.2%', url: 'https://www.cnbc.com/2026/10/02/jobs-report-september-2026.html' }]
+  },
+  {
+    month: '2026-11',
+    date: '2026-11-03',
+    title: 'U.S. job openings rose by 333,000 in September as hiring and quits increased',
+    urls: [{ title: 'Job openings posted big September gain in positive sign for labor market ahead of payrolls report', url: 'https://www.cnbc.com/2026/11/03/job-openings-posted-big-september-gain-in-positive-sign-for-labor-market-ahead-of-payrolls-report.html' }]
+  },
+  {
+    month: '2026-11',
+    date: '2026-11-04',
+    title: 'U.S. private employers added 86,000 jobs in October, ADP says',
+    urls: [{ title: 'Private companies added 86,000 jobs in October, slightly higher than expected, ADP says', url: 'https://www.cnbc.com/2026/11/04/private-companies-added-86000-jobs-in-october-slightly-higher-than-expected-adp-says.html' }]
+  },
 ];
