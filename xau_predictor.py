@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-DATA_PATH = Path(__file__).resolve().parent / "dashboard_monthly.csv"
+DATA_PATH = Path(__file__).resolve().parent / "monthly_series.csv"
 PREDICTIONS_PATH = Path(__file__).resolve().parent / "predictions.json"
 d = pd.read_csv(DATA_PATH, index_col="month")
 

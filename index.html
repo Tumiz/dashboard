@@ -252,8 +252,11 @@ function renderXauEvents(month,force){
   list.append(section);
 }
 
-function render(rows,predictions){
+function render(rows,predictions,dailyRows){
   const num=v=>v===''||v==null?null:+v;
+  const daily=(dailyRows||[])
+    .map(r=>({date:r.date,close:num(r.close)}))
+    .filter(r=>r.date&&r.close!=null);
   const M={}; rows.forEach(r=>M[r.month]=r);
   const months=rows.map(r=>r.month);
   const goldMonths=months.filter(m=>M[m].au9999_close!=='');
@@ -274,6 +277,15 @@ function render(rows,predictions){
     if(++month>12){year++;month=1}
     labels.push(year+'-'+String(month).padStart(2,'0'));
   }
+  const monthIndexByMonth={};
+  labels.forEach((month,index)=>{monthIndexByMonth[month]=index});
+  const dailyXauPoints=daily.map(row=>{
+    const index=monthIndexByMonth[row.date.slice(0,7)];
+    if(index==null) return null;
+    const [year,month,day]=row.date.split('-').map(Number);
+    const daysInMonth=new Date(year,month,0).getDate();
+    return {x:index+(day-(daysInMonth+1)/2)/daysInMonth,y:row.close};
+  }).filter(Boolean);
   const gprices=[...new Array(preLabels.length).fill(null),...goldMonths.map(m=>num(M[m].au9999_close)),...new Array(extMonths.length).fill(null),...new Array(labels.length-preLabels.length-goldMonths.length-extMonths.length).fill(null)];
   const col=key=>labels.map(m=>{const r=M[m];return r&&r[key]!==''?num(r[key]):null});
   const usdOnLabels=col('usd_index');
@@ -449,6 +461,29 @@ function render(rows,predictions){
     };
   };
 
+  Chart.Interaction.modes.monthlyIndex = function(chart,event,_options,useFinalPosition){
+    const dailyIndex=chart.data.datasets.findIndex(ds=>ds.label===dailyCloseLabel);
+    const metas=chart.getSortedVisibleDatasetMetas().filter(meta=>meta.index!==dailyIndex);
+    if(!metas.length) return [];
+    const pos=Chart.helpers.getRelativePosition(event,chart);
+    let bestIndex=null,bestDistance=Infinity;
+    for(const meta of metas){
+      for(let index=0;index<meta.data.length;index++){
+        const element=meta.data[index];
+        if(!element||element.skip) continue;
+        const distance=Math.abs(element.x-pos.x);
+        if(distance<bestDistance){bestDistance=distance;bestIndex=index}
+      }
+    }
+    if(bestIndex==null) return [];
+    const result=[];
+    for(const meta of metas){
+      const element=meta.data[bestIndex];
+      if(element&&!element.skip) result.push({element,datasetIndex:meta.index,index:bestIndex});
+    }
+    return result;
+  };
+
   let hoverValues;
   let pinnedXauMonth=null;
   function hoverValue(dataset,value){
@@ -610,6 +645,8 @@ function render(rows,predictions){
     'XAU Return (Forecast Low, Quarterly)':quarterPredLowReturnOnLabels,
     'XAU Return (Forecast High, Quarterly)':quarterPredHighReturnOnLabels,
   };
+  const dailyCloseLabel='XAU/USD (Daily Close)';
+  const curveNames=[dailyCloseLabel,...Object.keys(signalMap).sort((a,b)=>a.localeCompare(b))];
 
   const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -629,7 +666,7 @@ function render(rows,predictions){
 
   document.getElementById('app').innerHTML=`
     <div class="chart-card">
-      <h2>Gold &amp; Macro Index</h2>
+      <h2>Gold &amp; Macro Index — Daily XAU/USD</h2>
       <div class="chart-controls">
         <div class="zoom-group" id="zoomGroup">
           <span class="zoom-hint">Drag right for earlier data &middot; Shift-drag to zoom</span>
@@ -638,7 +675,7 @@ function render(rows,predictions){
         <div class="corr-dd" id="corrDD">
           <button class="corr-dd-btn" id="corrDDToggle" type="button">Select curves <span class="caret">&#9662;</span></button>
           <div class="corr-dd-panel" id="corrDDPanel">
-            <div class="corr-checks" id="corrChecks">${Object.keys(signalMap).sort((a,b)=>a.localeCompare(b)).map(s=>`<label><input type="checkbox" value="${s}"${s==='XAU/USD (Actual)'?' checked':''}>${s}</label>`).join('')}</div>
+            <div class="corr-checks" id="corrChecks">${curveNames.map(s=>`<label><input type="checkbox" value="${s}"${s===dailyCloseLabel?' checked':''}>${s}</label>`).join('')}</div>
             <div class="corr-dd-actions"><button type="button" id="corrAll">All</button><button type="button" id="corrNone">None</button></div>
           </div>
         </div>
@@ -1477,6 +1514,20 @@ function render(rows,predictions){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y5'
+      },{
+        label:dailyCloseLabel,
+        data:dailyXauPoints,
+        parsing:false,
+        borderColor:'#f59e0b',
+        backgroundColor:'rgba(245,158,11,0.08)',
+        fill:false,
+        tension:0,
+        spanGaps:true,
+        borderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y5'
       }]
     },
     plugins:[{
@@ -1531,7 +1582,7 @@ function render(rows,predictions){
     }],
     options:{
       responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
+      interaction:{mode:'monthlyIndex',intersect:false},
       onClick(evt,els,chart){
         const area=chart.chartArea;
         if(!area||evt.x<area.left||evt.x>area.right||evt.y<area.top||evt.y>area.bottom) return;
@@ -1610,7 +1661,8 @@ function render(rows,predictions){
         },
         y5:{
           position:'right',title:{display:true,text:'XAU/USD'},
-          grid:{color:'rgba(255,255,255,0.07)'},display:false,offset:true
+          grid:{color:'rgba(255,255,255,0.07)'},display:false,offset:true,
+          ticks:{callback:v=>'$'+v}
         },
         y6:{
           position:'right',title:{display:true,text:'CB Demand (t)'},
@@ -1769,7 +1821,8 @@ function render(rows,predictions){
   const zoomReset=document.getElementById('zoomReset');
   const lastIdx=labels.length-1;
   const firstBtcIdx=btcOnLabels.findIndex(v=>v!=null);
-  const defaultStart=firstBtcIdx>=0?firstBtcIdx:0;
+  const firstDailyIdx=daily.length?monthIndexByMonth[daily[0].date.slice(0,7)]:null;
+  const defaultStart=firstDailyIdx!=null?Math.max(0,firstDailyIdx-0.5):(firstBtcIdx>=0?firstBtcIdx:0);
   const nextQuarterEndIdx=labels.indexOf(nextQuarterEndMonth);
   const lastActualIdx=labels.indexOf(lastActualMonth);
   const firstFutureIdx=arr=>{
@@ -1827,7 +1880,8 @@ function render(rows,predictions){
   }
   function updatePanDropdown(checked){
     const prev=corrS2.value;
-    corrS2.innerHTML='<option value="">— pan —</option>'+checked.map(s=>`<option value="${s}"${s===prev?' selected':''}>${s}</option>`).join('');
+    const panOptions=checked.filter(s=>s!==dailyCloseLabel);
+    corrS2.innerHTML='<option value="">— pan —</option>'+panOptions.map(s=>`<option value="${s}"${s===prev?' selected':''}>${s}</option>`).join('');
   }
   function updateDDLabel(checked){
     if(checked.length) corrDDToggle.textContent='Curves ('+checked.length+') ▾';
@@ -1921,13 +1975,16 @@ document.addEventListener('DOMContentLoaded',async ()=>{
       throw new Error('Mathematical equation renderer failed to load');
     }
     await window.MathJax.startup.promise;
-    const [res,predRes]=await Promise.all([
-      fetch('dashboard_monthly.csv'),
+    const [res,predRes,dailyRes]=await Promise.all([
+      fetch('monthly_series.csv'),
       fetch('predictions.json'),
+      fetch('daily_series.csv'),
     ]);
     if(!predRes.ok) throw new Error(`predictions.json is unavailable (HTTP ${predRes.status}); run xau_predictor.py to regenerate it`);
+    if(!dailyRes.ok) throw new Error(`daily_series.csv is unavailable (HTTP ${dailyRes.status}); run fetch.py --daily-series to regenerate it`);
     const predictions=await predRes.json();
-    render(parseCSV(await res.text()),predictions);
+    const dailyRows=parseCSV(await dailyRes.text());
+    render(parseCSV(await res.text()),predictions,dailyRows);
     await window.MathJax.typesetPromise([document.getElementById('formulaCard')]);
   }catch(e){
     const equationStatus=document.getElementById('equationStatus');

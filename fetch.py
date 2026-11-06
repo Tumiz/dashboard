@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch economic/financial series and update the dashboard_monthly.csv dashboard data."""
+"""Fetch economic/financial series and update the monthly_series.csv dashboard data."""
 
 import argparse
 import io
@@ -30,7 +30,7 @@ def http_get(url: str, timeout: int = 30) -> bytes:
     return resp.content
 
 
-def update_dashboard(month_df: pd.DataFrame, output: str = "dashboard_monthly.csv"):
+def update_dashboard(month_df: pd.DataFrame, output: str = "monthly_series.csv"):
     """Merge a monthly series (month + value columns) into the wide dashboard CSV."""
     if os.path.exists(output):
         merged = pd.read_csv(output).set_index("month")
@@ -280,11 +280,20 @@ def fetch_btc():
     update_dashboard(df[["month", "btc_usd"]].round(1))
 
 
-def fetch_xau():
+def _xau_daily_history() -> pd.DataFrame:
     df = ak.futures_foreign_hist(symbol="XAU")
-    df = df[["date", "high", "low", "close"]].copy()
+    df = df[["date", "open", "high", "low", "close"]].copy()
     df["date"] = pd.to_datetime(df["date"])
-    df = df.sort_values("date").dropna(subset=["close"]).copy()
+    return (
+        df.sort_values("date")
+        .dropna(subset=["close"])
+        .drop_duplicates("date")
+        .reset_index(drop=True)
+    )
+
+
+def fetch_xau():
+    df = _xau_daily_history()
     df["month"] = df["date"].dt.to_period("M")
     df = (
         df.groupby("month", sort=True, as_index=False)
@@ -298,6 +307,16 @@ def fetch_xau():
     update_dashboard(
         df[["month", "xau_usd", "xau_usd_high", "xau_usd_low"]].round(1)
     )
+
+
+def fetch_daily_series(output: str = "daily_series.csv"):
+    """Save daily XAU OHLC joined with the market-implied Fed rate history."""
+    xau = _xau_daily_history()
+    fed = _fetch_fed_rate_market_implied_daily()
+    fed = fed.rename(columns={"quote_date": "date"})
+    merged = xau.merge(fed, on="date", how="outer").sort_values("date")
+    merged.to_csv(output, index=False)
+    print(f"Saved {len(merged)} daily observations to {output}")
 
 
 def fetch_copper():
@@ -364,7 +383,7 @@ def fetch_fed_rates():
     update_dashboard(_fed_rate_history())
 
 
-def fetch_fed_rate_market_implied():
+def _fetch_fed_rate_market_implied_daily() -> pd.DataFrame:
     """Fetch point-in-time three-month market-implied rates from the Atlanta Fed MPT."""
     url = (
         "https://www.atlantafed.org/-/media/Project/Atlanta/FRBA/Documents/"
@@ -381,9 +400,11 @@ def fetch_fed_rate_market_implied():
     daily_history = _fed_rate_market_implied_daily_history(df, horizon_months=3)
     if daily_history.empty:
         raise ValueError("No point-in-time three-month market-implied Fed rates found")
-    daily_history.to_csv("fed_rate_market_implied_daily.csv", index=False)
-    print(f"Saved {len(daily_history)} daily observations to fed_rate_market_implied_daily.csv")
+    return daily_history
 
+
+def fetch_fed_rate_market_implied():
+    daily_history = _fetch_fed_rate_market_implied_daily()
     monthly_history = (
         daily_history.assign(
             month=daily_history["quote_date"].dt.strftime("%Y-%m")
@@ -696,14 +717,14 @@ def fetch_central_bank_reserves():
     if not rows:
         raise ValueError("IMF COFER reserves response contained no observations")
     update_dashboard(pd.DataFrame(rows))
-    merged = pd.read_csv("dashboard_monthly.csv")
+    merged = pd.read_csv("monthly_series.csv")
     if "central_bank_reserves_usd" in merged.columns:
         merged = merged.drop(columns=["central_bank_reserves_usd"])
-        merged.to_csv("dashboard_monthly.csv", index=False)
+        merged.to_csv("monthly_series.csv", index=False)
 
 
 def update_all(timeout: int = TASK_TIMEOUT):
-    """Run every fetcher to refresh all series in dashboard_monthly.csv."""
+    """Run every fetcher to refresh all series in monthly_series.csv."""
     tasks = [
         ("usd_index", fetch_usd_index, (), {"months": True}),
         ("us_cpi", fetch_us_cpi, (), {}),
@@ -722,6 +743,7 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("brent", fetch_brent, (), {}),
         ("au9999", fetch_au9999, (), {}),
         ("fed_rate_market_implied", fetch_fed_rate_market_implied, (), {}),
+        ("daily_series", fetch_daily_series, (), {}),
         ("fed_rates_and_cleveland", fetch_fed_rate_cleveland, (), {}),
         ("china_lpr", fetch_china_lpr, (), {}),
         ("nasdaq", fetch_nasdaq, (), {}),
@@ -790,7 +812,7 @@ def list_gold_symbols():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Fetch series and update dashboard_monthly.csv (or write daily files for gold/USD index)"
+        description="Fetch series and update monthly_series.csv (or write daily files for gold/USD index)"
     )
     parser.add_argument("--symbols", action="store_true", help="List all available gold symbols")
     parser.add_argument("--monthly", action="store_true", help="Resample gold/USD index to monthly and update dashboard")
@@ -806,6 +828,7 @@ if __name__ == "__main__":
     parser.add_argument("--gold-etf-flows", action="store_true", help="Fetch monthly global gold ETF flows (tonnes)")
     parser.add_argument("--btc", action="store_true", help="Fetch monthly BTC/USD price")
     parser.add_argument("--xau", action="store_true", help="Fetch monthly XAU/USD (gold spot) price")
+    parser.add_argument("--daily-series", action="store_true", help="Save daily XAU OHLC with market-implied Fed rates")
     parser.add_argument("--xag", action="store_true", help="Fetch monthly XAG/USD (silver spot) price")
     parser.add_argument("--copper", action="store_true", help="Fetch monthly COMEX copper (HG) price")
     parser.add_argument("--oil", action="store_true", help="Fetch monthly NYMEX WTI crude oil (CL) price, USD/bbl")
@@ -880,6 +903,8 @@ if __name__ == "__main__":
         fetch_btc()
     elif args.xau:
         fetch_xau()
+    elif args.daily_series:
+        fetch_daily_series()
     elif args.xag:
         fetch_xag()
     elif args.copper:
