@@ -87,9 +87,6 @@ body{
 .wrap{overflow-x:auto}
 .xau-events{margin-top:10px;padding:10px;border:1px solid #2d2d35;border-radius:8px;background:#101014}
 .xau-events.pinned{border-color:#fbbf55;background:#141210}
-.xau-release{display:block;margin:0 0 6px auto;font-size:10px;line-height:1.4;padding:1px 8px;border:1px solid #fbbf24;border-radius:4px;background:transparent;color:#fbbf24;cursor:pointer}
-.xau-release[hidden]{display:none}
-.xau-release:hover{background:rgba(251,191,36,.14)}
 .xau-events .event-note{margin-top:4px;color:#9ca3af;font-size:10px;line-height:1.45}
 .xau-event-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:8px;margin-top:8px}
 .xau-event-month{padding:8px;border:1px solid #26262c;border-radius:6px;background:#141418}
@@ -209,7 +206,7 @@ function renderXauEvents(month,force){
   if(!monthEvents.length){
     const empty=document.createElement('p');
     empty.className='event-note';
-    empty.textContent=month?`No curated major events for ${month}.`:'Hover over a month on the chart to see its events.';
+    empty.textContent=month?`No curated major events for ${month}.`:'Click a month on the chart to see its events.';
     list.append(empty);
     return;
   }
@@ -530,41 +527,21 @@ function render(rows,predictions,dailyRows){
     const active=chart._active||[];
     if(!active.length){
       hoverValues.textContent='';
-      renderXauEvents(null);
       return;
     }
-    const index=active[0].index;
-    renderXauEvents(labels[index]||null);
-    showValuesForIndex(chart,index);
+    showValuesForIndex(chart,active[0].index);
   }
 
   function updateXauPanel(){
-    const on=pinnedXauMonth!=null;
-    xauEventsEl.classList.toggle('pinned',on);
-    xauRelease.hidden=!on;
+    xauEventsEl.classList.toggle('pinned',pinnedXauMonth!=null);
   }
 
-  function setPin(month,on){
-    pinnedXauMonth=on?month:null;
+  function setPin(month){
+    pinnedXauMonth=month;
     updateXauPanel();
-    if(pinnedXauMonth!=null){
-      showValuesForIndex(chart,labels.indexOf(pinnedXauMonth));
-      renderXauEvents(pinnedXauMonth,true);
-    }else{
-      const active=chart._active||[];
-      if(active.length){
-        showValuesForIndex(chart,active[0].index);
-        renderXauEvents(labels[active[0].index]||null,true);
-      }else{
-        hoverValues.textContent='';
-        renderXauEvents(null,true);
-      }
-    }
+    showValuesForIndex(chart,labels.indexOf(pinnedXauMonth));
+    renderXauEvents(pinnedXauMonth,true);
     chart.render();
-  }
-
-  function togglePin(month){
-    setPin(month,pinnedXauMonth!==month);
   }
 
   function r2(pairs){
@@ -703,7 +680,6 @@ function render(rows,predictions,dailyRows){
       <div class="hover-values" id="hoverValues" aria-live="polite"></div>
       <div class="chart-wrapper"><canvas id="priceChart"></canvas></div>
       <section class="xau-events" id="xauEvents">
-        <button type="button" class="xau-release" id="xauRelease" hidden>Release</button>
         <div class="xau-event-list" id="xauEventList" aria-live="polite"></div>
       </section>
     </div>
@@ -724,7 +700,6 @@ function render(rows,predictions,dailyRows){
 
   hoverValues=document.getElementById('hoverValues');
   const xauEventsEl=document.getElementById('xauEvents');
-  const xauRelease=document.getElementById('xauRelease');
   const chart=new Chart(document.getElementById('priceChart'),{
     type:'line',
     data:{
@@ -1666,7 +1641,6 @@ function render(rows,predictions,dailyRows){
         if(pinnedXauMonth!=null) return;
         if(args.event.type==='mouseout'||args.event.type==='mouseleave'){
           hoverValues.textContent='';
-          renderXauEvents(null);
         }
       }
     }],
@@ -1678,7 +1652,7 @@ function render(rows,predictions,dailyRows){
         if(!area||evt.x<area.left||evt.x>area.right||evt.y<area.top||evt.y>area.bottom) return;
         const idx=chart.scales.x.getValueForPixel(evt.x);
         if(!(idx>=0&&idx<labels.length)) return;
-        togglePin(labels[idx]);
+        setPin(labels[idx]);
       },
       plugins:{
         legend:{display:false},
@@ -1961,10 +1935,6 @@ function render(rows,predictions,dailyRows){
     chart.options.scales.x.max=defaultEnd;
     chart.update('none');
     updateZoomReset();
-  });
-  xauRelease.addEventListener('click',()=>setPin(null,false));
-  document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'&&pinnedXauMonth!=null) setPin(null,false);
   });
   renderXauEvents(null);
   chart.update('none');
