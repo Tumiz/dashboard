@@ -746,6 +746,11 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("daily_series", fetch_daily_series, (), {}),
         ("fed_rates_and_cleveland", fetch_fed_rate_cleveland, (), {}),
         ("china_lpr", fetch_china_lpr, (), {}),
+        ("fund_010990", fetch_fund_010990, (), {}),
+        ("fund_020650", fetch_fund_020650, (), {}),
+        ("fund_025832", fetch_fund_025832, (), {}),
+        ("fund_023638", fetch_fund_023638, (), {}),
+        ("fund_011148", fetch_fund_011148, (), {}),
         ("nasdaq", fetch_nasdaq, (), {}),
         ("usd_cny", fetch_usd_cny, (), {}),
         ("twexb", fetch_twexb, (), {}),
@@ -793,6 +798,37 @@ def fetch_zijin():
     df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
     df["month"] = df["date"].dt.strftime("%Y-%m")
     update_dashboard(df[["month", "close"]].rename(columns={"close": "zijin_close"}).round(2))
+
+
+def fetch_china_fund(symbol: str, column: str):
+    df = ak.fund_open_fund_info_em(symbol=symbol, indicator="单位净值走势")
+    df = df.rename(columns={"净值日期": "date", "单位净值": "nav"})
+    df["date"] = pd.to_datetime(df["date"])
+    df["nav"] = pd.to_numeric(df["nav"], errors="coerce")
+    df = df.dropna(subset=["nav"]).sort_values("date")
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    last = df.groupby("month", sort=True, as_index=False).tail(1)
+    update_dashboard(last[["month", "nav"]].rename(columns={"nav": column}).round(4))
+
+
+def fetch_fund_010990():
+    fetch_china_fund("010990", "fund_010990_nav")
+
+
+def fetch_fund_020650():
+    fetch_china_fund("020650", "fund_020650_nav")
+
+
+def fetch_fund_025832():
+    fetch_china_fund("025832", "fund_025832_nav")
+
+
+def fetch_fund_023638():
+    fetch_china_fund("023638", "fund_023638_nav")
+
+
+def fetch_fund_011148():
+    fetch_china_fund("011148", "fund_011148_nav")
 
 
 def fetch_china_lpr():
@@ -854,6 +890,11 @@ if __name__ == "__main__":
         help="Fetch historical Fed Funds rates and current Cleveland Fed policy rule projections",
     )
     parser.add_argument("--china-lpr", action="store_true", help="Fetch monthly China 1-year Loan Prime Rate (LPR)")
+    parser.add_argument("--fund-010990", action="store_true", help="Fetch monthly NAV of China fund 010990")
+    parser.add_argument("--fund-020650", action="store_true", help="Fetch monthly NAV of China fund 020650")
+    parser.add_argument("--fund-025832", action="store_true", help="Fetch monthly NAV of China fund 025832")
+    parser.add_argument("--fund-023638", action="store_true", help="Fetch monthly NAV of China fund 023638")
+    parser.add_argument("--fund-011148", action="store_true", help="Fetch monthly NAV of China fund 011148")
     parser.add_argument("--usd-cny", action="store_true", help="Fetch monthly USD/CNY exchange rate")
     parser.add_argument("--twexb", action="store_true", help="Fetch monthly Broad Trade-Weighted USD Index (FRED DTWEXBGS)")
     parser.add_argument("--zijin", action="store_true", help="Fetch monthly Zijin Mining (601899.SH) stock price")
@@ -893,6 +934,16 @@ if __name__ == "__main__":
         fetch_fed_rate_cleveland()
     elif args.china_lpr:
         fetch_china_lpr()
+    elif args.fund_010990:
+        fetch_fund_010990()
+    elif args.fund_020650:
+        fetch_fund_020650()
+    elif args.fund_025832:
+        fetch_fund_025832()
+    elif args.fund_023638:
+        fetch_fund_023638()
+    elif args.fund_011148:
+        fetch_fund_011148()
     elif args.cb_demand:
         fetch_cb_demand()
     elif args.central_bank_reserves:

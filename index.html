@@ -311,6 +311,11 @@ function render(rows,predictions,dailyRows){
   const usdCnyOnLabels=col('usd_cny');
   const twexbOnLabels=col('twexb');
   const zijinOnLabels=col('zijin_close');
+  const fund010990OnLabels=col('fund_010990_nav');
+  const fund020650OnLabels=col('fund_020650_nav');
+  const fund025832OnLabels=col('fund_025832_nav');
+  const fund023638OnLabels=col('fund_023638_nav');
+  const fund011148OnLabels=col('fund_011148_nav');
   const copperOnLabels=col('copper_close');
   const oilOnLabels=col('oil_usd');
   const brentOnLabels=col('brent_usd');
@@ -500,6 +505,11 @@ function render(rows,predictions,dailyRows){
     else if(axis==='y32'||axis==='y35') formatted=value.toFixed(2);
     else if(axis==='y33') formatted=value.toLocaleString('en-US',{maximumFractionDigits:0})+' contracts';
     else if(axis==='y34') formatted=value.toFixed(1)+'t';
+    else if(axis==='y36') formatted='¥'+value.toFixed(4);
+    else if(axis==='y37') formatted='¥'+value.toFixed(4);
+    else if(axis==='y38') formatted='¥'+value.toFixed(4);
+    else if(axis==='y39') formatted='¥'+value.toFixed(4);
+    else if(axis==='y40') formatted='¥'+value.toFixed(4);
     else formatted=value.toFixed(1);
     return `<span class="hover-value" style="color:${dataset.borderColor}">${esc(dataset.label)}: ${formatted}</span>`;
   }
@@ -618,6 +628,11 @@ function render(rows,predictions,dailyRows){
     'USD/CNY':usdCnyOnLabels,
     'Trade-Wtd USD (TWEXB)':twexbOnLabels,
     'Zijin Mining (601899)':zijinOnLabels,
+    'Nonferrous Metals ETF Feeder (010990)':fund010990OnLabels,
+    'Grain Industry ETF Feeder A (020650)':fund020650OnLabels,
+    'Power Grid Equipment Index A (025832)':fund025832OnLabels,
+    'A-Share Grid Equipment ETF Feeder A (023638)':fund023638OnLabels,
+    'Military Reform Flexible Allocation C (011148)':fund011148OnLabels,
     'Copper (COMEX)':copperOnLabels,
     'Crude Oil WTI':oilOnLabels,
     'Brent Crude':brentOnLabels,
@@ -1227,6 +1242,81 @@ function render(rows,predictions,dailyRows){
         pointHitRadius:0,
         yAxisID:'y22'
       },{
+        label:'Nonferrous Metals ETF Feeder (010990)',
+        data:fund010990OnLabels,
+        hidden:true,
+        borderColor:'#0891b2',
+        backgroundColor:'rgba(8,145,178,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#0891b2',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y36'
+      },{
+        label:'Grain Industry ETF Feeder A (020650)',
+        data:fund020650OnLabels,
+        hidden:true,
+        borderColor:'#1d4ed8',
+        backgroundColor:'rgba(29,78,216,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#1d4ed8',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y37'
+      },{
+        label:'Power Grid Equipment Index A (025832)',
+        data:fund025832OnLabels,
+        hidden:true,
+        borderColor:'#be123c',
+        backgroundColor:'rgba(190,18,60,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#be123c',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y38'
+      },{
+        label:'A-Share Grid Equipment ETF Feeder A (023638)',
+        data:fund023638OnLabels,
+        hidden:true,
+        borderColor:'#0f766e',
+        backgroundColor:'rgba(15,118,110,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#0f766e',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y39'
+      },{
+        label:'Military Reform Flexible Allocation C (011148)',
+        data:fund011148OnLabels,
+        hidden:true,
+        borderColor:'#7e22ce',
+        backgroundColor:'rgba(126,34,206,0.1)',
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#7e22ce',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y40'
+      },{
         label:'Copper (COMEX)',
         data:copperOnLabels,
         hidden:true,
@@ -1628,6 +1718,11 @@ function render(rows,predictions,dailyRows){
               else if(ctx.dataset.yAxisID==='y32'||ctx.dataset.yAxisID==='y35') v=v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y33') v=v.toLocaleString('en-US',{maximumFractionDigits:0})+' contracts';
               else if(ctx.dataset.yAxisID==='y34') v=v.toFixed(1)+'t';
+              else if(ctx.dataset.yAxisID==='y36') v='¥'+v.toFixed(4);
+              else if(ctx.dataset.yAxisID==='y37') v='¥'+v.toFixed(4);
+              else if(ctx.dataset.yAxisID==='y38') v='¥'+v.toFixed(4);
+              else if(ctx.dataset.yAxisID==='y39') v='¥'+v.toFixed(4);
+              else if(ctx.dataset.yAxisID==='y40') v='¥'+v.toFixed(4);
               else v=v.toFixed(1);
               return ctx.dataset.label+': '+v;
             }
@@ -1778,6 +1873,26 @@ function render(rows,predictions,dailyRows){
         },
         y35:{
           position:'right',title:{display:true,text:'VIX'},
+          grid:{display:false},display:false,offset:true
+        },
+        y36:{
+          position:'right',title:{display:true,text:'Nonferrous ETF NAV (CNY)'},
+          grid:{display:false},display:false,offset:true
+        },
+        y37:{
+          position:'right',title:{display:true,text:'Grain ETF NAV (CNY)'},
+          grid:{display:false},display:false,offset:true
+        },
+        y38:{
+          position:'right',title:{display:true,text:'Grid Equipment NAV (CNY)'},
+          grid:{display:false},display:false,offset:true
+        },
+        y39:{
+          position:'right',title:{display:true,text:'A-Share Grid ETF NAV (CNY)'},
+          grid:{display:false},display:false,offset:true
+        },
+        y40:{
+          position:'right',title:{display:true,text:'Military Reform NAV (CNY)'},
           grid:{display:false},display:false,offset:true
         }
       }
