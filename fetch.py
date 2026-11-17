@@ -383,6 +383,23 @@ def fetch_fed_rates():
     update_dashboard(_fed_rate_history())
 
 
+def _iorb_history() -> pd.DataFrame:
+    url = (
+        "https://fred.stlouisfed.org/graph/fredgraph.csv"
+        "?id=IORB&cosd=2021-07-29&coed=9999-12-31"
+    )
+    df = pd.read_csv(io.BytesIO(http_get(url)))
+    df.columns = ["date", "iorb_pct"]
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").resample("ME").mean(numeric_only=True).dropna().reset_index()
+    df["month"] = df["date"].dt.strftime("%Y-%m")
+    return df[["month", "iorb_pct"]].round(2)
+
+
+def fetch_iorb():
+    update_dashboard(_iorb_history())
+
+
 def _fetch_fed_rate_market_implied_daily() -> pd.DataFrame:
     """Fetch point-in-time three-month market-implied rates from the Atlanta Fed MPT."""
     url = (
@@ -745,6 +762,7 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("fed_rate_market_implied", fetch_fed_rate_market_implied, (), {}),
         ("daily_series", fetch_daily_series, (), {}),
         ("fed_rates_and_cleveland", fetch_fed_rate_cleveland, (), {}),
+        ("iorb", fetch_iorb, (), {}),
         ("china_lpr", fetch_china_lpr, (), {}),
         ("fund_010990", fetch_fund_010990, (), {}),
         ("fund_020650", fetch_fund_020650, (), {}),
@@ -879,6 +897,7 @@ if __name__ == "__main__":
     parser.add_argument("--gold-production", action="store_true", help="Fetch annual global mine gold production (tonnes), spread monthly")
     parser.add_argument("--nasdaq", action="store_true", help="Fetch monthly NASDAQ Composite index")
     parser.add_argument("--fed-rates", action="store_true", help="Fetch monthly Fed Funds rate")
+    parser.add_argument("--iorb", action="store_true", help="Fetch monthly interest rate on reserve balances (IORB)")
     parser.add_argument(
         "--fed-market-implied",
         action="store_true",
@@ -928,6 +947,8 @@ if __name__ == "__main__":
         fetch_nasdaq()
     elif args.fed_rates:
         fetch_fed_rates()
+    elif args.iorb:
+        fetch_iorb()
     elif args.fed_market_implied:
         fetch_fed_rate_market_implied()
     elif args.fed_cleveland:

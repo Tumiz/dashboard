@@ -301,6 +301,7 @@ function render(rows,predictions,dailyRows){
   const cbOnLabels=col('cb_demand');
   const goldProdOnLabels=col('gold_mine_production_t');
   const fedOnLabels=col('fed_rate_pct');
+  const iorbOnLabels=col('iorb_pct');
   const fomcMonths=new Set((window.XAU_EVENTS||[]).filter(event=>event.fomc&&event.date).map(event=>event.date.slice(0,7)));
   const fedMarket3mOnLabels=col('fed_rate_market_implied_3m_pct');
   const fedClevelandOnLabels=col('fed_rate_cleveland_pct');
@@ -597,6 +598,7 @@ function render(rows,predictions,dailyRows){
     'Central Bank USD Share (%)':centralBankUsdShareOnLabels,
     'Gold Mine Production (t)':goldProdOnLabels,
     'Fed Funds Rate (%)':fedOnLabels,
+    'Interest on Reserve Balances (%)':iorbOnLabels,
     'Fed Funds Rate (~3M Ahead, CME)':fedMarket3mOnLabels,
     'Fed Funds Rate (Cleveland Fed)':fedClevelandOnLabels,
     'China LPR 1Y (%)':chinaLprOnLabels,
@@ -972,6 +974,22 @@ function render(rows,predictions,dailyRows){
         pointRadius:ctx=>fomcMonths.has(labels[ctx.dataIndex])?4:0,
         pointHoverRadius:ctx=>fomcMonths.has(labels[ctx.dataIndex])?5:0,
         pointHitRadius:ctx=>fomcMonths.has(labels[ctx.dataIndex])?8:0,
+        yAxisID:'y8'
+      },{
+        label:'Interest on Reserve Balances (%)',
+        data:iorbOnLabels,
+        hidden:true,
+        borderColor:'#c084fc',
+        backgroundColor:'rgba(192,132,252,0.1)',
+        borderDash:[5,3],
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#c084fc',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
         yAxisID:'y8'
       },{
         label:'Fed Funds Rate (~3M Ahead, CME)',
