@@ -328,56 +328,7 @@ function render(rows,predictions,dailyRows){
   const centralBankUsdReservesOnLabels=col('central_bank_usd_reserves');
   const centralBankUsdShareOnLabels=col('central_bank_usd_share_pct');
   const chinaLprOnLabels=col('china_lpr_1y_pct');
-  const monthlySeries=predictions.monthly_series||{};
-  const predictedLowPriceByMonth={};
-  const predictedHighPriceByMonth={};
-  const predLowReturnByMonth={};
-  const predHighReturnByMonth={};
-  const monthlyIntervalByMonth={};
-  Object.entries(monthlySeries).forEach(([month,entry])=>{
-    if(entry==null) return;
-    if(entry.predicted_low_price!=null) predictedLowPriceByMonth[month]=entry.predicted_low_price;
-    if(entry.predicted_high_price!=null) predictedHighPriceByMonth[month]=entry.predicted_high_price;
-    if(entry.predicted_low_return!=null) predLowReturnByMonth[month]=entry.predicted_low_return;
-    if(entry.predicted_high_return!=null) predHighReturnByMonth[month]=entry.predicted_high_return;
-    if(entry.prediction_interval!=null) monthlyIntervalByMonth[month]=entry.prediction_interval;
-  });
-  const actualReturns=predictions.actual_returns||{};
-  const actualReturnByMonth=actualReturns.monthly||{};
-  const actualQuarterReturnByMonth=actualReturns.quarterly||{};
   const monthlyForecast=predictions.forecasts?.next_month||null;
-  const predLowOnLabels=labels.map(m=>predictedLowPriceByMonth[m]??null);
-  const predHighOnLabels=labels.map(m=>predictedHighPriceByMonth[m]??null);
-  const actualReturnOnLabels=labels.map(m=>actualReturnByMonth[m]??null);
-  const quarterActualOnLabels=labels.map(m=>actualQuarterReturnByMonth[m]??null);
-  const predLowReturnOnLabels=labels.map(m=>predLowReturnByMonth[m]??null);
-  const predHighReturnOnLabels=labels.map(m=>predHighReturnByMonth[m]??null);
-  const monthlyIntervalLowerOnLabels=labels.map(m=>monthlyIntervalByMonth[m]?.lower??null);
-  const monthlyIntervalUpperOnLabels=labels.map(m=>monthlyIntervalByMonth[m]?.upper??null);
-
-  const quarterlySeries=predictions.quarterly_series||{};
-  const quarterlyIntervalByMonth={};
-  Object.entries(quarterlySeries).forEach(([month,entry])=>{
-    if(entry?.prediction_interval!=null) quarterlyIntervalByMonth[month]=entry.prediction_interval;
-  });
-  const quarterlyIntervalLowerOnLabels=labels.map(m=>quarterlyIntervalByMonth[m]?.lower??null);
-  const quarterlyIntervalUpperOnLabels=labels.map(m=>quarterlyIntervalByMonth[m]?.upper??null);
-  const quarterPredLowReturnOnLabels=labels.map(m=>{
-    const entry=quarterlySeries[m];
-    return entry&&entry.predicted_low_return!=null?entry.predicted_low_return:null;
-  });
-  const quarterPredHighReturnOnLabels=labels.map(m=>{
-    const entry=quarterlySeries[m];
-    return entry&&entry.predicted_high_return!=null?entry.predicted_high_return:null;
-  });
-  const quarterlyPredLowPriceOnLabels=labels.map(m=>{
-    const entry=quarterlySeries[m];
-    return entry&&entry.predicted_low_price!=null?entry.predicted_low_price:null;
-  });
-  const quarterlyPredHighPriceOnLabels=labels.map(m=>{
-    const entry=quarterlySeries[m];
-    return entry&&entry.predicted_high_price!=null?entry.predicted_high_price:null;
-  });
 
   const monthlyEquation=document.getElementById('monthlyForecastEquation');
   const quarterlyEquation=document.getElementById('quarterlyForecastEquation');
@@ -496,7 +447,7 @@ function render(rows,predictions,dailyRows){
     if(axis==='y') formatted='¥'+value.toFixed(2);
     else if(axis==='y6'||axis==='y24') formatted=value.toFixed(1)+'t';
     else if(axis==='y27') formatted='$'+value.toFixed(1)+'bn';
-    else if(axis==='y28'||axis==='y2'||axis==='y8'||axis==='y26') formatted=(axis==='y26'?(value*100).toFixed(2):value.toFixed(2))+'%';
+    else if(axis==='y28'||axis==='y2'||axis==='y8') formatted=value.toFixed(2)+'%';
     else if(axis==='y7'||axis==='y5'||axis==='y29'||axis==='y31') formatted='$'+value.toFixed(2);
     else if(axis==='y13') formatted='¥'+value.toFixed(2);
     else if(axis==='y14') formatted='HK$'+value.toFixed(2);
@@ -591,7 +542,6 @@ function render(rows,predictions,dailyRows){
     'CFTC Managed Money Net (contracts)':cftcMmOnLabels,
     'Gold ETF Flows (t)':goldEtfFlowOnLabels,
     'BTC/USD':btcOnLabels,
-    'XAU/USD (Actual)':auxOnLabels,
     'XAG/USD':xagOnLabels,
     'CB Demand (tonnes)':cbOnLabels,
     'Central Bank USD Reserves (USD bn)':centralBankUsdReservesOnLabels,
@@ -624,20 +574,6 @@ function render(rows,predictions,dailyRows){
     'Hang Seng Index':hsiOnLabels,
     'AUX/XAG':auxXagOnLabels,
     'BTC/XAU':btcXauOnLabels,
-    'XAU/USD (Forecast Low, Monthly)':predLowOnLabels,
-    'XAU/USD (Forecast High, Monthly)':predHighOnLabels,
-    'XAU/USD (Forecast Low, Quarterly)':quarterlyPredLowPriceOnLabels,
-    'XAU/USD (Forecast High, Quarterly)':quarterlyPredHighPriceOnLabels,
-    'XAU/USD (90% Interval Lower, Monthly)':monthlyIntervalLowerOnLabels,
-    'XAU/USD (90% Interval Upper, Monthly)':monthlyIntervalUpperOnLabels,
-    'XAU/USD (90% Interval Lower, Quarterly)':quarterlyIntervalLowerOnLabels,
-    'XAU/USD (90% Interval Upper, Quarterly)':quarterlyIntervalUpperOnLabels,
-    'XAU Return (Actual)':actualReturnOnLabels,
-    'XAU Return (Forecast Low, Monthly)':predLowReturnOnLabels,
-    'XAU Return (Forecast High, Monthly)':predHighReturnOnLabels,
-    'XAU Return (Actual, Quarterly)':quarterActualOnLabels,
-    'XAU Return (Forecast Low, Quarterly)':quarterPredLowReturnOnLabels,
-    'XAU Return (Forecast High, Quarterly)':quarterPredHighReturnOnLabels,
   };
   const dailyCloseLabel='XAU/USD (Daily Close)';
   const curveNames=[dailyCloseLabel,...Object.keys(signalMap).sort((a,b)=>a.localeCompare(b))];
@@ -870,21 +806,6 @@ function render(rows,predictions,dailyRows){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y4'
-      },{
-        label:'XAU/USD (Actual)',
-        data:auxOnLabels,
-        hidden:true,
-        borderColor:'#06b6d4',
-        backgroundColor:'rgba(6,182,212,0.1)',
-        fill:false,
-        tension:0,
-        pointBackgroundColor:'#06b6d4',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
       },{
         label:'XAG/USD',
         data:xagOnLabels,
@@ -1388,216 +1309,6 @@ function render(rows,predictions,dailyRows){
         pointHitRadius:0,
         yAxisID:'y25'
       },{
-        label:'XAU Return (Actual)',
-        data:actualReturnOnLabels,
-        borderColor:'#22c55e',
-        backgroundColor:'rgba(34,197,94,0.08)',
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointBackgroundColor:'#22c55e',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y26'
-      },{
-        label:'XAU Return (Forecast Low, Monthly)',
-        data:predLowReturnOnLabels,
-        borderColor:'#f43f5e',
-        backgroundColor:'rgba(244,63,94,0.08)',
-        borderDash:[5,4],
-        spanGaps:true,
-        fill:'+1',
-        tension:0,
-        pointBackgroundColor:'#f43f5e',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y26'
-      },{
-        label:'XAU Return (Forecast High, Monthly)',
-        data:predHighReturnOnLabels,
-        borderColor:'#f43f5e',
-        backgroundColor:'rgba(244,63,94,0.08)',
-        borderDash:[5,4],
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointBackgroundColor:'#f43f5e',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y26'
-      },{
-        label:'XAU Return (Actual, Quarterly)',
-        data:quarterActualOnLabels,
-        borderColor:'#10b981',
-        backgroundColor:'rgba(16,185,129,0.08)',
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointBackgroundColor:'#10b981',
-        pointBorderColor:'#fff',
-        pointBorderWidth:2,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y26'
-      },{
-        label:'XAU Return (Forecast Low, Quarterly)',
-        data:quarterPredLowReturnOnLabels,
-        borderColor:'#f97316',
-        backgroundColor:'rgba(249,115,22,0.08)',
-        borderDash:[6,4],
-        spanGaps:true,
-        fill:'+1',
-        tension:0,
-        pointBackgroundColor:'#f97316',
-        pointBorderColor:'#fff',
-        pointBorderWidth:2,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y26'
-      },{
-        label:'XAU Return (Forecast High, Quarterly)',
-        data:quarterPredHighReturnOnLabels,
-        borderColor:'#f97316',
-        backgroundColor:'rgba(249,115,22,0.08)',
-        borderDash:[6,4],
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointBackgroundColor:'#f97316',
-        pointBorderColor:'#fff',
-        pointBorderWidth:2,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y26'
-      },{
-        label:'XAU/USD (Forecast Low, Monthly)',
-        data:predLowOnLabels,
-        borderColor:'#f43f5e',
-        backgroundColor:'rgba(244,63,94,0.05)',
-        borderDash:[5,4],
-        spanGaps:true,
-        fill:'+1',
-        tension:0,
-        pointBackgroundColor:'#f43f5e',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
-        label:'XAU/USD (Forecast High, Monthly)',
-        data:predHighOnLabels,
-        borderColor:'#f43f5e',
-        backgroundColor:'rgba(244,63,94,0.05)',
-        borderDash:[5,4],
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointBackgroundColor:'#f43f5e',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
-        label:'XAU/USD (Forecast Low, Quarterly)',
-        data:quarterlyPredLowPriceOnLabels,
-        borderColor:'#8b5cf6',
-        backgroundColor:'rgba(139,92,246,0.05)',
-        borderDash:[2,3],
-        spanGaps:true,
-        fill:'+1',
-        tension:0,
-        pointBackgroundColor:'#8b5cf6',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
-        label:'XAU/USD (90% Interval Lower, Monthly)',
-        data:monthlyIntervalLowerOnLabels,
-        borderColor:'#fb7185',
-        backgroundColor:'rgba(251,113,133,0.12)',
-        borderDash:[3,3],
-        spanGaps:true,
-        fill:'+1',
-        tension:0,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
-        label:'XAU/USD (90% Interval Upper, Monthly)',
-        data:monthlyIntervalUpperOnLabels,
-        borderColor:'#fb7185',
-        backgroundColor:'rgba(251,113,133,0.12)',
-        borderDash:[3,3],
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
-        label:'XAU/USD (90% Interval Lower, Quarterly)',
-        data:quarterlyIntervalLowerOnLabels,
-        borderColor:'#c4b5fd',
-        backgroundColor:'rgba(196,181,253,0.12)',
-        borderDash:[2,4],
-        spanGaps:true,
-        fill:'+1',
-        tension:0,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
-        label:'XAU/USD (90% Interval Upper, Quarterly)',
-        data:quarterlyIntervalUpperOnLabels,
-        borderColor:'#c4b5fd',
-        backgroundColor:'rgba(196,181,253,0.12)',
-        borderDash:[2,4],
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
-        label:'XAU/USD (Forecast High, Quarterly)',
-        data:quarterlyPredHighPriceOnLabels,
-        borderColor:'#8b5cf6',
-        backgroundColor:'rgba(139,92,246,0.05)',
-        borderDash:[2,3],
-        spanGaps:true,
-        fill:false,
-        tension:0,
-        pointBackgroundColor:'#8b5cf6',
-        pointBorderColor:'#fff',
-        pointBorderWidth:1.5,
-        pointRadius:0,
-        pointHoverRadius:0,
-        pointHitRadius:0,
-        yAxisID:'y5'
-      },{
         label:dailyCloseLabel,
         data:dailyXauPoints,
         parsing:false,
@@ -1706,7 +1417,6 @@ function render(rows,predictions,dailyRows){
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y13') v='¥'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y14') v='HK$'+v.toFixed(2);
-              else if(ctx.dataset.yAxisID==='y26') v=(v===null?'N/A':(v*100).toFixed(2)+'%');
               else if(ctx.dataset.yAxisID==='y32'||ctx.dataset.yAxisID==='y35') v=v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y33') v=v.toLocaleString('en-US',{maximumFractionDigits:0})+' contracts';
               else if(ctx.dataset.yAxisID==='y34') v=v.toFixed(1)+'t';
@@ -1833,10 +1543,6 @@ function render(rows,predictions,dailyRows){
         },
         y25:{
           position:'right',title:{display:true,text:'Hang Seng'},
-          grid:{display:false},display:false,offset:true
-        },
-        y26:{
-          position:'right',title:{display:true,text:'Gold Return'},
           grid:{display:false},display:false,offset:true
         },
         y29:{
