@@ -328,6 +328,10 @@ function render(rows,predictions,dailyRows){
   const centralBankUsdReservesOnLabels=col('central_bank_usd_reserves');
   const centralBankUsdShareOnLabels=col('central_bank_usd_share_pct');
   const chinaLprOnLabels=col('china_lpr_1y_pct');
+  const chinaGdpGrowthOnLabels=col('china_gdp_growth_pct');
+  const usGdpGrowthOnLabels=col('us_gdp_growth_pct');
+  const japanGdpGrowthOnLabels=col('japan_gdp_growth_pct');
+  const euGdpGrowthOnLabels=col('eu_gdp_growth_pct');
   const monthlyForecast=predictions.forecasts?.next_month||null;
 
   const monthlyEquation=document.getElementById('monthlyForecastEquation');
@@ -447,7 +451,7 @@ function render(rows,predictions,dailyRows){
     if(axis==='y') formatted='¥'+value.toFixed(2);
     else if(axis==='y6'||axis==='y24') formatted=value.toFixed(1)+'t';
     else if(axis==='y27') formatted='$'+value.toFixed(1)+'bn';
-    else if(axis==='y28'||axis==='y2'||axis==='y8') formatted=value.toFixed(2)+'%';
+    else if(axis==='y28'||axis==='y2'||axis==='y8'||axis==='y41') formatted=value.toFixed(2)+'%';
     else if(axis==='y7'||axis==='y5'||axis==='y29'||axis==='y31') formatted='$'+value.toFixed(2);
     else if(axis==='y13') formatted='¥'+value.toFixed(2);
     else if(axis==='y14') formatted='HK$'+value.toFixed(2);
@@ -552,6 +556,10 @@ function render(rows,predictions,dailyRows){
     'Fed Funds Rate (~3M Ahead, CME)':fedMarket3mOnLabels,
     'Fed Funds Rate (Cleveland Fed)':fedClevelandOnLabels,
     'China LPR 1Y (%)':chinaLprOnLabels,
+    'China GDP Growth (YoY, %)':chinaGdpGrowthOnLabels,
+    'US GDP Growth (YoY, %)':usGdpGrowthOnLabels,
+    'Japan GDP Growth (YoY, %)':japanGdpGrowthOnLabels,
+    'EU GDP Growth (YoY, %)':euGdpGrowthOnLabels,
     'NASDAQ':nasdaqOnLabels,
     'Tencent (0700.HK)':tencentOnLabels,
     'USD/CNY':usdCnyOnLabels,
@@ -960,6 +968,70 @@ function render(rows,predictions,dailyRows){
         pointHoverRadius:0,
         pointHitRadius:0,
         yAxisID:'y30'
+      },{
+        label:'China GDP Growth (YoY, %)',
+        data:chinaGdpGrowthOnLabels,
+        hidden:true,
+        borderColor:'#ef4444',
+        backgroundColor:'rgba(239,68,68,0.1)',
+        spanGaps:true,
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#ef4444',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y41'
+      },{
+        label:'US GDP Growth (YoY, %)',
+        data:usGdpGrowthOnLabels,
+        hidden:true,
+        borderColor:'#3b82f6',
+        backgroundColor:'rgba(59,130,246,0.1)',
+        spanGaps:true,
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#3b82f6',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y41'
+      },{
+        label:'Japan GDP Growth (YoY, %)',
+        data:japanGdpGrowthOnLabels,
+        hidden:true,
+        borderColor:'#eab308',
+        backgroundColor:'rgba(234,179,8,0.1)',
+        spanGaps:true,
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#eab308',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y41'
+      },{
+        label:'EU GDP Growth (YoY, %)',
+        data:euGdpGrowthOnLabels,
+        hidden:true,
+        borderColor:'#14b8a6',
+        backgroundColor:'rgba(20,184,166,0.1)',
+        spanGaps:true,
+        fill:false,
+        tension:0,
+        pointBackgroundColor:'#14b8a6',
+        pointBorderColor:'#fff',
+        pointBorderWidth:1.5,
+        pointRadius:0,
+        pointHoverRadius:0,
+        pointHitRadius:0,
+        yAxisID:'y41'
       },{
         label:'AUX/XAG',
         data:auxXagOnLabels,
@@ -1412,6 +1484,7 @@ function render(rows,predictions,dailyRows){
               else if(ctx.dataset.yAxisID==='y2') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y8') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y30') v=v.toFixed(2)+'%';
+              else if(ctx.dataset.yAxisID==='y41') v=v.toFixed(2)+'%';
               else if(ctx.dataset.yAxisID==='y7'||ctx.dataset.yAxisID==='y5'||ctx.dataset.yAxisID==='y29'||ctx.dataset.yAxisID==='y31') v='$'+v.toFixed(2);
               else if(ctx.dataset.yAxisID==='y10') v=v===null?'N/A':v.toFixed(1);
               else if(ctx.dataset.yAxisID==='y11') v=v===null?'N/A':v.toFixed(1);
@@ -1591,6 +1664,10 @@ function render(rows,predictions,dailyRows){
         },
         y40:{
           position:'right',title:{display:true,text:'Military Reform NAV (CNY)'},
+          grid:{display:false},display:false,offset:true
+        },
+        y41:{
+          position:'right',title:{display:true,text:'Quarterly GDP Growth (YoY, %)'},
           grid:{display:false},display:false,offset:true
         }
       }

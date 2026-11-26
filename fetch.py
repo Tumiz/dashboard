@@ -30,7 +30,9 @@ def http_get(url: str, timeout: int = 30) -> bytes:
     return resp.content
 
 
-def update_dashboard(month_df: pd.DataFrame, output: str = "monthly_series.csv"):
+def update_dashboard(
+    month_df: pd.DataFrame, output: str = "monthly_series.csv", replace: bool = False
+):
     """Merge a monthly series (month + value columns) into the wide dashboard CSV."""
     if os.path.exists(output):
         merged = pd.read_csv(output).set_index("month")
@@ -39,7 +41,7 @@ def update_dashboard(month_df: pd.DataFrame, output: str = "monthly_series.csv")
     upd = month_df.set_index("month")
     merged = merged.reindex(merged.index.union(upd.index)).sort_index()
     for col in upd.columns:
-        if col in merged.columns:
+        if col in merged.columns and not replace:
             merged[col] = upd[col].reindex(merged.index).combine_first(merged[col])
         else:
             merged[col] = upd[col].reindex(merged.index)
@@ -590,6 +592,63 @@ def fetch_usd_cny():
     update_dashboard(df[["month", "usd_cny"]].round(2))
 
 
+def _china_quarterly_gdp_yoy() -> pd.DataFrame:
+    df = ak.macro_china_nbs_nation(
+        kind="季度数据",
+        path="国民经济核算>国内生产总值指数",
+        period="2000-",
+    )
+    index_row = "国内生产总值指数(上年同期=100)当季值"
+    if index_row not in df.index:
+        raise ValueError("China NBS quarterly GDP index row not found")
+    quarter_map = {"第一": 1, "第二": 2, "第三": 3, "第四": 4}
+    rows = []
+    for period, raw_value in df.loc[index_row].items():
+        match = re.fullmatch(r"(\d{4})年(第[一二三四])季度", str(period).strip())
+        if not match:
+            continue
+        value = pd.to_numeric(raw_value, errors="coerce")
+        if pd.isna(value):
+            continue
+        year, quarter_name = match.groups()
+        rows.append({
+            "month": f"{int(year)}-{quarter_map[quarter_name] * 3:02d}",
+            "china_gdp_growth_pct": round(float(value) - 100, 2),
+        })
+    if not rows:
+        raise ValueError("China NBS quarterly GDP index returned no observations")
+    return pd.DataFrame(rows)
+
+
+def _fred_quarterly_gdp_yoy(series_id: str, column: str) -> pd.DataFrame:
+    url = (
+        "https://fred.stlouisfed.org/graph/fredgraph.csv"
+        f"?id={series_id}&cosd=1999-01-01&coed=9999-12-31"
+    )
+    df = pd.read_csv(io.BytesIO(http_get(url)))
+    df = df[["observation_date", series_id]].rename(columns={"observation_date": "date"})
+    df["date"] = pd.to_datetime(df["date"])
+    df[series_id] = pd.to_numeric(df[series_id], errors="coerce")
+    df = df.dropna(subset=[series_id]).sort_values("date")
+    df[column] = (df[series_id].pct_change(4, fill_method=None) * 100).round(2)
+    df = df.dropna(subset=[column]).copy()
+    df["month"] = [f"{date.year}-{date.quarter * 3:02d}" for date in df["date"]]
+    return df[["month", column]]
+
+
+def fetch_gdp_growth():
+    frames = [
+        _china_quarterly_gdp_yoy(),
+        _fred_quarterly_gdp_yoy("GDPC1", "us_gdp_growth_pct"),
+        _fred_quarterly_gdp_yoy("JPNRGDPEXP", "japan_gdp_growth_pct"),
+        _fred_quarterly_gdp_yoy("CLVMNACSCAB1GQEU272020", "eu_gdp_growth_pct"),
+    ]
+    monthly = frames[0]
+    for frame in frames[1:]:
+        monthly = monthly.merge(frame, on="month", how="outer")
+    update_dashboard(monthly.sort_values("month"), replace=True)
+
+
 def fetch_global_index(symbol: str, column: str):
     df = ak.index_global_hist_em(symbol=symbol)
     df = df.rename(columns={"日期": "date", "最新价": column})
@@ -764,6 +823,7 @@ def update_all(timeout: int = TASK_TIMEOUT):
         ("fed_rates_and_cleveland", fetch_fed_rate_cleveland, (), {}),
         ("iorb", fetch_iorb, (), {}),
         ("china_lpr", fetch_china_lpr, (), {}),
+        ("gdp_growth", fetch_gdp_growth, (), {}),
         ("fund_010990", fetch_fund_010990, (), {}),
         ("fund_020650", fetch_fund_020650, (), {}),
         ("fund_025832", fetch_fund_025832, (), {}),
@@ -909,6 +969,7 @@ if __name__ == "__main__":
         help="Fetch historical Fed Funds rates and current Cleveland Fed policy rule projections",
     )
     parser.add_argument("--china-lpr", action="store_true", help="Fetch monthly China 1-year Loan Prime Rate (LPR)")
+    parser.add_argument("--gdp-growth", action="store_true", help="Fetch official quarterly real GDP YoY growth for China, US, Japan and EU")
     parser.add_argument("--fund-010990", action="store_true", help="Fetch monthly NAV of China fund 010990")
     parser.add_argument("--fund-020650", action="store_true", help="Fetch monthly NAV of China fund 020650")
     parser.add_argument("--fund-025832", action="store_true", help="Fetch monthly NAV of China fund 025832")
@@ -955,6 +1016,8 @@ if __name__ == "__main__":
         fetch_fed_rate_cleveland()
     elif args.china_lpr:
         fetch_china_lpr()
+    elif args.gdp_growth:
+        fetch_gdp_growth()
     elif args.fund_010990:
         fetch_fund_010990()
     elif args.fund_020650:
